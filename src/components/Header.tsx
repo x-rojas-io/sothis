@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import Button from './Button';
@@ -18,6 +19,7 @@ const navigation = [
 
 export default function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const { status } = useSession();
     const pathname = usePathname();
 
     return (
@@ -56,9 +58,26 @@ export default function Header() {
                             {item.name}
                         </Link>
                     ))}
+
+                    {/* Desktop Auth Links */}
+                    {status === 'authenticated' ? (
+                        <Link
+                            href="/my-bookings"
+                            className={`text-sm font-semibold leading-6 transition-colors ${pathname === '/my-bookings' ? 'text-secondary' : 'text-stone-900 hover:text-secondary'}`}
+                        >
+                            My Bookings
+                        </Link>
+                    ) : (
+                        <Link
+                            href="/api/auth/signin"
+                            className="text-sm font-semibold leading-6 text-stone-900 hover:text-secondary transition-colors"
+                        >
+                            Sign In
+                        </Link>
+                    )}
                 </div>
                 <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-                    <Button href="/services" size="sm">Book Now</Button>
+                    <Button href="/book" size="sm">Book Now</Button>
                 </div>
             </nav>
 
@@ -103,9 +122,26 @@ export default function Header() {
                                             {item.name}
                                         </Link>
                                     ))}
+                                    {status === 'authenticated' ? (
+                                        <Link
+                                            href="/my-bookings"
+                                            className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-stone-900 hover:bg-stone-50"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                        >
+                                            My Bookings
+                                        </Link>
+                                    ) : (
+                                        <Link
+                                            href="/api/auth/signin"
+                                            className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-stone-900 hover:bg-stone-50"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                        >
+                                            Sign In
+                                        </Link>
+                                    )}
                                 </div>
                                 <div className="py-6">
-                                    <Button href="/services" className="w-full justify-center" onClick={() => setMobileMenuOpen(false)}>
+                                    <Button href="/book" className="w-full justify-center" onClick={() => setMobileMenuOpen(false)}>
                                         Book Now
                                     </Button>
                                 </div>

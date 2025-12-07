@@ -52,7 +52,7 @@ export default function ServicesPage() {
                                 <p className="text-stone-600">{service.description}</p>
                             </CardContent>
                             <CardFooter>
-                                <Button className="w-full">Book Now</Button>
+                                <Button href="/book" className="w-full">Book Now</Button>
                             </CardFooter>
                         </Card>
                     ))}

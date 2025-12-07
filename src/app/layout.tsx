@@ -19,21 +19,23 @@ export const metadata: Metadata = {
   description: "Holistic healing and therapeutic massage services.",
 };
 
+import Providers from '@/components/Providers';
+
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
-      >
-        <Header />
-        <main className="flex-grow">
-          {children}
-        </main>
-        <Footer />
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full bg-stone-50`}>
+      <body className="flex h-full flex-col font-sans text-stone-900 antialiased">
+        <Providers>
+          <Header />
+          <main className="flex-1">
+            {children}
+          </main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

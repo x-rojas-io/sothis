@@ -16,7 +16,8 @@ export default function Home() {
             Sothis Therapeutic Massage embodies renewal and the flow of energy, supporting your journey toward wellness, healing, and a fresh beginning in body and mind.
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button href="/services" size="lg">View Services</Button>
+            <Button href="/book" size="lg">Book Now</Button>
+            <Button href="/services" size="lg" variant="secondary">View Services</Button>
             <Link href="/about" className="text-sm font-semibold leading-6 text-stone-900">
               Learn more <span aria-hidden="true">→</span>
             </Link>
@@ -28,45 +29,27 @@ export default function Home() {
       <section className="py-24 sm:py-32 bg-white">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-serif font-bold tracking-tight text-stone-900 sm:text-4xl">Our Services</h2>
+            <h2 className="text-3xl font-serif font-bold tracking-tight text-stone-900 sm:text-4xl">Our Service</h2>
             <p className="mt-2 text-lg leading-8 text-stone-600">
-              Tailored treatments designed to meet your specific needs.
+              A holistic approach tailored to your specific needs.
             </p>
           </div>
-          <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+          <div className="mx-auto mt-16 max-w-2xl">
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <h3 className="text-xl font-bold text-stone-900">Therapeutic Massage</h3>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-2xl font-bold text-stone-900">Therapeutic Massage</h3>
+                </div>
               </CardHeader>
               <CardContent>
-                <p className="text-stone-600">
-                  A blend of techniques including Swedish and Deep Tissue to address chronic pain and promote relaxation.
+                <p className="text-stone-600 text-lg leading-relaxed">
+                  Experience a customized blend of techniques including Swedish and Deep Tissue designed to specific needs. Whether you seek relief from chronic pain, muscle tension, or simply wish to unwind, our therapeutic massage promotes deep relaxation, improved circulation, and overall well-being.
                 </p>
+                <div className="mt-6 flex justify-center">
+                  <Button href="/book" size="lg">Book Appointment</Button>
+                </div>
               </CardContent>
             </Card>
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <h3 className="text-xl font-bold text-stone-900">Neuromuscular Therapy</h3>
-              </CardHeader>
-              <CardContent>
-                <p className="text-stone-600">
-                  Targeted treatment for trigger points and specific muscle issues to restore function and reduce pain.
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <h3 className="text-xl font-bold text-stone-900">Reiki Healing</h3>
-              </CardHeader>
-              <CardContent>
-                <p className="text-stone-600">
-                  Energy work to balance the body&apos;s energy centers and promote emotional and physical healing.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="mt-10 text-center">
-            <Button href="/services" variant="secondary">See All Services</Button>
           </div>
         </div>
       </section>
