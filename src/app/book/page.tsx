@@ -14,6 +14,10 @@ export default function BookingPage() {
         client_name: '',
         client_email: '',
         client_phone: '',
+        client_address: '',
+        client_city: '',
+        client_state: '',
+        client_zip: '',
         notes: '',
     });
     const [message, setMessage] = useState('');
@@ -70,6 +74,10 @@ export default function BookingPage() {
                     client_name: '',
                     client_email: '',
                     client_phone: '',
+                    client_address: '',
+                    client_city: '',
+                    client_state: '',
+                    client_zip: '',
                     notes: '',
                 });
                 await fetchAvailableSlots();
@@ -139,8 +147,8 @@ export default function BookingPage() {
                                                     key={slot.id}
                                                     onClick={() => setSelectedSlot(slot)}
                                                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${selectedSlot?.id === slot.id
-                                                            ? 'bg-secondary text-white'
-                                                            : 'bg-stone-100 text-stone-900 hover:bg-stone-200'
+                                                        ? 'bg-secondary text-white'
+                                                        : 'bg-stone-100 text-stone-900 hover:bg-stone-200'
                                                         }`}
                                                 >
                                                     {slot.start_time.slice(0, 5)}
@@ -212,6 +220,50 @@ export default function BookingPage() {
                                     />
                                 </div>
 
+                                <div className="space-y-4 pt-4 border-t border-stone-200">
+                                    <h3 className="text-sm font-semibold text-stone-900">Address (Optional)</h3>
+                                    <div>
+                                        <label className="block text-sm font-medium text-stone-700 mb-2">Street Address</label>
+                                        <input
+                                            type="text"
+                                            value={formData.client_address}
+                                            onChange={(e) => setFormData({ ...formData, client_address: e.target.value })}
+                                            className="w-full rounded-md border border-stone-300 px-3 py-2"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-stone-700 mb-2">City</label>
+                                            <input
+                                                type="text"
+                                                value={formData.client_city}
+                                                onChange={(e) => setFormData({ ...formData, client_city: e.target.value })}
+                                                className="w-full rounded-md border border-stone-300 px-3 py-2"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-stone-700 mb-2">State</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.client_state}
+                                                    onChange={(e) => setFormData({ ...formData, client_state: e.target.value })}
+                                                    className="w-full rounded-md border border-stone-300 px-3 py-2"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-stone-700 mb-2">Zip</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.client_zip}
+                                                    onChange={(e) => setFormData({ ...formData, client_zip: e.target.value })}
+                                                    className="w-full rounded-md border border-stone-300 px-3 py-2"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-medium text-stone-700 mb-2">
                                         Notes (optional)
@@ -227,8 +279,8 @@ export default function BookingPage() {
 
                                 {message && (
                                     <div className={`p-4 rounded-lg ${message.startsWith('✅')
-                                            ? 'bg-green-50 text-green-800 border border-green-200'
-                                            : 'bg-red-50 text-red-800 border border-red-200'
+                                        ? 'bg-green-50 text-green-800 border border-green-200'
+                                        : 'bg-red-50 text-red-800 border border-red-200'
                                         }`}>
                                         {message}
                                     </div>

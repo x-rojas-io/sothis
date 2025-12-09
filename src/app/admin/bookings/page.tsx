@@ -184,6 +184,18 @@ export default function BookingsPage() {
                                                         📱 {booking.client_phone}
                                                     </div>
                                                 )}
+                                                {booking.client_address && (
+                                                    <div className="text-sm text-stone-600">
+                                                        📍 {booking.client_address}
+                                                        {(booking.client_city || booking.client_state || booking.client_zip) && (
+                                                            <div className="pl-5">
+                                                                {booking.client_city && `${booking.client_city}, `}
+                                                                {booking.client_state && `${booking.client_state} `}
+                                                                {booking.client_zip}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                                 <div className="text-sm text-stone-600">
                                                     💆 {booking.service_type}
                                                 </div>

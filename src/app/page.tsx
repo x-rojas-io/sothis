@@ -10,7 +10,7 @@ export default function Home() {
       <section className="relative bg-stone-100 py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
           <h1 className="text-4xl font-serif font-bold tracking-tight text-stone-900 sm:text-6xl">
-            Renewal. Balance. Healing.
+            Renewal, Balance, Healing.
           </h1>
           <p className="mt-6 text-lg leading-8 text-stone-600 max-w-2xl mx-auto">
             Sothis Therapeutic Massage embodies renewal and the flow of energy, supporting your journey toward wellness, healing, and a fresh beginning in body and mind.
@@ -60,7 +60,7 @@ export default function Home() {
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-serif font-bold tracking-tight text-stone-900 sm:text-4xl">Massage Benefits</h2>
             <p className="mt-2 text-lg leading-8 text-stone-600">
-              Massage goes beyond just relaxing you—it also helps:
+              Massage goes beyond just relaxing you it also helps:
             </p>
           </div>
           <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-2">

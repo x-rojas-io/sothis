@@ -37,7 +37,7 @@ export default function Footer() {
 
                 <div className="mt-8 border-t border-stone-800 pt-8">
                     <p className="text-center text-xs leading-5">
-                        &copy; {new Date().getFullYear()} Sothis Therapeutic Massage. All rights reserved.
+                        &copy; {new Date().getFullYear()} Sothis Therapeutic Massage, All rights reserved.
                     </p>
                 </div>
             </div>

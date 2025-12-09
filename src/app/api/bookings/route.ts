@@ -7,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { time_slot_id, client_name, client_email, client_phone, notes } = body;
+        const { time_slot_id, client_name, client_email, client_phone, client_address, client_city, client_state, client_zip, notes } = body;
 
         // Validate input
         if (!time_slot_id || !client_name || !client_email) {
@@ -40,6 +40,10 @@ export async function POST(request: Request) {
                 client_name,
                 client_email,
                 client_phone,
+                client_address,
+                client_city,
+                client_state,
+                client_zip,
                 service_type: 'Therapeutic Massage',
                 notes,
                 status: 'confirmed'
