@@ -10,6 +10,7 @@ const adminNavigation = [
     { name: 'Time Slots', href: '/admin/slots' },
     { name: 'Bookings', href: '/admin/bookings' },
     { name: 'Clients', href: '/admin/clients' },
+    { name: 'Admin Users', href: '/admin/users' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

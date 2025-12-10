@@ -1,5 +1,6 @@
-import EmailProvider from 'next-auth/providers/email';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import { SimpleSupabaseAdapter } from '@/lib/custom-adapter';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { Resend } from 'resend';
 import { NextAuthOptions } from 'next-auth';
 
@@ -14,43 +15,82 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 export const authOptions: NextAuthOptions = {
     providers: [
-        EmailProvider({
-            async sendVerificationRequest({ identifier, url }) {
-                if (!process.env.RESEND_API_KEY) {
-                    console.error('RESEND_API_KEY is missing');
-                    return;
-                }
-                const { host } = new URL(url);
-                const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-                try {
-                    await resend.emails.send({
-                        from: `Sothis Admin <${fromEmail}>`,
-                        to: identifier,
-                        subject: `Sign in to ${host}`,
-                        text: `Sign in to ${host}\n${url}\n\n`,
-                        html: `
-                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                                <h2 style="color: #292524;">Sign in to Sothis Admin</h2>
-                                <p style="color: #44403c;">Click the button below to sign in:</p>
-                                <a href="${url}" style="background-color: #d6d3d1; color: #292524; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 10px 0;">Sign In</a>
-                                <p style="color: #78716c; font-size: 12px; margin-top: 20px;">If you didn't request this email, you can ignore it.</p>
-                            </div>
-                        `,
-                    });
-                } catch (error) {
-                    console.error('Error sending verification email', error);
-                    throw new Error('Failed to send verification email');
-                }
+        CredentialsProvider({
+            name: "OTP",
+            credentials: {
+                email: { label: "Email", type: "email" },
+                code: { label: "Code", type: "text" }
             },
-        }),
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.code) {
+                    throw new Error('Missing email or code');
+                }
+
+                // 1. Verify Code in verification_tokens
+                const { data: tokenData } = await supabaseAdmin
+                    .from('verification_tokens')
+                    .select('*')
+                    .eq('identifier', credentials.email)
+                    .eq('token', credentials.code)
+                    .single();
+
+                if (!tokenData) {
+                    throw new Error('Invalid code');
+                }
+
+                if (new Date(tokenData.expires) < new Date()) {
+                    throw new Error('Code expired');
+                }
+
+                // 2. Get or Create User
+                const { data: user } = await supabaseAdmin
+                    .from('users')
+                    .select('*')
+                    .eq('email', credentials.email)
+                    .single();
+
+                // If user exists, return them
+                if (user) {
+                    // Clean up used token
+                    await supabaseAdmin.from('verification_tokens').delete().eq('token', credentials.code);
+                    return {
+                        id: user.id,
+                        email: user.email,
+                        name: user.name,
+                        image: user.image,
+                        role: user.role
+                    };
+                }
+
+                // Note: In this specific app flow, users are typically created BEFORE sign-in 
+                // via the /api/users/create route or booking flow. 
+                // However, to be safe, if we have a valid OTP for an email, we could conceptually create the user here too,
+                // but our current flow ensures they are created first.
+                // If user doesn't exist but has valid OTP, it implies they started the "New User" flow but maybe didn't finish creation?
+                // Actually, the new user flow creates user THEN sends OTP. 
+                // So if we are here, user SHOULD exist. 
+
+                throw new Error('User not found');
+            }
+        })
     ],
     // Only configure adapter if variables exist to prevent crash
     adapter: SimpleSupabaseAdapter(),
+    session: {
+        strategy: "jwt", // Use JWT for credentials provider
+    },
     callbacks: {
-        async session({ session, user }: any) {
+        async jwt({ token, user, account }: any) {
+            if (user) {
+                token.id = user.id;
+                token.role = user.role;
+            }
+            return token;
+        },
+        async session({ session, token }: any) {
             if (session?.user) {
-                session.user.id = user.id;
-                session.user.role = user.role; // Ensure role is passed to session
+                session.user.id = token.id;
+                session.user.role = token.role;
             }
             return session;
         },

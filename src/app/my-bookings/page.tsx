@@ -2,8 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSession, signIn } from 'next-auth/react';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 
 export default function MyBookingsPage() {
     const { data: session, status } = useSession();
@@ -45,8 +43,6 @@ export default function MyBookingsPage() {
 
     return (
         <div className="min-h-screen bg-stone-50 flex flex-col">
-            <Header />
-
             <main className="flex-grow pt-32 pb-16 px-6">
                 <div className="max-w-3xl mx-auto">
                     <div className="flex justify-between items-end mb-8">
@@ -116,8 +112,6 @@ export default function MyBookingsPage() {
                     </div>
                 </div>
             </main>
-
-            <Footer />
         </div>
     );
 }

@@ -54,10 +54,10 @@ export async function POST(request: Request) {
         if (bookingError) throw bookingError;
 
         // Send confirmation email to client
-        const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+        const fromEmail = 'bookings@sothistherapeutic.com';
 
         const { error: clientError } = await resend.emails.send({
-            from: `Sothis Therapeutic <${fromEmail}>`,
+            from: `Sothis Bookings <${fromEmail}>`,
             to: client_email,
             subject: 'Appointment Confirmed - Sothis Therapeutic Massage',
             html: `

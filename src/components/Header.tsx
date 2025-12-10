@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import Button from './Button';
@@ -19,7 +19,7 @@ const navigation = [
 
 export default function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const { status } = useSession();
+    const { data: session, status } = useSession();
     const pathname = usePathname();
 
     return (
@@ -49,7 +49,7 @@ export default function Header() {
                         </button>
                     </div>
                     <div className="hidden lg:flex lg:gap-x-12">
-                        {navigation.map((item) => (
+                        {(!session?.user || (session.user as any).role !== 'admin') && navigation.map((item) => (
                             <Link
                                 key={item.name}
                                 href={item.href}
@@ -62,15 +62,33 @@ export default function Header() {
 
                         {/* Desktop Auth Links */}
                         {status === 'authenticated' ? (
-                            <Link
-                                href="/my-bookings"
-                                className={`text-sm font-semibold leading-6 transition-colors ${pathname === '/my-bookings' ? 'text-secondary' : 'text-stone-900 hover:text-secondary'}`}
-                            >
-                                My Bookings
-                            </Link>
+                            <div className="flex items-center gap-x-6">
+                                {(session?.user as any).role === 'admin' && (
+                                    <Link
+                                        href="/admin"
+                                        className={`text-sm font-semibold leading-6 transition-colors ${pathname.startsWith('/admin') ? 'text-secondary' : 'text-stone-900 hover:text-secondary'}`}
+                                    >
+                                        Dashboard
+                                    </Link>
+                                )}
+                                {(session?.user as any).role !== 'admin' && (
+                                    <Link
+                                        href="/my-bookings"
+                                        className={`text-sm font-semibold leading-6 transition-colors ${pathname === '/my-bookings' ? 'text-secondary' : 'text-stone-900 hover:text-secondary'}`}
+                                    >
+                                        My Bookings
+                                    </Link>
+                                )}
+                                <button
+                                    onClick={() => signOut({ callbackUrl: '/' })}
+                                    className="text-sm font-semibold leading-6 text-stone-900 hover:text-secondary transition-colors"
+                                >
+                                    Sign Out
+                                </button>
+                            </div>
                         ) : (
                             <Link
-                                href="/api/auth/signin"
+                                href="/book"
                                 className="text-sm font-semibold leading-6 text-stone-900 hover:text-secondary transition-colors"
                             >
                                 Sign In
@@ -78,7 +96,9 @@ export default function Header() {
                         )}
                     </div>
                     <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-                        <Button href="/book" size="sm">Book Now</Button>
+                        {(!session?.user || (session.user as any).role !== 'admin') && (
+                            <Button href="/book" size="sm">Book Now</Button>
+                        )}
                     </div>
                 </nav>
             </header>
@@ -114,7 +134,7 @@ export default function Header() {
                         <div className="mt-6 flow-root">
                             <div className="-my-6 divide-y divide-stone-500/10">
                                 <div className="space-y-2 py-6">
-                                    {navigation.map((item) => (
+                                    {(!session?.user || (session.user as any).role !== 'admin') && navigation.map((item) => (
                                         <Link
                                             key={item.name}
                                             href={item.href}
@@ -125,16 +145,38 @@ export default function Header() {
                                         </Link>
                                     ))}
                                     {status === 'authenticated' ? (
-                                        <Link
-                                            href="/my-bookings"
-                                            className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-stone-900 hover:bg-stone-50"
-                                            onClick={() => setMobileMenuOpen(false)}
-                                        >
-                                            My Bookings
-                                        </Link>
+                                        <>
+                                            {(session?.user as any).role === 'admin' && (
+                                                <Link
+                                                    href="/admin"
+                                                    className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-stone-900 hover:bg-stone-50"
+                                                    onClick={() => setMobileMenuOpen(false)}
+                                                >
+                                                    Admin Dashboard
+                                                </Link>
+                                            )}
+                                            {(session?.user as any).role !== 'admin' && (
+                                                <Link
+                                                    href="/my-bookings"
+                                                    className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-stone-900 hover:bg-stone-50"
+                                                    onClick={() => setMobileMenuOpen(false)}
+                                                >
+                                                    My Bookings
+                                                </Link>
+                                            )}
+                                            <button
+                                                onClick={() => {
+                                                    setMobileMenuOpen(false);
+                                                    signOut({ callbackUrl: '/' });
+                                                }}
+                                                className="-mx-3 block w-full text-left rounded-lg px-3 py-2 text-base font-semibold leading-7 text-stone-900 hover:bg-stone-50"
+                                            >
+                                                Sign Out
+                                            </button>
+                                        </>
                                     ) : (
                                         <Link
-                                            href="/api/auth/signin"
+                                            href="/book"
                                             className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-stone-900 hover:bg-stone-50"
                                             onClick={() => setMobileMenuOpen(false)}
                                         >
@@ -143,9 +185,11 @@ export default function Header() {
                                     )}
                                 </div>
                                 <div className="py-6">
-                                    <Button href="/book" className="w-full justify-center" onClick={() => setMobileMenuOpen(false)}>
-                                        Book Now
-                                    </Button>
+                                    {(!session?.user || (session.user as any).role !== 'admin') && (
+                                        <Button href="/book" className="w-full justify-center" onClick={() => setMobileMenuOpen(false)}>
+                                            Book Now
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </div>
