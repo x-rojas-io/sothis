@@ -17,9 +17,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default function ServicesPage() {
     const t = useTranslations('ServicesPage');
 
-    // We can iterate over keys if there were multiple, but for now we can hardcode the one service 
-    // or genericize it. Given there is only one, accessing directly is fine or array mapping
-    const services = ['therapeutic'];
+    const services = [
+        { key: 'therapeutic', image: '/images/services/therapeutic.png' },
+        { key: 'deepTissue', image: '/images/services/deep-tissue.png' },
+        { key: 'sports', image: '/images/services/sports.png' },
+        { key: 'triggerPoint', image: '/images/services/trigger-point.png' }
+    ] as const;
 
     return (
         <div className="bg-white py-24 sm:py-32">
@@ -31,33 +34,42 @@ export default function ServicesPage() {
                     </p>
                 </div>
 
-                {/* Benefits Graphic */}
-                <div className="mx-auto mt-12 max-w-4xl">
-                    <div className="relative overflow-hidden rounded-2xl shadow-lg">
-                        <img
-                            src="/sothis_benefits.png"
-                            alt="Sothis Therapeutic Massage Benefits"
-                            className="w-full h-auto"
-                        />
-                    </div>
+                {/* Benefits Section */}
+                <div className="mx-auto mt-16 max-w-4xl bg-stone-50 rounded-2xl p-8 mb-16">
+                    <h2 className="text-2xl font-bold text-center text-stone-900 mb-8">{t('benefits.title')}</h2>
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {(['0', '1', '2', '3', '4'] as const).map((idx) => (
+                            <li key={idx} className="flex items-start">
+                                <span className="mr-2 text-primary">✓</span>
+                                <span className="text-stone-700">{t(`benefits.items.${idx}`)}</span>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
 
-                <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 lg:mx-0 lg:max-w-none lg:grid-cols-2">
-                    {services.map((key) => (
-                        <Card key={key} className="flex flex-col">
-                            <CardHeader>
-                                <div className="flex justify-between items-baseline">
-                                    <h3 className="text-xl font-bold text-stone-900">{t(`items.${key}.title`)}</h3>
-                                    <span className="text-lg font-semibold text-secondary">{t(`items.${key}.price`)}</span>
-                                </div>
-                                <p className="text-sm text-stone-500 mt-1">{t(`items.${key}.duration`)}</p>
-                            </CardHeader>
-                            <CardContent className="flex-grow">
-                                <p className="text-stone-600">{t(`items.${key}.description`)}</p>
+                <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+                    {services.map(({ key, image }) => (
+                        <Card key={key} className="flex flex-col justify-between overflow-hidden">
+                            {/* Image - Natural Aspect Ratio */}
+                            <div className="w-full relative">
+                                <img
+                                    src={image}
+                                    alt={t(`items.${key}.title`)}
+                                    className="w-full h-auto block"
+                                />
+                            </div>
+                            <CardContent className="pt-6">
+                                <h3 className="text-lg font-semibold leading-8 text-stone-900">{t(`items.${key}.title`)}</h3>
+                                <p className="mt-4 text-base leading-7 text-stone-600">
+                                    {t(`items.${key}.description`)}
+                                </p>
                             </CardContent>
-                            <CardFooter>
-                                <Button href="/book" className="w-full">{t('bookNow')}</Button>
-                            </CardFooter>
+                            <div className="border-t border-stone-100 bg-stone-50 p-6">
+                                <div className="flex items-center justify-between text-sm leading-6">
+                                    <div className="font-semibold text-stone-900">{t(`items.${key}.duration`)}</div>
+                                    <div className="text-stone-500">{t(`items.${key}.price`)}</div>
+                                </div>
+                            </div>
                         </Card>
                     ))}
                 </div>

@@ -58,7 +58,35 @@
                 "description": "Una mezcla personalizada de técnicas adaptadas a sus necesidades específicas. Ideal para aliviar el estrés, el manejo del dolor, la tensión muscular y la relajación general. Cada sesión incluye una consulta para garantizar una atención personalizada centrada en sus objetivos de bienestar.",
                 "duration": "60 / 90 min",
                 "price": "Contactar por precios"
+            },
+            "deepTissue": {
+                "title": "Masaje de Tejido Profundo",
+                "description": "Ideal para liberar nudos musculares persistentes y aliviar el dolor crónico en zonas como la espalda baja y los hombros.",
+                "duration": "60 / 90 min",
+                "price": "Contactar por precios"
+            },
+            "sports": {
+                "title": "Masaje Deportivo",
+                "description": "Diseñado para atletas; se enfoca en la prevención de lesiones, la recuperación muscular post-entrenamiento y la preparación pre-evento.",
+                "duration": "60 / 90 min",
+                "price": "Contactar por precios"
+            },
+            "triggerPoint": {
+                "title": "Terapia de Puntos Gatillo",
+                "description": "Aplicación de presión sostenida y específica en puntos hipersensibles para aliviar el dolor referido y restablecer la función muscular.",
+                "duration": "60 / 90 min",
+                "price": "Contactar por precios"
             }
+        },
+        "benefits": {
+            "title": "Beneficios del Masaje Terapéutico",
+            "items": [
+                "Reducción del Dolor y Alivio de la Tensión Muscular",
+                "Reducción Significativa del Estrés y Ansiedad",
+                "Mejora en la Circulación Sanguínea y Linfática",
+                "Mayor Flexibilidad y mejora del Movimiento",
+                "Mejor Calidad del Sueño"
+            ]
         },
         "bookNow": "Reservar Ahora"
     },

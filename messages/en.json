@@ -58,7 +58,35 @@
                 "description": "A customized blend of techniques tailored to your specific needs. Ideal for stress relief, pain management, muscle tension, and overall relaxation. Each session includes a consultation to ensure personalized care focused on your wellness goals.",
                 "duration": "60 / 90 min",
                 "price": "Contact for pricing"
+            },
+            "deepTissue": {
+                "title": "Deep Tissue Massage",
+                "description": "Ideal for releasing persistent muscle knots and relieving chronic pain in areas such as the lower back and shoulders.",
+                "duration": "60 / 90 min",
+                "price": "Contact for pricing"
+            },
+            "sports": {
+                "title": "Sports Massage",
+                "description": "Designed for athletes; focuses on injury prevention, post-training muscle recovery, and pre-event preparation.",
+                "duration": "60 / 90 min",
+                "price": "Contact for pricing"
+            },
+            "triggerPoint": {
+                "title": "Trigger Point Therapy",
+                "description": "Application of sustained and specific pressure on hypersensitive points to relieve referred pain and restore muscle function.",
+                "duration": "60 / 90 min",
+                "price": "Contact for pricing"
             }
+        },
+        "benefits": {
+            "title": "Therapeutic Massage Benefits",
+            "items": [
+                "Pain Reduction and Muscle Tension Relief",
+                "Significant Stress and Anxiety Reduction",
+                "Improved Blood and Lymphatic Circulation",
+                "Enhanced Flexibility and Range of Motion",
+                "Better Quality Sleep"
+            ]
         },
         "bookNow": "Book Now"
     },
