@@ -20,6 +20,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SOTHIS Therapeutic Massage",
   description: "Holistic healing and therapeutic massage services.",
+  manifest: "/manifest.json",
+  themeColor: "#ffffff",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Sothis",
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
 };
 
 export default async function RootLayout({
