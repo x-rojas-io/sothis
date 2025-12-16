@@ -6,9 +6,11 @@ import type { TimeSlot } from '@/lib/supabase';
 import { useSession, signIn } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Button from '@/components/Button';
+import { useTranslations } from 'next-intl';
 
 // Wrap the content in a separate component to use useSearchParams
 function BookingContent() {
+    const t = useTranslations('BookPage');
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -96,7 +98,7 @@ function BookingContent() {
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            setMessage('❌ Please enter a valid email address.');
+            setMessage(t('errors.invalidEmail'));
             setProcessing(false);
             return;
         }
@@ -132,13 +134,13 @@ function BookingContent() {
                 body: JSON.stringify({ email })
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to send code');
+            if (!res.ok) throw new Error(data.error || t('errors.sendCodeError'));
 
             if (data.dev_otp) {
                 alert(`DEV MODE: Your verification code is: ${data.dev_otp}`);
             }
 
-            setMessage('✅ Code sent to your email.');
+            setMessage(t('errors.codeSent'));
             setStep('verify');
         } catch (error: any) {
             setMessage(`❌ ${error.message}`);
@@ -165,7 +167,7 @@ function BookingContent() {
             }
 
             // Success! The session will update, passing the effect hook to show slots
-            setMessage('✅ Verification successful!');
+            setMessage(t('errors.verifySuccess'));
             // The useEffect listening to [status] will likely take over, but we can force step slightly faster
             // Wait for session update...
 
@@ -182,7 +184,7 @@ function BookingContent() {
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formData.client_email)) {
-            setMessage('❌ Please enter a valid email address.');
+            setMessage(t('errors.invalidEmail'));
             setProcessing(false);
             return;
         }
@@ -228,7 +230,7 @@ function BookingContent() {
 
             setEmail(formData.client_email); // Ensure email state is set for verify step
             setStep('verify');
-            setMessage('✅ Account created! We sent a code to your email to verify.');
+            setMessage(t('errors.accountCreated'));
 
         } catch (error: any) {
             setMessage(`❌ ${error.message}`);
@@ -262,7 +264,7 @@ function BookingContent() {
                 throw new Error(err.error || 'Failed to create booking');
             }
 
-            setMessage('✅ Booking confirmed! Check your email for details.');
+            setMessage(t('errors.bookingConfirmed'));
             setTimeout(() => {
                 router.push('/my-bookings');
             }, 2000);
@@ -280,21 +282,21 @@ function BookingContent() {
         return acc;
     }, {} as Record<string, TimeSlot[]>);
 
-    if (status === 'loading') return <div className="text-center py-24">Loading...</div>;
+    if (status === 'loading') return <div className="text-center py-24">{t('loading')}</div>;
 
     return (
         <div className="min-h-screen bg-white py-24">
             <div className="mx-auto max-w-3xl px-6 lg:px-8">
                 <div className="mx-auto max-w-2xl text-center mb-12">
                     <h1 className="text-3xl font-serif font-bold tracking-tight text-stone-900 sm:text-4xl">
-                        Book Your Appointment
+                        {t('heading')}
                     </h1>
                     <p className="mt-2 text-lg text-stone-600">
-                        {step === 'auth' && 'Please sign in or register to view available appointments.'}
-                        {step === 'register' && 'Please complete your registration.'}
-                        {step === 'verify' && 'Check your email for the verification code.'}
-                        {step === 'slots' && 'Select a time for your appointment.'}
-                        {step === 'confirm' && 'Confirm your booking details.'}
+                        {step === 'auth' && t('steps.auth')}
+                        {step === 'register' && t('steps.register')}
+                        {step === 'verify' && t('steps.verify')}
+                        {step === 'slots' && t('steps.slots')}
+                        {step === 'confirm' && t('steps.confirm')}
                     </p>
                 </div>
 
@@ -305,36 +307,36 @@ function BookingContent() {
                             {!existingUser?.exists ? (
                                 <>
                                     <div>
-                                        <label className="block text-sm font-medium text-stone-700 mb-2">Email Address</label>
+                                        <label className="block text-sm font-medium text-stone-700 mb-2">{t('auth.emailLabel')}</label>
                                         <input
                                             type="email"
                                             required
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             className="w-full rounded-md border border-stone-300 px-4 py-3 text-lg"
-                                            placeholder="you@example.com"
+                                            placeholder={t('auth.emailPlaceholder')}
                                             autoFocus
                                         />
                                     </div>
                                     <Button type="submit" disabled={processing} className="w-full justify-center">
-                                        {processing ? 'Checking...' : 'Continue'}
+                                        {processing ? t('auth.checking') : t('auth.submit')}
                                     </Button>
                                 </>
                             ) : (
                                 <div className="text-center">
-                                    <div className="text-green-600 font-medium mb-2 text-lg">Welcome back, {existingUser.name}!</div>
+                                    <div className="text-green-600 font-medium mb-2 text-lg">{t('auth.welcomeBack', { name: existingUser.name || '' })}</div>
                                     <p className="text-stone-600 mb-6">
-                                        Please sign in to view appointments. We'll send a focused verification code to your email.
+                                        {t('auth.signInPrompt')}
                                     </p>
                                     <Button onClick={handleSendOtp} type="button" disabled={processing} className="w-full justify-center bg-stone-800">
-                                        Send Code
+                                        {t('auth.sendCode')}
                                     </Button>
                                     <button
                                         type="button"
                                         onClick={() => { setExistingUser(null); setEmail(''); }}
                                         className="mt-4 text-sm text-stone-500 hover:text-stone-800"
                                     >
-                                        Use a different email
+                                        {t('auth.useDifferentEmail')}
                                     </button>
                                 </div>
                             )}
@@ -345,28 +347,28 @@ function BookingContent() {
                     {step === 'verify' && (
                         <form onSubmit={handleVerifyOtp} className="max-w-md mx-auto space-y-6 text-center">
                             <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-2">Enter Verification Code</label>
+                                <label className="block text-sm font-medium text-stone-700 mb-2">{t('auth.verifyLabel')}</label>
                                 <input
                                     type="text"
                                     required
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value)}
                                     className="w-full text-center tracking-[1em] font-bold text-2xl rounded-md border border-stone-300 px-4 py-3"
-                                    placeholder="123456"
+                                    placeholder={t('auth.verifyPlaceholder')}
                                     maxLength={6}
                                     autoFocus
                                 />
-                                <p className="text-xs text-stone-500 mt-2">Sent to {email}</p>
+                                <p className="text-xs text-stone-500 mt-2">{t('auth.sentTo', { email })}</p>
                             </div>
                             <Button type="submit" disabled={processing} className="w-full justify-center">
-                                {processing ? 'Verifying...' : 'Verify & Sign In'}
+                                {processing ? t('auth.verifying') : t('auth.verifySubmit')}
                             </Button>
                             <button
                                 type="button"
                                 onClick={() => { setStep('auth'); }}
                                 className="mt-4 text-sm text-stone-500 hover:text-stone-800"
                             >
-                                Back
+                                {t('auth.back')}
                             </button>
                         </form>
                     )}
@@ -375,10 +377,10 @@ function BookingContent() {
                     {/* STEP 1.5: REGISTRATION */}
                     {step === 'register' && (
                         <form onSubmit={handleRegister} className="space-y-4">
-                            <h3 className="font-semibold text-lg text-stone-900 mb-4">Create your account</h3>
+                            <h3 className="font-semibold text-lg text-stone-900 mb-4">{t('register.title')}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-stone-700">Email</label>
+                                    <label className="block text-sm font-medium text-stone-700">{t('register.email')}</label>
                                     <input
                                         type="email" disabled
                                         value={formData.client_email}
@@ -386,7 +388,7 @@ function BookingContent() {
                                     />
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-stone-700">Full Name *</label>
+                                    <label className="block text-sm font-medium text-stone-700">{t('register.name')}</label>
                                     <input
                                         type="text" required
                                         value={formData.client_name}
@@ -395,7 +397,7 @@ function BookingContent() {
                                     />
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-stone-700">Phone</label>
+                                    <label className="block text-sm font-medium text-stone-700">{t('register.phone')}</label>
                                     <input
                                         type="tel"
                                         value={formData.client_phone}
@@ -404,7 +406,7 @@ function BookingContent() {
                                     />
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-stone-700">Address</label>
+                                    <label className="block text-sm font-medium text-stone-700">{t('register.address')}</label>
                                     <input
                                         type="text"
                                         value={formData.client_address}
@@ -413,7 +415,7 @@ function BookingContent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-stone-700">City</label>
+                                    <label className="block text-sm font-medium text-stone-700">{t('register.city')}</label>
                                     <input
                                         type="text"
                                         value={formData.client_city}
@@ -422,16 +424,16 @@ function BookingContent() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-stone-700">State / Zip</label>
+                                    <label className="block text-sm font-medium text-stone-700">{t('register.stateZip')}</label>
                                     <div className="flex gap-2">
                                         <input
-                                            type="text" placeholder="State"
+                                            type="text" placeholder={t('register.statePlaceholder')}
                                             className="w-1/2 rounded-md border border-stone-300 px-3 py-2"
                                             value={formData.client_state}
                                             onChange={e => setFormData({ ...formData, client_state: e.target.value })}
                                         />
                                         <input
-                                            type="text" placeholder="Zip"
+                                            type="text" placeholder={t('register.zipPlaceholder')}
                                             className="w-1/2 rounded-md border border-stone-300 px-3 py-2"
                                             value={formData.client_zip}
                                             onChange={e => setFormData({ ...formData, client_zip: e.target.value })}
@@ -440,14 +442,14 @@ function BookingContent() {
                                 </div>
                             </div>
                             <Button type="submit" disabled={processing} className="w-full justify-center mt-6">
-                                {processing ? 'Creating Account...' : 'Continue'}
+                                {processing ? t('register.processing') : t('register.submit')}
                             </Button>
                             <button
                                 type="button"
                                 onClick={() => { setStep('auth'); setExistingUser(null); }}
                                 className="w-full text-center text-sm text-stone-500 hover:text-stone-800 mt-4"
                             >
-                                Cancel
+                                {t('register.cancel')}
                             </button>
                         </form>
                     )}
@@ -456,9 +458,9 @@ function BookingContent() {
                     {step === 'slots' && (
                         <div className="space-y-6">
                             {loadingSlots ? (
-                                <div className="text-center py-12 text-stone-500">Loading availability...</div>
+                                <div className="text-center py-12 text-stone-500">{t('slots.loading')}</div>
                             ) : Object.keys(slotsByDate).length === 0 ? (
-                                <div className="text-center py-12 text-stone-500">No appointments available right now.</div>
+                                <div className="text-center py-12 text-stone-500">{t('slots.noSlots')}</div>
                             ) : (
                                 Object.entries(slotsByDate).map(([date, slots]) => (
                                     <div key={date} className="bg-white border border-stone-200 rounded-lg overflow-hidden">
@@ -490,7 +492,7 @@ function BookingContent() {
                     {step === 'confirm' && selectedSlot && (
                         <form onSubmit={handleConfirmBooking} className="space-y-6">
                             <div className="bg-secondary/10 border border-secondary/20 p-4 rounded-lg">
-                                <p className="text-sm font-medium text-stone-900">Appointment Time:</p>
+                                <p className="text-sm font-medium text-stone-900">{t('confirm.timeLabel')}</p>
                                 <p className="text-xl font-bold text-secondary mt-1">
                                     {new Date(selectedSlot.date + 'T00:00:00').toLocaleDateString('en-US', {
                                         weekday: 'short', month: 'long', day: 'numeric'
@@ -500,35 +502,35 @@ function BookingContent() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-stone-600 bg-white p-4 rounded-lg border border-stone-100">
                                 <div>
-                                    <span className="block font-medium text-stone-900">Name</span>
+                                    <span className="block font-medium text-stone-900">{t('confirm.nameLabel')}</span>
                                     {formData.client_name}
                                 </div>
                                 <div>
-                                    <span className="block font-medium text-stone-900">Email</span>
+                                    <span className="block font-medium text-stone-900">{t('confirm.emailLabel')}</span>
                                     {formData.client_email}
                                 </div>
                                 {formData.client_phone && (
                                     <div>
-                                        <span className="block font-medium text-stone-900">Phone</span>
+                                        <span className="block font-medium text-stone-900">{t('confirm.phoneLabel')}</span>
                                         {formData.client_phone}
                                     </div>
                                 )}
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-2">Reason for Visit *</label>
+                                <label className="block text-sm font-medium text-stone-700 mb-2">{t('confirm.reasonLabel')}</label>
                                 <textarea
                                     required rows={3}
                                     value={formData.notes}
                                     onChange={e => setFormData({ ...formData, notes: e.target.value })}
                                     className="w-full rounded-md border border-stone-300 px-3 py-2"
-                                    placeholder="Please describe any issues or areas of focus..."
+                                    placeholder={t('confirm.reasonPlaceholder')}
                                     autoFocus
                                 />
                             </div>
 
                             <Button type="submit" disabled={processing} className="w-full justify-center">
-                                {processing ? 'Confirming...' : 'Confirm Appointment'}
+                                {processing ? t('confirm.processing') : t('confirm.submit')}
                             </Button>
 
                             <button
@@ -536,7 +538,7 @@ function BookingContent() {
                                 onClick={() => { setStep('slots'); setSelectedSlot(null); }}
                                 className="w-full text-center text-sm text-stone-500 hover:text-stone-800"
                             >
-                                Back to Time Slots
+                                {t('confirm.back')}
                             </button>
                         </form>
                     )}

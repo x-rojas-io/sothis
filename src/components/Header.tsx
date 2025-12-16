@@ -1,26 +1,28 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import Button from './Button';
+import { usePathname, Link } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 
 const navigation = [
-    { name: 'About', href: '/about' },
-    { name: 'Services', href: '/services' },
-    { name: 'Testimonials', href: '/testimonials' },
-    { name: 'Blog', href: '/blog' },
-    { name: 'Contact', href: '/contact' },
+    { name: 'home', href: '/' },
+    { name: 'about', href: '/about' },
+    { name: 'services', href: '/services' },
+    { name: 'testimonials', href: '/testimonials' },
+    { name: 'blog', href: '/blog' },
+    { name: 'contact', href: '/contact' },
 ];
 
 export default function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { data: session, status } = useSession();
     const pathname = usePathname();
+    const t = useTranslations('Navigation');
 
     return (
         <>
@@ -48,7 +50,7 @@ export default function Header() {
                             <Bars3Icon className="h-6 w-6" aria-hidden="true" />
                         </button>
                     </div>
-                    <div className="hidden lg:flex lg:gap-x-12">
+                    <div className="hidden lg:flex lg:gap-x-12 items-center">
                         {(!session?.user || (session.user as any).role !== 'admin') && navigation.map((item) => (
                             <Link
                                 key={item.name}
@@ -56,9 +58,16 @@ export default function Header() {
                                 className={`text-sm font-semibold leading-6 transition-colors ${pathname === item.href ? 'text-secondary' : 'text-stone-900 hover:text-secondary'
                                     }`}
                             >
-                                {item.name}
+                                {t(`items.${item.name}`)}
                             </Link>
                         ))}
+
+                        {/* Language Switcher Desktop */}
+                        <div className="flex items-center gap-2 border-l border-stone-200 pl-4 ml-2">
+                            <Link href={pathname} locale="en" className="text-sm font-medium hover:text-secondary">EN</Link>
+                            <span className="text-stone-300">|</span>
+                            <Link href={pathname} locale="es" className="text-sm font-medium hover:text-secondary">ES</Link>
+                        </div>
 
                         {/* Desktop Auth Links */}
                         {status === 'authenticated' ? (
@@ -97,7 +106,7 @@ export default function Header() {
                     </div>
                     <div className="hidden lg:flex lg:flex-1 lg:justify-end">
                         {(!session?.user || (session.user as any).role !== 'admin') && (
-                            <Button href="/book" size="sm">Book Now</Button>
+                            <Button href="/book" size="sm" >{t('book')}</Button>
                         )}
                     </div>
                 </nav>
@@ -134,6 +143,12 @@ export default function Header() {
                         <div className="mt-6 flow-root">
                             <div className="-my-6 divide-y divide-stone-500/10">
                                 <div className="space-y-2 py-6">
+                                    {/* Language Switcher Mobile */}
+                                    <div className="flex items-center gap-4 py-2">
+                                        <Link href={pathname} locale="en" className="text-base font-semibold leading-7 text-stone-900 hover:bg-stone-50" onClick={() => setMobileMenuOpen(false)}>English</Link>
+                                        <Link href={pathname} locale="es" className="text-base font-semibold leading-7 text-stone-900 hover:bg-stone-50" onClick={() => setMobileMenuOpen(false)}>Español</Link>
+                                    </div>
+
                                     {(!session?.user || (session.user as any).role !== 'admin') && navigation.map((item) => (
                                         <Link
                                             key={item.name}
@@ -141,7 +156,7 @@ export default function Header() {
                                             className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-stone-900 hover:bg-stone-50"
                                             onClick={() => setMobileMenuOpen(false)}
                                         >
-                                            {item.name}
+                                            {t(`items.${item.name}`)}
                                         </Link>
                                     ))}
                                     {status === 'authenticated' ? (
@@ -187,7 +202,7 @@ export default function Header() {
                                 <div className="py-6">
                                     {(!session?.user || (session.user as any).role !== 'admin') && (
                                         <Button href="/book" className="w-full justify-center" onClick={() => setMobileMenuOpen(false)}>
-                                            Book Now
+                                            {t('book')}
                                         </Button>
                                     )}
                                 </div>

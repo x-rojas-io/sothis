@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1,
+        "name": "Sarah Jenkins",
+        "quote": "¡El mejor masaje que he tenido! El ambiente es muy relajante y salí sintiéndome completamente rejuvenecida.",
+        "role": "Cliente Regular"
+    },
+    {
+        "id": 2,
+        "name": "Michael Chen",
+        "quote": "He luchado con dolor de espalda durante años, pero después de unas pocas sesiones en SOTHIS, me siento como una persona nueva.",
+        "role": "Atleta"
+    },
+    {
+        "id": 3,
+        "name": "Emily Rodriguez",
+        "quote": "Altamente profesional y calificada. Aprecio el enfoque personalizado para mis problemas específicos.",
+        "role": "Instructora de Yoga"
+    }
+]

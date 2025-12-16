@@ -1,0 +1,194 @@
+{
+    "HomePage": {
+        "Hero": {
+            "title": "Renewal, Balance, Healing.",
+            "description": "Sothis Therapeutic Massage embodies renewal and the flow of energy, supporting your journey toward wellness, healing, and a fresh beginning in body and mind.",
+            "bookNow": "Book Now",
+            "viewServices": "View Services",
+            "learnMore": "Learn more"
+        },
+        "Services": {
+            "title": "Our Service",
+            "subtitle": "A holistic approach tailored to your specific needs.",
+            "therapeuticMassage": {
+                "title": "Therapeutic Massage",
+                "description": "Experience a customized blend of techniques including Swedish and Deep Tissue designed to specific needs. Whether you seek relief from chronic pain, muscle tension, or simply wish to unwind, our therapeutic massage promotes deep relaxation, improved circulation, and overall well-being.",
+                "bookAppointment": "Book Appointment"
+            }
+        },
+        "Benefits": {
+            "title": "Massage Benefits",
+            "subtitle": "Massage goes beyond just relaxing you it also helps:",
+            "circulation": {
+                "title": "Improve Blood Circulation",
+                "description": "Enhanced circulation delivers oxygen and nutrients throughout your body, promoting healing and vitality."
+            },
+            "anxiety": {
+                "title": "Relieve Anxiety",
+                "description": "Therapeutic touch reduces stress hormones and promotes relaxation, helping you find calm and peace."
+            },
+            "fibromyalgia": {
+                "title": "Relieve Symptoms of Fibromyalgia",
+                "description": "Targeted massage techniques can help reduce pain, stiffness, and fatigue associated with fibromyalgia."
+            },
+            "immuneSystem": {
+                "title": "Enhancement of the Immune System",
+                "description": "Regular massage supports your body's natural defense system, helping you stay healthy and resilient."
+            }
+        },
+        "Testimonials": {
+            "title": "What Clients Say",
+            "readMore": "Read More Reviews",
+            "review1": "“The best massage I've ever had! The atmosphere is so calming and I left feeling completely rejuvenated.”",
+            "review2": "“I've struggled with back pain for years, but after a few sessions at SOTHIS, I feel like a new person.”"
+        }
+    },
+    "AboutPage": {
+        "title": "About - Sothis Therapeutic Massage | Nancy Raza, LMT",
+        "description": "Learn about Nancy Raza and the meaning of Sothis. Therapeutic massage in Edgewater, NJ focused on renewal, healing, and wellness."
+    },
+    "ServicesPage": {
+        "title": "Services - Sothis Therapeutic Massage | Edgewater, NJ",
+        "description": "Therapeutic massage, wellness, and healing services by Nancy Raza in Edgewater, NJ. Improve circulation, relieve anxiety, and enhance your immune system.",
+        "heading": "Our Services",
+        "subheading": "Choose the treatment that best suits your needs. All sessions include a consultation to ensure personalized care.",
+        "items": {
+            "therapeutic": {
+                "title": "Therapeutic Massage",
+                "description": "A customized blend of techniques tailored to your specific needs. Ideal for stress relief, pain management, muscle tension, and overall relaxation. Each session includes a consultation to ensure personalized care focused on your wellness goals.",
+                "duration": "60 / 90 min",
+                "price": "Contact for pricing"
+            }
+        },
+        "bookNow": "Book Now"
+    },
+    "TestimonialsPage": {
+        "title": "Testimonials - SOTHIS Therapeutic Massage",
+        "description": "Read what our clients have to say about their experience.",
+        "heading": "Client Testimonials",
+        "subheading": "We are honored to be part of our clients' healing journeys."
+    },
+    "BlogPage": {
+        "title": "Blog - SOTHIS Therapeutic Massage",
+        "description": "Wellness tips, news, and updates from SOTHIS.",
+        "heading": "SOTHIS Blog",
+        "subheading": "Insights on holistic health, massage therapy, and self-care."
+    },
+    "ContactPage": {
+        "title": "Contact Us - SOTHIS Therapeutic Massage",
+        "description": "Have questions or want to book a session? Reach out to us.",
+        "heading": "Contact Us",
+        "subheading": "Have questions or want to book a session? Reach out to us.",
+        "form": {
+            "name": "Name",
+            "email": "Email",
+            "subject": "Subject",
+            "message": "Message",
+            "submit": "Send Message",
+            "submitting": "Sending...",
+            "success": "Message sent successfully!",
+            "error": "Failed to send message. Please try again."
+        },
+        "info": {
+            "location": "Location",
+            "locationText": "Edgewater, NJ",
+            "serving": "Serving Edgewater and surrounding areas",
+            "hours": "Hours",
+            "hoursText": "By Appointment Only",
+            "flexible": "Flexible scheduling available",
+            "contact": "Contact",
+            "email": "Email: ",
+            "instagram": "Instagram: "
+        }
+    },
+    "BookPage": {
+        "title": "Book Appointment - SOTHIS Therapeutic Massage",
+        "description": "Book your therapeutic massage session online.",
+        "heading": "Book Your Appointment",
+        "loading": "Loading...",
+        "steps": {
+            "auth": "Please sign in or register to view available appointments.",
+            "register": "Please complete your registration.",
+            "verify": "Check your email for the verification code.",
+            "slots": "Select a time for your appointment.",
+            "confirm": "Confirm your booking details."
+        },
+        "auth": {
+            "emailLabel": "Email Address",
+            "emailPlaceholder": "you@example.com",
+            "submit": "Continue",
+            "checking": "Checking...",
+            "welcomeBack": "Welcome back, {name}!",
+            "signInPrompt": "Please sign in to view appointments. We'll send a focused verification code to your email.",
+            "sendCode": "Send Code",
+            "useDifferentEmail": "Use a different email",
+            "verifyLabel": "Enter Verification Code",
+            "verifyPlaceholder": "123456",
+            "sentTo": "Sent to {email}",
+            "verifySubmit": "Verify & Sign In",
+            "verifying": "Verifying...",
+            "back": "Back"
+        },
+        "register": {
+            "title": "Create your account",
+            "email": "Email",
+            "name": "Full Name *",
+            "phone": "Phone",
+            "address": "Address",
+            "city": "City",
+            "stateZip": "State / Zip",
+            "submit": "Continue",
+            "processing": "Creating Account...",
+            "cancel": "Cancel",
+            "statePlaceholder": "State",
+            "zipPlaceholder": "Zip"
+        },
+        "slots": {
+            "loading": "Loading availability...",
+            "noSlots": "No appointments available right now."
+        },
+        "confirm": {
+            "timeLabel": "Appointment Time:",
+            "nameLabel": "Name",
+            "emailLabel": "Email",
+            "phoneLabel": "Phone",
+            "reasonLabel": "Reason for Visit *",
+            "reasonPlaceholder": "Please describe any issues or areas of focus...",
+            "submit": "Confirm Appointment",
+            "processing": "Confirming...",
+            "back": "Back to Time Slots"
+        },
+        "errors": {
+            "invalidEmail": "❌ Please enter a valid email address.",
+            "sendCodeError": "Failed to send code",
+            "codeSent": "✅ Code sent to your email.",
+            "verifySuccess": "✅ Verification successful!",
+            "accountCreated": "✅ Account created! We sent a code to your email to verify.",
+            "bookingConfirmed": "✅ Booking confirmed! Check your email for details."
+        }
+    },
+    "Footer": {
+        "navigation": "Navigation",
+        "location": "Location",
+        "locationText": "Edgewater, NJ",
+        "connect": "Connect",
+        "copyright": "© {year} Sothis Therapeutic Massage, All rights reserved."
+    },
+    "Navigation": {
+        "home": "Home",
+        "about": "About",
+        "services": "Services",
+        "testimonials": "Testimonials",
+        "blog": "Blog",
+        "contact": "Contact",
+        "book": "Book Now",
+        "items": {
+            "home": "Home",
+            "about": "About",
+            "services": "Services",
+            "testimonials": "Testimonials",
+            "blog": "Blog",
+            "contact": "Contact"
+        }
+    }
+}

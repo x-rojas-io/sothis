@@ -1,13 +1,24 @@
 import React from 'react';
 import { getMarkdownContent } from '@/lib/markdown';
+import { getTranslations } from 'next-intl/server';
 
-export const metadata = {
-    title: 'About - Sothis Therapeutic Massage | Nancy Raza, LMT',
-    description: 'Learn about Nancy Raza and the meaning of Sothis. Therapeutic massage in Edgewater, NJ focused on renewal, healing, and wellness.',
-};
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+    const { locale } = await params;
+    const t = await getTranslations({ locale, namespace: 'AboutPage' });
 
-export default async function AboutPage() {
-    const { contentHtml, title } = await getMarkdownContent('about');
+    return {
+        title: t('title'),
+        description: t('description'),
+    };
+}
+
+export default async function AboutPage({
+    params
+}: {
+    params: Promise<{ locale: string }>
+}) {
+    const { locale } = await params;
+    const { contentHtml, title } = await getMarkdownContent('about', locale);
 
     return (
         <div className="bg-white py-24 sm:py-32">

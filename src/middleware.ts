@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+import createMiddleware from 'next-intl/middleware';
+import { routing } from './i18n/routing';
 
-// Pass-through middleware to fix redirect loop
-// Auth checks are now handled in src/app/admin/layout.tsx
-export default function middleware() {
-    return NextResponse.next();
-}
+export default createMiddleware(routing);
+
+export const config = {
+    // Match only internationalized pathnames
+    matcher: ['/', '/(es|en)/:path*']
+};

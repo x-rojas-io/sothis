@@ -1,0 +1,194 @@
+{
+    "HomePage": {
+        "Hero": {
+            "title": "Renovación, Equilibrio, Sanación.",
+            "description": "Sothis Masaje Terapéutico personifica la renovación y el flujo de energía, apoyando tu viaje hacia el bienestar, la sanación y un nuevo comienzo en cuerpo y mente.",
+            "bookNow": "Reservar Ahora",
+            "viewServices": "Ver Servicios",
+            "learnMore": "Saber más"
+        },
+        "Services": {
+            "title": "Nuestro Servicio",
+            "subtitle": "Un enfoque holístico adaptado a tus necesidades específicas.",
+            "therapeuticMassage": {
+                "title": "Masaje Terapéutico",
+                "description": "Experimenta una mezcla personalizada de técnicas que incluyen Sueco y Tejido Profundo diseñadas para necesidades específicas. Ya sea que busques alivio del dolor crónico, tensión muscular o simplemente desees relajarte, nuestro masaje terapéutico promueve una relajación profunda, mejor circulación y bienestar general.",
+                "bookAppointment": "Reservar Cita"
+            }
+        },
+        "Benefits": {
+            "title": "Beneficios del Masaje",
+            "subtitle": "El masaje va más allá de solo relajarte, también ayuda a:",
+            "circulation": {
+                "title": "Mejorar la Circulación Sanguínea",
+                "description": "Una mejor circulación entrega oxígeno y nutrientes a todo tu cuerpo, promoviendo la sanación y la vitalidad."
+            },
+            "anxiety": {
+                "title": "Aliviar la Ansiedad",
+                "description": "El toque terapéutico reduce las hormonas del estrés y promueve la relajación, ayudándote a encontrar calma y paz."
+            },
+            "fibromyalgia": {
+                "title": "Aliviar Síntomas de Fibromialgia",
+                "description": "Las técnicas de masaje dirigidas pueden ayudar a reducir el dolor, la rigidez y la fatiga asociados con la fibromialgia."
+            },
+            "immuneSystem": {
+                "title": "Mejora del Sistema Inmunológico",
+                "description": "El masaje regular apoya el sistema de defensa natural de tu cuerpo, ayudándote a mantenerte saludable y resiliente."
+            }
+        },
+        "Testimonials": {
+            "title": "Lo Que Dicen Los Clientes",
+            "readMore": "Leer Más Reseñas",
+            "review1": "“¡El mejor masaje que he tenido! El ambiente es muy relajante y salí sintiéndome completamente rejuvenecida.”",
+            "review2": "“He luchado con dolor de espalda durante años, pero después de unas pocas sesiones en SOTHIS, me siento como una persona nueva.”"
+        }
+    },
+    "AboutPage": {
+        "title": "Sobre - Sothis Masaje Terapéutico | Nancy Raza, LMT",
+        "description": "Conozca a Nancy Raza y el significado de Sothis. Masaje terapéutico en Edgewater, NJ, enfocado en la renovación, la sanación y el bienestar."
+    },
+    "ServicesPage": {
+        "title": "Servicios - Sothis Masaje Terapéutico | Edgewater, NJ",
+        "description": "Masaje terapéutico, bienestar y servicios de sanación por Nancy Raza en Edgewater, NJ. Mejore la circulación, alivie la ansiedad y mejore su sistema inmunológico.",
+        "heading": "Nuestros Servicios",
+        "subheading": "Elija el tratamiento que mejor se adapte a sus necesidades. Todas las sesiones incluyen una consulta para garantizar una atención personalizada.",
+        "items": {
+            "therapeutic": {
+                "title": "Masaje Terapéutico",
+                "description": "Una mezcla personalizada de técnicas adaptadas a sus necesidades específicas. Ideal para aliviar el estrés, el manejo del dolor, la tensión muscular y la relajación general. Cada sesión incluye una consulta para garantizar una atención personalizada centrada en sus objetivos de bienestar.",
+                "duration": "60 / 90 min",
+                "price": "Contactar por precios"
+            }
+        },
+        "bookNow": "Reservar Ahora"
+    },
+    "TestimonialsPage": {
+        "title": "Testimonios - Sothis Masaje Terapéutico",
+        "description": "Lea lo que nuestros clientes tienen que decir sobre su experiencia.",
+        "heading": "Testimonios de Clientes",
+        "subheading": "Nos sentimos honrados de ser parte de los viajes de sanación de nuestros clientes."
+    },
+    "BlogPage": {
+        "title": "Blog - Sothis Masaje Terapéutico",
+        "description": "Consejos de bienestar, noticias y actualizaciones de SOTHIS.",
+        "heading": "Blog de SOTHIS",
+        "subheading": "Ideas sobre salud holística, terapia de masaje y autocuidado."
+    },
+    "ContactPage": {
+        "title": "Contáctenos - Sothis Masaje Terapéutico",
+        "description": "¿Tiene preguntas o desea reservar una sesión? Contáctenos.",
+        "heading": "Contáctenos",
+        "subheading": "¿Tiene preguntas o desea reservar una sesión? Contáctenos.",
+        "form": {
+            "name": "Nombre",
+            "email": "Correo Electrónico",
+            "subject": "Asunto",
+            "message": "Mensaje",
+            "submit": "Enviar Mensaje",
+            "submitting": "Enviando...",
+            "success": "¡Mensaje enviado con éxito!",
+            "error": "Error al enviar el mensaje. Por favor intente de nuevo."
+        },
+        "info": {
+            "location": "Ubicación",
+            "locationText": "Edgewater, NJ",
+            "serving": "Sirviendo a Edgewater y áreas circundantes",
+            "hours": "Horario",
+            "hoursText": "Solo con Cita",
+            "flexible": "Horario flexible disponible",
+            "contact": "Contacto",
+            "email": "Correo: ",
+            "instagram": "Instagram: "
+        }
+    },
+    "BookPage": {
+        "title": "Reservar Cita - Sothis Masaje Terapéutico",
+        "description": "Reserve su sesión de masaje terapéutico en línea.",
+        "heading": "Reserve Su Cita",
+        "loading": "Cargando...",
+        "steps": {
+            "auth": "Por favor inicie sesión o regístrese para ver las citas disponibles.",
+            "register": "Por favor complete su registro.",
+            "verify": "Revise su correo electrónico para el código de verificación.",
+            "slots": "Seleccione una hora para su cita.",
+            "confirm": "Confirme los detalles de su reserva."
+        },
+        "auth": {
+            "emailLabel": "Dirección de Correo",
+            "emailPlaceholder": "tu@ejemplo.com",
+            "submit": "Continuar",
+            "checking": "Verificando...",
+            "welcomeBack": "¡Bienvenido de nuevo, {name}!",
+            "signInPrompt": "Por favor inicie sesión para ver las citas. Enviaremos un código de verificación a su correo.",
+            "sendCode": "Enviar Código",
+            "useDifferentEmail": "Usar un correo diferente",
+            "verifyLabel": "Ingrese el Código de Verificación",
+            "verifyPlaceholder": "123456",
+            "sentTo": "Enviado a {email}",
+            "verifySubmit": "Verificar e Iniciar Sesión",
+            "verifying": "Verificando...",
+            "back": "Atrás"
+        },
+        "register": {
+            "title": "Cree su cuenta",
+            "email": "Correo",
+            "name": "Nombre Completo *",
+            "phone": "Teléfono",
+            "address": "Dirección",
+            "city": "Ciudad",
+            "stateZip": "Estado / Código Postal",
+            "submit": "Continuar",
+            "processing": "Creando Cuenta...",
+            "cancel": "Cancelar",
+            "statePlaceholder": "Estado",
+            "zipPlaceholder": "CP"
+        },
+        "slots": {
+            "loading": "Cargando disponibilidad...",
+            "noSlots": "No hay citas disponibles en este momento."
+        },
+        "confirm": {
+            "timeLabel": "Hora de la Cita:",
+            "nameLabel": "Nombre",
+            "emailLabel": "Correo",
+            "phoneLabel": "Teléfono",
+            "reasonLabel": "Razón de la Visita *",
+            "reasonPlaceholder": "Por favor describa cualquier problema o área de enfoque...",
+            "submit": "Confirmar Cita",
+            "processing": "Confirmando...",
+            "back": "Volver a Horarios"
+        },
+        "errors": {
+            "invalidEmail": "❌ Por favor ingrese un correo válido.",
+            "sendCodeError": "Error al enviar código",
+            "codeSent": "✅ Código enviado a su correo.",
+            "verifySuccess": "✅ Verificación exitosa!",
+            "accountCreated": "✅ Cuenta creada! Enviamos un código a su correo para verificar.",
+            "bookingConfirmed": "✅ Reserva confirmada! Revise su correo para detalles."
+        }
+    },
+    "Footer": {
+        "navigation": "Navegación",
+        "location": "Ubicación",
+        "locationText": "Edgewater, NJ",
+        "connect": "Conectar",
+        "copyright": "© {year} Sothis Masaje Terapéutico, Todos los derechos reservados."
+    },
+    "Navigation": {
+        "home": "Inicio",
+        "about": "Nosotros",
+        "services": "Servicios",
+        "testimonials": "Testimonios",
+        "blog": "Blog",
+        "contact": "Contacto",
+        "book": "Reservar",
+        "items": {
+            "home": "Inicio",
+            "about": "Nosotros",
+            "services": "Servicios",
+            "testimonials": "Testimonios",
+            "blog": "Blog",
+            "contact": "Contacto"
+        }
+    }
+}

@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import Button from '@/components/Button';
 import Card, { CardContent } from '@/components/Card';
+import { useTranslations } from 'next-intl';
 
 export default function ContactPage() {
+    const t = useTranslations('ContactPage');
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -36,7 +38,7 @@ export default function ContactPage() {
             } else {
                 setStatus('error');
             }
-        } catch (_error) {
+        } catch {
             setStatus('error');
         }
     };
@@ -45,9 +47,9 @@ export default function ContactPage() {
         <div className="bg-white py-24 sm:py-32">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
                 <div className="mx-auto max-w-2xl text-center">
-                    <h1 className="text-3xl font-serif font-bold tracking-tight text-stone-900 sm:text-4xl">Contact Us</h1>
+                    <h1 className="text-3xl font-serif font-bold tracking-tight text-stone-900 sm:text-4xl">{t('heading')}</h1>
                     <p className="mt-2 text-lg leading-8 text-stone-600">
-                        Have questions or want to book a session? Reach out to us.
+                        {t('subheading')}
                     </p>
                 </div>
 
@@ -57,7 +59,7 @@ export default function ContactPage() {
                         <CardContent className="pt-6">
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div>
-                                    <label htmlFor="name" className="block text-sm font-medium leading-6 text-stone-900">Name</label>
+                                    <label htmlFor="name" className="block text-sm font-medium leading-6 text-stone-900">{t('form.name')}</label>
                                     <div className="mt-2">
                                         <input
                                             type="text"
@@ -71,7 +73,7 @@ export default function ContactPage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label htmlFor="email" className="block text-sm font-medium leading-6 text-stone-900">Email</label>
+                                    <label htmlFor="email" className="block text-sm font-medium leading-6 text-stone-900">{t('form.email')}</label>
                                     <div className="mt-2">
                                         <input
                                             type="email"
@@ -85,7 +87,7 @@ export default function ContactPage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label htmlFor="subject" className="block text-sm font-medium leading-6 text-stone-900">Subject</label>
+                                    <label htmlFor="subject" className="block text-sm font-medium leading-6 text-stone-900">{t('form.subject')}</label>
                                     <div className="mt-2">
                                         <input
                                             type="text"
@@ -99,7 +101,7 @@ export default function ContactPage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label htmlFor="message" className="block text-sm font-medium leading-6 text-stone-900">Message</label>
+                                    <label htmlFor="message" className="block text-sm font-medium leading-6 text-stone-900">{t('form.message')}</label>
                                     <div className="mt-2">
                                         <textarea
                                             name="message"
@@ -114,14 +116,14 @@ export default function ContactPage() {
                                 </div>
                                 <div>
                                     <Button type="submit" className="w-full" disabled={status === 'submitting'}>
-                                        {status === 'submitting' ? 'Sending...' : 'Send Message'}
+                                        {status === 'submitting' ? t('form.submitting') : t('form.submit')}
                                     </Button>
                                 </div>
                                 {status === 'success' && (
-                                    <p className="text-green-600 text-sm text-center">Message sent successfully!</p>
+                                    <p className="text-green-600 text-sm text-center">{t('form.success')}</p>
                                 )}
                                 {status === 'error' && (
-                                    <p className="text-red-600 text-sm text-center">Failed to send message. Please try again.</p>
+                                    <p className="text-red-600 text-sm text-center">{t('form.error')}</p>
                                 )}
                             </form>
                         </CardContent>
@@ -130,28 +132,28 @@ export default function ContactPage() {
                     {/* Contact Info & Map Placeholder */}
                     <div className="space-y-8">
                         <div>
-                            <h3 className="text-lg font-semibold text-stone-900">Location</h3>
+                            <h3 className="text-lg font-semibold text-stone-900">{t('info.location')}</h3>
                             <p className="mt-2 text-stone-600">
-                                Edgewater, NJ<br />
-                                <span className="text-sm text-stone-500">Serving Edgewater and surrounding areas</span>
+                                {t('info.locationText')}<br />
+                                <span className="text-sm text-stone-500">{t('info.serving')}</span>
                             </p>
                         </div>
                         <div>
-                            <h3 className="text-lg font-semibold text-stone-900">Hours</h3>
+                            <h3 className="text-lg font-semibold text-stone-900">{t('info.hours')}</h3>
                             <p className="mt-2 text-stone-600">
-                                By Appointment Only<br />
-                                <span className="text-sm text-stone-500">Flexible scheduling available</span>
+                                {t('info.hoursText')}<br />
+                                <span className="text-sm text-stone-500">{t('info.flexible')}</span>
                             </p>
                         </div>
                         <div>
-                            <h3 className="text-lg font-semibold text-stone-900">Contact</h3>
+                            <h3 className="text-lg font-semibold text-stone-900">{t('info.contact')}</h3>
                             <p className="mt-2 text-stone-600">
-                                Email: <a href="mailto:sothistherapeutic@gmail.com" className="text-secondary hover:underline">sothistherapeutic@gmail.com</a><br />
-                                Instagram: <a href="https://instagram.com/sothistherapeutic" target="_blank" rel="noopener noreferrer" className="text-secondary hover:underline">@sothistherapeutic</a>
+                                {t('info.email')} <a href="mailto:sothistherapeutic@gmail.com" className="text-secondary hover:underline">sothistherapeutic@gmail.com</a><br />
+                                {t('info.instagram')} <a href="https://instagram.com/sothistherapeutic" target="_blank" rel="noopener noreferrer" className="text-secondary hover:underline">@sothistherapeutic</a>
                             </p>
                         </div>
                         <div className="aspect-video bg-stone-200 rounded-lg flex items-center justify-center text-stone-500">
-                            📍 Edgewater, NJ
+                            📍 {t('info.locationText')}
                         </div>
                     </div>
                 </div>

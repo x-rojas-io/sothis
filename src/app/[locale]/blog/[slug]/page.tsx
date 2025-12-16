@@ -1,6 +1,6 @@
 import React from 'react';
 import { getBlogPost, getBlogPosts } from '@/lib/markdown';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 export async function generateStaticParams() {
@@ -10,18 +10,18 @@ export async function generateStaticParams() {
     }));
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
-    const post = await getBlogPost(slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string; locale: string }> }) {
+    const { slug, locale } = await params;
+    const post = await getBlogPost(slug, locale);
     return {
         title: `${post.title} - SOTHIS Blog`,
         description: post.excerpt,
     };
 }
 
-export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
-    const post = await getBlogPost(slug);
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string; locale: string }> }) {
+    const { slug, locale } = await params;
+    const post = await getBlogPost(slug, locale);
 
     return (
         <div className="bg-white py-24 sm:py-32">

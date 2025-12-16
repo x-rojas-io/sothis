@@ -52,7 +52,8 @@ export async function POST(request: Request) {
                     </div>
                     <p style="color: #666; font-size: 14px; margin-top: 20px;">This code expires in 10 minutes.</p>
                 </div>
-            `
+            `,
+            text: `Sign in to Sothis\n\nEnter the following code to complete your sign-in: ${otp}\n\nThis code expires in 10 minutes.`
         });
 
         if (emailError) {
