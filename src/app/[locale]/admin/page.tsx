@@ -11,7 +11,7 @@ export default function AdminDashboard() {
     const [stats, setStats] = useState({
         todayBookings: 0,
         weekBookings: 0,
-        availableSlots: 0,
+        monthBookings: 0,
     });
     const [loading, setLoading] = useState(true);
 
@@ -30,7 +30,7 @@ export default function AdminDashboard() {
             setStats(data.stats || {
                 todayBookings: 0,
                 weekBookings: 0,
-                availableSlots: 0,
+                monthBookings: 0,
             });
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
@@ -72,10 +72,10 @@ export default function AdminDashboard() {
                         </div>
                     </Link>
 
-                    <Link href="/admin/slots" className="block transform transition-all hover:scale-105">
+                    <Link href="/admin/bookings?filter=month" className="block transform transition-all hover:scale-105">
                         <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-200">
-                            <h3 className="text-stone-500 font-medium font-sans">Available Slots</h3>
-                            <p className="text-3xl font-bold text-stone-900 mt-2">{stats.availableSlots}</p>
+                            <h3 className="text-stone-500 font-medium font-sans">This Month</h3>
+                            <p className="text-3xl font-bold text-stone-900 mt-2">{stats.monthBookings}</p>
                         </div>
                     </Link>
                 </div>

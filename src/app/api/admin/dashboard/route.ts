@@ -12,7 +12,11 @@ export async function GET() {
 
         const today = new Date().toISOString().split('T')[0];
         const weekFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        // Month calc
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
         // Fetch upcoming bookings (Simplify to JS filter to avoid PostgREST join syntax issues)
         const { data: allBookings, error: bookingsError } = await supabaseAdmin
@@ -36,14 +40,14 @@ export async function GET() {
             .slice(0, 5) || [];
 
         // Stats
-        // We can use count queries
+        // Today
         const { count: todayCount } = await supabaseAdmin
             .from('bookings')
             .select('id, time_slots!inner(date)', { count: 'exact', head: true })
             .eq('status', 'confirmed')
             .eq('time_slots.date', today);
 
-        // For week count
+        // Week
         const { count: weekCount } = await supabaseAdmin
             .from('bookings')
             .select('id, time_slots!inner(date)', { count: 'exact', head: true })
@@ -51,18 +55,20 @@ export async function GET() {
             .gte('time_slots.date', today)
             .lte('time_slots.date', weekFromNow);
 
-        const { count: availableCount } = await supabaseAdmin
-            .from('time_slots')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'available')
-            .gte('date', today);
+        // Month
+        const { count: monthCount } = await supabaseAdmin
+            .from('bookings')
+            .select('id, time_slots!inner(date)', { count: 'exact', head: true })
+            .eq('status', 'confirmed')
+            .gte('time_slots.date', startOfMonth)
+            .lte('time_slots.date', endOfMonth);
 
         return NextResponse.json({
             upcomingBookings: validBookings,
             stats: {
                 todayBookings: todayCount || 0,
                 weekBookings: weekCount || 0,
-                availableSlots: availableCount || 0
+                monthBookings: monthCount || 0,
             }
         });
 
