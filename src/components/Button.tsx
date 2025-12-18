@@ -1,5 +1,5 @@
 import React from 'react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import { clsx } from 'clsx';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -38,8 +38,10 @@ export default function Button({
     );
 
     if (href) {
+        // Remove button-specific props that are invalid for links
+        const { type, ...rest } = props;
         return (
-            <Link href={href} className={styles}>
+            <Link href={href} className={styles} {...(rest as any)}>
                 {children}
             </Link>
         );

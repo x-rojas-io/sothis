@@ -7,6 +7,25 @@ import { useSession, signIn } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Button from '@/components/Button';
 import { useTranslations } from 'next-intl';
+import {
+    format,
+    startOfMonth,
+    endOfMonth,
+    startOfWeek,
+    endOfWeek,
+    eachDayOfInterval,
+    isSameMonth,
+    isSameDay,
+    addMonths,
+    subMonths,
+    parseISO,
+    isToday,
+    isBefore,
+    startOfDay,
+    addDays,
+    subDays,
+} from 'date-fns';
+import { ChevronLeftIcon, ChevronRightIcon, CalendarDaysIcon, ArrowLeftIcon } from '@heroicons/react/24/solid';
 
 // Wrap the content in a separate component to use useSearchParams
 function BookingContent() {
@@ -18,6 +37,11 @@ function BookingContent() {
     const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
     const [loadingSlots, setLoadingSlots] = useState(false);
     const [processing, setProcessing] = useState(false);
+
+    // Calendar State
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [calendarView, setCalendarView] = useState<'month' | 'day'>('month');
+    const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
     // Auth Flow State
     const [step, setStep] = useState<'auth' | 'register' | 'verify' | 'slots' | 'confirm'>('auth');
@@ -41,7 +65,7 @@ function BookingContent() {
     useEffect(() => {
         if (status === 'authenticated' && session?.user?.email) {
             setStep('slots');
-            fetchAvailableSlots();
+            // fetchAvailableSlots(); // Handled by effect dependency on step
 
             // Pre-fill data
             setFormData(prev => ({ ...prev, client_email: session.user?.email! }));
@@ -68,18 +92,35 @@ function BookingContent() {
     }, [status, session]);
 
 
+    // Fetch slots when switching to slots step or changing month
+    useEffect(() => {
+        if (step === 'slots') {
+            fetchAvailableSlots();
+        }
+    }, [step, currentDate]);
+
+
     async function fetchAvailableSlots() {
         setLoadingSlots(true);
         try {
+            // Calculate start and end of the calendar view (including padding days)
+            const monthStart = startOfMonth(currentDate);
+            const monthEnd = endOfMonth(currentDate);
+            const calendarStart = startOfWeek(monthStart).toISOString().split('T')[0];
+            const calendarEnd = endOfWeek(monthEnd).toISOString().split('T')[0];
+
+            // Also ensure we don't show past slots if we are in current month
             const today = new Date().toISOString().split('T')[0];
+            const fetchStart = calendarStart < today ? today : calendarStart;
+
             const { data, error } = await supabase
                 .from('time_slots')
                 .select('*')
                 .eq('status', 'available')
-                .gte('date', today)
+                .gte('date', fetchStart)
+                .lte('date', calendarEnd)
                 .order('date')
-                .order('start_time')
-                .limit(50);
+                .order('start_time');
 
             if (error) throw error;
             setAvailableSlots(data || []);
@@ -275,12 +316,49 @@ function BookingContent() {
         }
     };
 
-    // Group slots by date
+    const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+    const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+    const goToToday = () => { setCurrentDate(new Date()); setCalendarView('month'); };
+
+    // Day Detail Navigation
+    const nextDay = () => {
+        if (!selectedDay) return;
+        const next = addDays(selectedDay, 1);
+        setSelectedDay(next);
+        // If we cross month boundary, update current view
+        if (!isSameMonth(next, currentDate)) setCurrentDate(next);
+    };
+
+    const prevDay = () => {
+        if (!selectedDay) return;
+        const prev = subDays(selectedDay, 1);
+        // Prevent going into past relative to TODAY, not just any past
+        if (isBefore(prev, startOfDay(new Date()))) return;
+
+        setSelectedDay(prev);
+        if (!isSameMonth(prev, currentDate)) setCurrentDate(prev);
+    };
+
+    // Group available slots by date for easy lookup
     const slotsByDate = availableSlots.reduce((acc, slot) => {
+        // Only include available slots (API filters this too, but safety check)
+        if (slot.status !== 'available') return acc;
+
         if (!acc[slot.date]) acc[slot.date] = [];
         acc[slot.date].push(slot);
         return acc;
     }, {} as Record<string, TimeSlot[]>);
+
+    const getSlotsForDate = (date: Date) => {
+        const dateStr = format(date, 'yyyy-MM-dd');
+        return slotsByDate[dateStr] || [];
+    };
+
+    const handleDayClick = (day: Date) => {
+        if (isBefore(day, startOfDay(new Date()))) return; // Prevent clicking past days
+        setSelectedDay(day);
+        setCalendarView('day');
+    };
 
     if (status === 'loading') return <div className="text-center py-24">{t('loading')}</div>;
 
@@ -454,36 +532,214 @@ function BookingContent() {
                         </form>
                     )}
 
-                    {/* STEP 2: SELECT SLOT */}
+                    {/* STEP 2: SELECT SLOT (CALENDAR) */}
                     {step === 'slots' && (
                         <div className="space-y-6">
+                            {/* Calendar Header */}
+                            <div className="flex items-center justify-between mb-6">
+                                <button onClick={prevMonth} className="p-2 hover:bg-stone-100 rounded-full text-stone-600 transition-colors">
+                                    <ChevronLeftIcon className="w-5 h-5" />
+                                </button>
+                                <div className="text-center">
+                                    <h2 className="text-xl font-serif font-bold text-stone-900">
+                                        {format(currentDate, 'MMMM yyyy')}
+                                    </h2>
+                                    <button
+                                        onClick={goToToday}
+                                        className="text-xs font-medium text-stone-500 hover:text-stone-900 mt-1 uppercase tracking-wide"
+                                    >
+                                        Today
+                                    </button>
+                                </div>
+                                <button onClick={nextMonth} className="p-2 hover:bg-stone-100 rounded-full text-stone-600 transition-colors">
+                                    <ChevronRightIcon className="w-5 h-5" />
+                                </button>
+                            </div>
+
                             {loadingSlots ? (
-                                <div className="text-center py-12 text-stone-500">{t('slots.loading')}</div>
-                            ) : Object.keys(slotsByDate).length === 0 ? (
-                                <div className="text-center py-12 text-stone-500">{t('slots.noSlots')}</div>
-                            ) : (
-                                Object.entries(slotsByDate).map(([date, slots]) => (
-                                    <div key={date} className="bg-white border border-stone-200 rounded-lg overflow-hidden">
-                                        <div className="bg-stone-50 px-4 py-3 border-b border-stone-200">
-                                            <h3 className="font-semibold text-stone-900">
-                                                {new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
-                                                    weekday: 'long', month: 'long', day: 'numeric'
-                                                })}
-                                            </h3>
-                                        </div>
-                                        <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                            {slots.map((slot) => (
-                                                <button
-                                                    key={slot.id}
-                                                    onClick={() => handleSlotSelect(slot)}
-                                                    className="px-3 py-2 rounded-md text-sm font-medium bg-stone-100 text-stone-900 hover:bg-secondary hover:text-white transition-colors"
+                                <div className="text-center py-12 text-stone-500 flex flex-col items-center">
+                                    <div className="w-8 h-8 border-4 border-secondary border-t-transparent rounded-full animate-spin mb-4"></div>
+                                    loading slots...
+                                </div>
+                            ) : calendarView === 'month' ? (
+                                /* === MONTH VIEW === */
+                                <div className="animate-fade-in select-none">
+                                    <div className="grid grid-cols-7 mb-2">
+                                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                                            <div key={day} className="text-center text-xs font-semibold text-stone-400 uppercase tracking-widest py-2">
+                                                {day}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="grid grid-cols-7 gap-1 md:gap-2">
+                                        {eachDayOfInterval({
+                                            start: startOfWeek(startOfMonth(currentDate)),
+                                            end: endOfWeek(endOfMonth(currentDate))
+                                        }).map((day) => {
+                                            const isCurrentMonth = isSameMonth(day, currentDate);
+                                            const isPast = isBefore(day, startOfDay(new Date()));
+                                            const daySlots = getSlotsForDate(day);
+                                            const hasSlots = daySlots.length > 0;
+                                            const isTodayDate = isToday(day);
+
+                                            return (
+                                                <div
+                                                    key={day.toString()}
+                                                    className={`
+                                                        aspect-square md:aspect-[0.8] rounded-lg relative transition-all duration-200 group
+                                                        flex flex-col
+                                                        ${!isCurrentMonth ? 'bg-stone-50/50' : 'bg-white'}
+                                                        ${isPast ? 'opacity-40' : ''}
+                                                        ${hasSlots && !isPast ? 'border-secondary/20 shadow-sm' : 'border-transparent'}
+                                                        border
+                                                    `}
                                                 >
-                                                    {slot.start_time.slice(0, 5)}
-                                                </button>
-                                            ))}
+                                                    {/* Day Number Header */}
+                                                    <button
+                                                        onClick={() => !isPast && handleDayClick(day)}
+                                                        disabled={isPast}
+                                                        className={`
+                                                            w-full text-center p-1 md:text-left md:p-2 text-sm font-medium
+                                                            ${!isCurrentMonth ? 'text-stone-300' : 'text-stone-700'}
+                                                            ${isTodayDate ? 'text-secondary font-bold' : ''}
+                                                        `}
+                                                    >
+                                                        <span className={`
+                                                            inline-flex w-7 h-7 items-center justify-center rounded-full
+                                                            ${isTodayDate ? 'bg-secondary/10' : ''}
+                                                            ${hasSlots && !isPast ? 'md:bg-transparent bg-stone-100' : ''} 
+                                                        `}>
+                                                            {format(day, 'd')}
+                                                        </span>
+
+                                                        {/* Mobile Dot */}
+                                                        {hasSlots && !isPast && (
+                                                            <div className="md:hidden mx-auto w-1.5 h-1.5 rounded-full bg-green-500 mt-1"></div>
+                                                        )}
+                                                    </button>
+
+                                                    {/* Desktop Slots Preview */}
+                                                    {!isPast && hasSlots && (
+                                                        <div className="hidden md:flex flex-col gap-1 p-1 overflow-hidden">
+                                                            {daySlots.slice(0, 3).map(slot => (
+                                                                <button
+                                                                    key={slot.id}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleSlotSelect(slot);
+                                                                    }}
+                                                                    className="
+                                                                        text-[10px] py-1 px-1 rounded bg-secondary/5 text-secondary 
+                                                                        hover:bg-secondary hover:text-white transition-colors text-center font-medium
+                                                                        truncate
+                                                                    "
+                                                                >
+                                                                    {slot.start_time.slice(0, 5)}
+                                                                </button>
+                                                            ))}
+                                                            {daySlots.length > 3 && (
+                                                                <button
+                                                                    onClick={() => handleDayClick(day)}
+                                                                    className="text-[10px] text-stone-400 hover:text-stone-600 text-center"
+                                                                >
+                                                                    +{daySlots.length - 3} more
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Click target for empty space to open day view */}
+                                                    {!isPast && (
+                                                        <div
+                                                            className="absolute inset-0 z-0 cursor-pointer"
+                                                            onClick={() => handleDayClick(day)}
+                                                        />
+                                                    )}
+
+                                                    {/* Make slots actionable above the overlay */}
+                                                    <div className="relative z-10 pointer-events-none p-1 h-full flex flex-col justify-end">
+                                                        <div className="pointer-events-auto contents">
+                                                            {/* Children (slots) are already here via flex layout above */}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="mt-4 flex items-center justify-center gap-4 text-xs text-stone-500">
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-2 h-2 rounded-full bg-green-500 md:hidden"></div>
+                                            <span className="md:hidden">Available</span>
+                                            <span className="hidden md:inline">Click a time to book directly</span>
                                         </div>
                                     </div>
-                                ))
+                                </div>
+                            ) : (
+                                /* === DAY VIEW === */
+                                <div className="animate-fade-in">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <button
+                                            onClick={() => setCalendarView('month')}
+                                            className="flex items-center text-sm font-medium text-stone-500 hover:text-stone-900 transition-colors"
+                                        >
+                                            <ArrowLeftIcon className="w-4 h-4 mr-1" />
+                                            Back to Month
+                                        </button>
+
+                                        {/* Day Navigation */}
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={prevDay}
+                                                className="p-1.5 hover:bg-stone-100 rounded-lg text-stone-600 disabled:opacity-30"
+                                                disabled={selectedDay ? isBefore(subDays(selectedDay, 1), startOfDay(new Date())) : true}
+                                            >
+                                                <ChevronLeftIcon className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={nextDay}
+                                                className="p-1.5 hover:bg-stone-100 rounded-lg text-stone-600"
+                                            >
+                                                <ChevronRightIcon className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white border border-stone-200 rounded-xl overflow-hidden shadow-sm">
+                                        <div className="bg-stone-50 px-6 py-4 border-b border-stone-200 flex justify-between items-center">
+                                            <div>
+                                                <h3 className="font-serif font-bold text-xl text-stone-900">
+                                                    {selectedDay && format(selectedDay, 'EEEE, MMMM do')}
+                                                </h3>
+                                                <p className="text-stone-500 text-sm mt-0.5">Available Appointments</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-6">
+                                            {selectedDay && getSlotsForDate(selectedDay).length > 0 ? (
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                                    {getSlotsForDate(selectedDay).map((slot) => (
+                                                        <button
+                                                            key={slot.id}
+                                                            onClick={() => handleSlotSelect(slot)}
+                                                            className="
+                                                                py-3 px-4 rounded-lg border border-secondary text-secondary font-medium
+                                                                hover:bg-secondary hover:text-white transition-all duration-200
+                                                                focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-1
+                                                            "
+                                                        >
+                                                            {slot.start_time.slice(0, 5)}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-12 text-stone-500">
+                                                    <CalendarDaysIcon className="w-12 h-12 mx-auto text-stone-200 mb-3" />
+                                                    <p>No available slots for this day.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             )}
                         </div>
                     )}
