@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import Providers from '@/components/Providers';
+import ChatWidget from '@/components/ChatWidget';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,6 +55,7 @@ export default async function RootLayout({
               {children}
             </main>
             <Footer />
+            <ChatWidget />
           </Providers>
         </NextIntlClientProvider>
       </body>

@@ -1,17 +1,38 @@
--- Create messages table for Chat System
-create table if not exists public.messages (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references public.users(id) not null,
-  sender_role text not null check (sender_role in ('admin', 'client')),
-  content text not null,
-  is_read boolean default false,
-  created_at timestamptz default now()
+-- Enable the pgvector extension to work with embedding vectors
+create extension if not exists vector;
+
+-- Create a table to store your documents
+create table if not exists documents (
+  id bigserial primary key,
+  content text,
+  metadata jsonb,
+  embedding vector(768) -- Gemini uses 768 dimensions for text-embedding-004
 );
 
--- Enable RLS (Secure by default, no public access)
--- We will access this table ONLY via our API routes using the Service Role key
-alter table public.messages enable row level security;
-
--- Optional: Create index for faster queries
-create index if not exists messages_user_id_idx on public.messages(user_id);
-create index if not exists messages_created_at_idx on public.messages(created_at);
+-- Create a function to search for documents
+create or replace function match_documents (
+  query_embedding vector(768),
+  match_threshold float,
+  match_count int
+)
+returns table (
+  id bigint,
+  content text,
+  metadata jsonb,
+  similarity float
+)
+language plpgsql
+as $$
+begin
+  return query
+  select
+    documents.id,
+    documents.content,
+    documents.metadata,
+    1 - (documents.embedding <=> query_embedding) as similarity
+  from documents
+  where 1 - (documents.embedding <=> query_embedding) > match_threshold
+  order by similarity desc
+  limit match_count;
+end;
+$$;

@@ -45,6 +45,9 @@ export default function Footer() {
                     <p className="text-center text-xs leading-5">
                         {t('copyright', { year: new Date().getFullYear() })}
                     </p>
+                    <p className="text-center text-xs leading-5 mt-2 text-stone-500">
+                        Developed by <a href="https://github.com/x-rojas-io" target="_blank" rel="noopener noreferrer" className="hover:text-stone-300 transition-colors">Nestor Rojas</a>
+                    </p>
                 </div>
             </div>
         </footer>

@@ -11,6 +11,7 @@
   "dependencies": {
     "@auth/supabase-adapter": "^1.11.1",
     "@ducanh2912/next-pwa": "^10.2.9",
+    "@google/generative-ai": "^0.24.1",
     "@heroicons/react": "^2.2.0",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/supabase-js": "^2.86.2",
@@ -20,6 +21,7 @@
     "dotenv": "^17.2.3",
     "framer-motion": "^12.23.24",
     "gray-matter": "^4.0.3",
+    "markdown-it": "^14.1.0",
     "next": "^16.0.7",
     "next-auth": "^4.24.13",
     "next-intl": "^4.6.1",
