@@ -51,7 +51,16 @@ export async function POST(request: Request) {
             .select()
             .single();
 
-        if (bookingError) throw bookingError;
+        if (bookingError) {
+            // Check for unique constraint violation (Race Condition)
+            if (bookingError.code === '23505') {
+                return NextResponse.json(
+                    { error: 'This time slot was just booked by another client. Please select a different time.' },
+                    { status: 409 }
+                );
+            }
+            throw bookingError;
+        }
 
         // Send confirmation email to client
         const fromEmail = 'bookings@sothistherapeutic.com';
