@@ -13,6 +13,7 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const startDate = searchParams.get('startDate');
         const endDate = searchParams.get('endDate');
+        const providerId = searchParams.get('providerId');
 
         // Default to showing slots from today onwards if no range provided
         const today = new Date().toISOString().split('T')[0];
@@ -21,13 +22,24 @@ export async function GET(request: Request) {
         // Build query
         let query = supabaseAdmin
             .from('time_slots')
-            .select('*')
+            .select(`
+                *,
+                providers (
+                    id,
+                    name,
+                    color_code
+                )
+            `)
             .gte('date', queryStart)
             .order('date', { ascending: true })
             .order('start_time', { ascending: true });
 
         if (endDate) {
             query = query.lte('date', endDate);
+        }
+
+        if (providerId) {
+            query = query.eq('provider_id', providerId);
         }
 
         const { data, error } = await query;

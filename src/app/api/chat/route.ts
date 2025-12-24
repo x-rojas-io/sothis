@@ -29,13 +29,25 @@ export async function POST(req: NextRequest) {
             });
         }
 
+        // 2b. Fetch Active Providers for Context
+        const { data: providers } = await supabase
+            .from('providers')
+            .select('name, specialties, bio')
+            .eq('is_active', true);
+
+        const providerContext = providers?.map((p: any) =>
+            `- ${p.name}: ${p.specialties?.join(', ') || 'General Massage'}.`
+        ).join('\n') || 'No specific providers listed.';
+
         // 3. Construct Context
-        const context = documents
+        const ragContext = documents
             ?.map((doc: any) => doc.content)
             .join('\n\n') || '';
 
+        const fullContext = `Available Therapists:\n${providerContext}\n\nGeneral Information:\n${ragContext}`;
+
         // 4. Generate Answer
-        const reply = await generateChatResponse(context, message);
+        const reply = await generateChatResponse(fullContext, message);
 
         return NextResponse.json({ reply });
 

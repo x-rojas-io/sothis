@@ -20,7 +20,12 @@ export async function POST(request: Request) {
         // Check if slot is still available
         const { data: slot, error: slotError } = await supabaseAdmin
             .from('time_slots')
-            .select('*')
+            .select(`
+                *,
+                providers (
+                    name
+                )
+            `)
             .eq('id', time_slot_id)
             .eq('status', 'available')
             .single();
@@ -62,6 +67,10 @@ export async function POST(request: Request) {
             throw bookingError;
         }
 
+        // Get Provider Name
+        // @ts-ignore
+        const providerName = slot.providers?.name || 'Sothis Provider';
+
         // Send confirmation email to client
         const fromEmail = 'bookings@sothistherapeutic.com';
 
@@ -80,13 +89,14 @@ export async function POST(request: Request) {
                     </p>
                     
                     <p style="color: #44403c; line-height: 1.6;">
-                        Your massage appointment has been confirmed!
+                        Your massage appointment with <strong>${providerName}</strong> has been confirmed!
                     </p>
                     
                     <div style="background-color: #f5f5f4; padding: 20px; border-radius: 8px; margin: 20px 0;">
                         <h3 style="color: #292524; margin-top: 0;">Appointment Details</h3>
                         <p style="margin: 10px 0;"><strong>Date:</strong> ${new Date(slot.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
                         <p style="margin: 10px 0;"><strong>Time:</strong> ${slot.start_time.slice(0, 5)}</p>
+                        <p style="margin: 10px 0;"><strong>Provider:</strong> ${providerName}</p>
                         <p style="margin: 10px 0;"><strong>Service:</strong> Therapeutic Massage</p>
                         <p style="margin: 10px 0;"><strong>Location:</strong> Edgewater, NJ</p>
                     </div>
@@ -116,7 +126,7 @@ export async function POST(request: Request) {
         const { error: adminError } = await resend.emails.send({
             from: `Sothis Booking System <${fromEmail}>`,
             to: process.env.CONTACT_EMAIL || 'sothistherapeutic@gmail.com',
-            subject: `New Booking: ${client_name}`,
+            subject: `New Booking: ${client_name} with ${providerName}`,
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                     <h2 style="color: #292524; border-bottom: 2px solid #78716c; padding-bottom: 10px;">
@@ -135,6 +145,7 @@ export async function POST(request: Request) {
                         <h3 style="color: #292524; margin-top: 0;">Appointment Details</h3>
                         <p style="margin: 10px 0;"><strong>Date:</strong> ${new Date(slot.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
                         <p style="margin: 10px 0;"><strong>Time:</strong> ${slot.start_time.slice(0, 5)}</p>
+                        <p style="margin: 10px 0;"><strong>Provider:</strong> ${providerName}</p>
                         <p style="margin: 10px 0;"><strong>Service:</strong> Therapeutic Massage</p>
                     </div>
                     

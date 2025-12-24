@@ -46,7 +46,7 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} h-full bg-stone-50`}>
+    <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} h-full bg-stone-50`} suppressHydrationWarning>
       <body className="flex h-full flex-col font-sans text-stone-900 antialiased">
         <NextIntlClientProvider messages={messages}>
           <Providers>

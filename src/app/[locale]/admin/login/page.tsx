@@ -6,26 +6,20 @@ import { useRouter } from 'next/navigation';
 import Button from '@/components/Button';
 import Card, { CardContent, CardHeader } from '@/components/Card';
 
-export default function SignInPage() {
+export default function AdminLoginPage() {
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
     const [step, setStep] = useState<'email' | 'verify'>('email');
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
     const router = useRouter();
-    const { data: session, status } = useSession();
+    const { status } = useSession();
 
     useEffect(() => {
-        if (status === 'authenticated' && session?.user) {
-            // Role-based redirect
-            const role = (session.user as any).role;
-            if (role === 'admin' || role === 'provider') {
-                router.push('/admin');
-            } else {
-                router.push('/book');
-            }
+        if (status === 'authenticated') {
+            router.push('/admin');
         }
-    }, [status, session, router]);
+    }, [status, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -45,9 +39,6 @@ export default function SignInPage() {
                 if (!res.ok) {
                     throw new Error(data.error || 'Failed to send code');
                 }
-
-                // Alert removed for production flow
-                // if (data.dev_otp) alert(...)
 
                 setMessage('✅ Code sent! Check your email.');
                 setStep('verify');
@@ -73,21 +64,21 @@ export default function SignInPage() {
     };
 
     if (status === 'authenticated') {
-        return <div className="text-center py-24">Redirecting to dashboard...</div>;
+        return <div className="text-center py-24">Redirecting to admin dashboard...</div>;
     }
 
     return (
-        <div className="min-h-screen bg-stone-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-stone-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-serif font-bold text-stone-900">Sign In</h1>
-                    <p className="mt-2 text-stone-600">Client Access</p>
+                    <h1 className="text-3xl font-serif font-bold text-stone-50">Admin Portal</h1>
+                    <p className="mt-2 text-stone-400">Restricted Access for Staff Only</p>
                 </div>
 
-                <Card>
+                <Card className="bg-white/95 backdrop-blur">
                     <CardHeader>
                         <h2 className="text-center text-lg font-semibold text-stone-900">
-                            {step === 'email' ? 'Email Sign In' : 'Enter Verification Code'}
+                            {step === 'email' ? 'Staff Sign In' : 'Enter Verification Code'}
                         </h2>
                     </CardHeader>
                     <CardContent>
@@ -107,7 +98,7 @@ export default function SignInPage() {
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             className="block w-full rounded-md border border-stone-300 px-3 py-2 shadow-sm focus:border-stone-500 focus:outline-none focus:ring-stone-500 sm:text-sm"
-                                            placeholder="nancy@example.com"
+                                            placeholder="staff@sothis.com"
                                             autoFocus
                                         />
                                     </div>
@@ -146,10 +137,10 @@ export default function SignInPage() {
 
                             <Button
                                 type="submit"
-                                className="w-full"
+                                className="w-full bg-stone-900 hover:bg-stone-800"
                                 disabled={isLoading}
                             >
-                                {isLoading ? 'Processing...' : (step === 'email' ? 'Send Code' : 'Verify & Sign In')}
+                                {isLoading ? 'Processing...' : (step === 'email' ? 'Send Code' : 'Verify & Enter Portal')}
                             </Button>
 
                             {step === 'verify' && (

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { TimeSlot } from '@/lib/supabase';
+import type { TimeSlot, Provider } from '@/lib/supabase';
 import { useSession, signIn } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Button from '@/components/Button';
@@ -44,7 +44,16 @@ function BookingContent() {
     const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
     // Auth Flow State
-    const [step, setStep] = useState<'auth' | 'register' | 'verify' | 'slots' | 'confirm'>('auth');
+    const [step, setStep] = useState<'auth' | 'register' | 'verify' | 'provider' | 'slots' | 'confirm'>('auth');
+    const [providers, setProviders] = useState<Provider[]>([]);
+    const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+
+    // Fetch providers on mount
+    useEffect(() => {
+        supabase.from('providers').select('*').eq('is_active', true).then(({ data }) => {
+            if (data) setProviders(data);
+        });
+    }, []);
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
     const [existingUser, setExistingUser] = useState<{ exists: boolean; name?: string } | null>(null);
@@ -64,8 +73,15 @@ function BookingContent() {
     // 1. Initial State Check
     useEffect(() => {
         if (status === 'authenticated' && session?.user?.email) {
-            setStep('slots');
-            // fetchAvailableSlots(); // Handled by effect dependency on step
+            // Check for Admin/Provider Role and Redirect
+            const role = (session.user as any).role;
+            if (role === 'admin' || role === 'provider') {
+                router.push('/admin');
+                return;
+            }
+
+            setStep('provider');
+            // fetchAvailableSlots(); // Handled later
 
             // Pre-fill data
             setFormData(prev => ({ ...prev, client_email: session.user?.email! }));
@@ -89,7 +105,7 @@ function BookingContent() {
         } else if (status === 'unauthenticated') {
             setStep('auth');
         }
-    }, [status, session]);
+    }, [status, session, router]);
 
 
     // Fetch slots when switching to slots step or changing month
@@ -113,7 +129,7 @@ function BookingContent() {
             const today = new Date().toISOString().split('T')[0];
             const fetchStart = calendarStart < today ? today : calendarStart;
 
-            const { data, error } = await supabase
+            let query = supabase
                 .from('time_slots')
                 .select('*')
                 .eq('status', 'available')
@@ -121,6 +137,12 @@ function BookingContent() {
                 .lte('date', calendarEnd)
                 .order('date')
                 .order('start_time');
+
+            if (selectedProvider) {
+                query = query.eq('provider_id', selectedProvider.id);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
             setAvailableSlots(data || []);
@@ -147,7 +169,6 @@ function BookingContent() {
         try {
             const res = await fetch(`/api/auth/check-user?email=${encodeURIComponent(email)}`);
             const data = await res.json();
-
             if (data.exists) {
                 setExistingUser({ exists: true, name: data.user?.name });
                 // Stay on auth step, but show login button instead of "Continue"
@@ -177,9 +198,7 @@ function BookingContent() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || t('errors.sendCodeError'));
 
-            if (data.dev_otp) {
-                alert(`DEV MODE: Your verification code is: ${data.dev_otp}`);
-            }
+            // Alert removed for production flow
 
             setMessage(t('errors.codeSent'));
             setStep('verify');
@@ -265,9 +284,7 @@ function BookingContent() {
             if (!otpRes.ok) throw new Error('Account created, but failed to send verification code.');
 
             const otpData = await otpRes.json();
-            if (otpData.dev_otp) {
-                alert(`DEV MODE: Your verification code is: ${otpData.dev_otp}`);
-            }
+            // Alert removed for production flow
 
             setEmail(formData.client_email); // Ensure email state is set for verify step
             setStep('verify');
@@ -373,6 +390,9 @@ function BookingContent() {
                         {step === 'auth' && t('steps.auth')}
                         {step === 'register' && t('steps.register')}
                         {step === 'verify' && t('steps.verify')}
+                        {step === 'slots' && t('steps.slots')}
+                        {step === 'verify' && t('steps.verify')}
+                        {step === 'provider' && "Select a Provider"}
                         {step === 'slots' && t('steps.slots')}
                         {step === 'confirm' && t('steps.confirm')}
                     </p>
@@ -530,6 +550,54 @@ function BookingContent() {
                                 {t('register.cancel')}
                             </button>
                         </form>
+                    )}
+
+                    {/* STEP 1.8: PROVIDER SELECTION */}
+                    {step === 'provider' && (
+                        <div className="space-y-6">
+                            <h3 className="text-xl font-serif font-bold text-stone-900 text-center">Choose your Therapist</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Option: Any Provider */}
+                                <button
+                                    onClick={() => { setSelectedProvider(null); setStep('slots'); }}
+                                    className="p-6 rounded-xl border-2 border-dashed border-stone-300 hover:border-secondary hover:bg-stone-50 transition-all text-left flex items-center gap-4 group"
+                                >
+                                    <div className="w-12 h-12 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 font-bold group-hover:bg-secondary/10 group-hover:text-secondary">
+                                        ?
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-stone-900 group-hover:text-secondary">Any Provider</h4>
+                                        <p className="text-sm text-stone-500">Maximum availability</p>
+                                    </div>
+                                </button>
+
+                                {/* List Providers */}
+                                {providers.map(provider => (
+                                    <button
+                                        key={provider.id}
+                                        onClick={() => { setSelectedProvider(provider); setStep('slots'); }}
+                                        className="p-6 rounded-xl border border-stone-200 hover:border-secondary hover:bg-stone-50 transition-all text-left flex items-center gap-4 bg-white shadow-sm group"
+                                    >
+                                        {provider.image_url ? (
+                                            <img src={provider.image_url} alt={provider.name} className="w-12 h-12 rounded-full object-cover" />
+                                        ) : (
+                                            <div
+                                                className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+                                                style={{ backgroundColor: provider.color_code || '#78716c' }}
+                                            >
+                                                {provider.name[0]}
+                                            </div>
+                                        )}
+                                        <div>
+                                            <h4 className="font-bold text-stone-900 group-hover:text-secondary">{provider.name}</h4>
+                                            {provider.specialties && provider.specialties.length > 0 && (
+                                                <p className="text-sm text-stone-500">{provider.specialties.join(', ')}</p>
+                                            )}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     )}
 
                     {/* STEP 2: SELECT SLOT (CALENDAR) */}

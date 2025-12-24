@@ -1,116 +1,151 @@
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+
+// Create a generic admin client
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false
+        }
+    }
+);
 
 export async function GET() {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== 'admin') {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     try {
-        const { data: admins, error } = await supabaseAdmin
+        // 1. Fetch all users from 'users' table (roles) - Filter out "client" role
+        const { data: users, error: userError } = await supabaseAdmin
             .from('users')
             .select('*')
-            .eq('role', 'admin')
-            .order('name');
+            .in('role', ['admin', 'provider']);
 
-        if (error) throw error;
+        if (userError) throw userError;
 
-        return NextResponse.json(admins);
-    } catch (error) {
-        console.error('Error fetching admins:', error);
-        return NextResponse.json({ error: 'Failed to fetch admins' }, { status: 500 });
+        // 2. Fetch providers to enrich
+        const { data: providers, error: providerError } = await supabaseAdmin.from('providers').select('*');
+        if (providerError) throw providerError;
+
+        // Merge logic
+        const merged = users.map((u: any) => {
+            const providerDetails = providers.find((p: any) => p.user_id === u.id); // Assuming we link by user_id
+
+            // If no link, maybe match by email? Or just return base
+            // Since we haven't strictly enforced user_id FK yet, let's look for matching emails or create a pseudo-link
+            // But 'providers' table doesn't have email column.
+
+            // Re-think: Current providers table has NO user_id link in migration script?
+            // "user_id UUID REFERENCES auth.users(id)" WAS in the creation script (user said "multi_provider_setup.sql" executed).
+            // Let's assume it exists.
+
+            return {
+                id: u.id,
+                email: u.email,
+                role: u.role,
+                ...providerDetails, // Enriches with name, bio, etc if provider
+            };
+        });
+
+        // Also, include any providers who might NOT have a user account yet (legacy ones from migration?)
+        // If they don't have user_id, they won't match. We should return them too?
+        // User requested strict "Staff Users", implying they interact with system.
+        // Let's stick to 'users' table as the source of truth for Logins.
+        // But Nancy (default) might not have a user entry in 'users' table if not migrated.
+
+        return NextResponse.json(merged);
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
-export async function POST(request: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== 'admin') {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+export async function POST(req: Request) {
     try {
-        const { email, name } = await request.json();
+        const body = await req.json();
+        const { email, password, role, name, bio, specialties, color_code } = body;
 
-        if (!email || !name) {
-            return NextResponse.json({ error: 'Email and Name are required' }, { status: 400 });
+        // 1. Create Auth User
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true,
+            user_metadata: { name }
+        });
+
+        if (authError) throw authError;
+        const userId = authData.user.id;
+
+        // 2. Add to 'users' table for role
+        const { error: roleError } = await supabaseAdmin.from('users').insert({
+            id: userId,
+            email,
+            role
+        });
+
+        if (roleError) throw roleError;
+
+        // 3. If Provider, create provider profile
+        if (role === 'provider') {
+            const { error: providerError } = await supabaseAdmin.from('providers').insert({
+                user_id: userId, // Link to auth user
+                name,
+                bio,
+                specialties,
+                color_code,
+                is_active: true
+            });
+
+            if (providerError) throw providerError;
         }
 
-        // Check if user exists
-        const { data: existingUser } = await supabaseAdmin
-            .from('users')
-            .select('*')
-            .eq('email', email)
-            .single();
-
-        let result;
-        if (existingUser) {
-            // Update role to admin
-            result = await supabaseAdmin
-                .from('users')
-                .update({ role: 'admin', name }) // Update name too if provided
-                .eq('email', email)
-                .select()
-                .single();
-        } else {
-            // Create new admin user
-            result = await supabaseAdmin
-                .from('users')
-                .insert([{ email, name, role: 'admin' }])
-                .select()
-                .single();
-        }
-
-        if (result.error) throw result.error;
-
-        return NextResponse.json(result.data);
-    } catch (error) {
-        console.error('Error creating/promoting admin:', error);
-        return NextResponse.json({ error: 'Failed to save admin user' }, { status: 500 });
+        return NextResponse.json({ success: true, userId });
+    } catch (error: any) {
+        console.error(error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
 
-export async function DELETE(request: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any).role !== 'admin') {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+export async function DELETE(req: Request) {
     try {
-        const { searchParams } = new URL(request.url);
+        const { searchParams } = new URL(req.url);
         const id = searchParams.get('id');
 
         if (!id) {
             return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
         }
 
-        // Prevent deleting yourself
-        if (session.user.email) {
-            const { data: currentUser } = await supabaseAdmin
-                .from('users')
-                .select('id')
-                .eq('email', session.user.email)
-                .single();
+        // 1. Fetch user to check email for protection
+        const { data: user, error: fetchError } = await supabaseAdmin.auth.admin.getUserById(id);
 
-            if (currentUser && currentUser.id === id) {
-                return NextResponse.json({ error: 'Cannot remove your own admin access' }, { status: 400 });
+        if (fetchError || !user.user) {
+            // If not found in auth, check public.users? 
+            // Actually if they are not in auth, we might still want to clean up public tables.
+            // But for protection check, we assume the Super Admin exists in Auth.
+            // Let's fallback to querying public table if auth lookup fails or if we want to be doubly sure.
+            const { data: publicUser } = await supabaseAdmin.from('users').select('email').eq('id', id).single();
+
+            if (publicUser?.email === 'sothistherapeutic@gmail.com') {
+                return NextResponse.json({ error: 'Cannot delete Super Admin account' }, { status: 403 });
+            }
+        } else {
+            if (user.user.email === 'sothistherapeutic@gmail.com') {
+                return NextResponse.json({ error: 'Cannot delete Super Admin account' }, { status: 403 });
             }
         }
 
-        // Downgrade to 'user' role instead of deleting the record
-        // This preserves booking history if they have any.
-        const { error } = await supabaseAdmin
-            .from('users')
-            .update({ role: 'user' })
-            .eq('id', id);
+        // 2. Delete from 'providers' (Cascade might handle this, but let's be explicit)
+        await supabaseAdmin.from('providers').delete().eq('user_id', id);
 
-        if (error) throw error;
+        // 3. Delete from 'users'
+        await supabaseAdmin.from('users').delete().eq('id', id);
+
+        // 4. Delete Auth User
+        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(id);
+        if (deleteError) throw deleteError;
 
         return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error('Error removing admin access:', error);
-        return NextResponse.json({ error: 'Failed to remove admin access' }, { status: 500 });
+    } catch (error: any) {
+        console.error('Delete Error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -5,7 +5,6 @@ import { Adapter } from 'next-auth/adapters';
 export function SimpleSupabaseAdapter(): Adapter {
     return {
         async createUser(user: any) {
-            console.log('ADAPTER: createUser called with:', user);
             const { emailVerified, id, ...rest } = user;
 
             // Explicitly map fields to avoid inserting unknown columns
@@ -169,7 +168,6 @@ export function SimpleSupabaseAdapter(): Adapter {
         },
         // Verification tokens for Magic Link
         async createVerificationToken(token) {
-            console.log('ADAPTER: createVerificationToken called with:', token);
             const { data, error } = await supabaseAdmin
                 .from('verification_tokens')
                 .insert(token)
@@ -179,14 +177,12 @@ export function SimpleSupabaseAdapter(): Adapter {
                 console.error('ADAPTER: createVerificationToken ERROR:', error);
                 throw error;
             }
-            console.log('ADAPTER: createVerificationToken SUCCESS:', data);
             return {
                 ...data,
                 expires: new Date(data.expires)
             };
         },
         async useVerificationToken({ identifier, token }) {
-            console.log('ADAPTER: useVerificationToken called with:', { identifier, token });
             const { data, error } = await supabaseAdmin
                 .from('verification_tokens')
                 .delete()
@@ -194,10 +190,8 @@ export function SimpleSupabaseAdapter(): Adapter {
                 .select()
                 .single();
             if (error) {
-                console.error('ADAPTER: useVerificationToken ERROR (or not found):', error);
                 return null;
             }
-            console.log('ADAPTER: useVerificationToken SUCCESS:', data);
             return {
                 ...data,
                 expires: new Date(data.expires)

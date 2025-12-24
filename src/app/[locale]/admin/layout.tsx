@@ -12,25 +12,32 @@ export default async function AdminLayout({
 
   if (!session) {
     // If not logged in, force signin
-    redirect("/auth/signin?callbackUrl=/admin");
+    redirect("/admin/login?callbackUrl=/admin");
   }
 
-  if (session?.user?.role !== "admin") {
-    // If logged in but not admin, kick them out
+  if (session?.user?.role !== "admin" && session?.user?.role !== "provider") {
+    // If logged in but not admin or provider, kick them out
     redirect("/");
   }
+
+  const isAdmin = session?.user?.role === "admin";
 
   return (
     <div className="min-h-screen bg-white">
       <nav className="bg-stone-900 text-stone-50 p-4 sticky top-0 z-50">
         <div className="container mx-auto flex justify-between items-center">
-          <span className="font-serif text-xl">Sothis Admin</span>
+          <span className="font-serif text-xl">Sothis {isAdmin ? 'Admin' : 'Provider'}</span>
           <div className="flex gap-6 text-sm items-center">
             <nav className="flex gap-4">
               <a href="/admin" className="text-stone-300 hover:text-white transition-colors">Dashboard</a>
               <a href="/admin/availability" className="text-stone-300 hover:text-white transition-colors">Availability</a>
-              <a href="/admin/slots" className="text-stone-300 hover:text-white transition-colors">Generate Availability</a>
               <a href="/admin/bookings" className="text-stone-300 hover:text-white transition-colors">Bookings</a>
+              {isAdmin && (
+                <>
+                  <a href="/admin/clients" className="text-stone-300 hover:text-white transition-colors">Clients</a>
+                  <a href="/admin/staff" className="text-stone-300 hover:text-white transition-colors">Staff Users</a>
+                </>
+              )}
             </nav>
             <div className="h-4 w-px bg-stone-700"></div>
             <div className="flex gap-4 items-center">

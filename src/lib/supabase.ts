@@ -14,8 +14,20 @@ export type AvailabilityTemplate = {
     slot_duration: number;
     buffer_minutes: number;
     is_active: boolean;
+    provider_id?: string; // Should be FK to providers
     created_at: string;
     updated_at: string;
+};
+
+export type Provider = {
+    id: string;
+    user_id?: string; // Link to auth.users/public.users
+    name: string;
+    bio?: string;
+    specialties?: string[];
+    image_url?: string;
+    color_code?: string;
+    is_active: boolean;
 };
 
 export type TimeSlot = {
@@ -24,13 +36,14 @@ export type TimeSlot = {
     start_time: string;
     end_time: string;
     status: 'available' | 'booked' | 'blocked';
+    provider_id?: string; // FK to providers
     created_at: string;
     updated_at: string;
 };
 
 export type Booking = {
     id: string;
-    time_slot_id: string;
+    time_slot_id: string; // This links to TimeSlot -> Provider implicitly
     client_name: string;
     client_email: string;
     client_phone?: string;
@@ -49,6 +62,20 @@ export type Booking = {
 export type User = {
     id: string;
     email: string;
-    role: 'admin' | 'client';
+    role: 'admin' | 'client' | 'provider';
     created_at: string;
+};
+
+export type Client = {
+    id: string;
+    email: string;
+    name: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    notes?: string;
+    created_at: string;
+    updated_at: string;
 };

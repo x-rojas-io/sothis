@@ -13,9 +13,40 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Email is required' }, { status: 400 });
         }
 
+        // 0. Validate Email Exists (Security)
+        // Check USERS
+        const { data: user } = await supabaseAdmin
+            .from('users')
+            .select('id')
+            .eq('email', email)
+            .single();
+
+        let exists = !!user;
+
+        if (!exists) {
+            // Check CLIENTS
+            const { data: client } = await supabaseAdmin
+                .from('clients')
+                .select('id')
+                .eq('email', email)
+                .single();
+            exists = !!client;
+        }
+
+        if (!exists) {
+            // Do NOT reveal that user doesn't exist for security? 
+            // Or following current requirements:
+            // The frontend expects success to show "Code sent". 
+            // If we return error, it says "Invalid email" or similar.
+            // Given the context (Client Booking), we should probably block invalid emails to prevent spamming Resend.
+            return NextResponse.json({ error: 'No account found with this email. Please register first.' }, { status: 404 });
+        }
+
         // 1. Generate 6-digit code
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        console.log('DEBUG OTP:', otp);
+        if (process.env.NODE_ENV === 'development') {
+            console.log('DEBUG OTP:', otp);
+        }
         const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
         // 2. Store in verification_tokens
@@ -64,8 +95,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({
             success: true,
-            // In development or if email fails (test mode), return the OTP to the client for convenience
-            dev_otp: emailError ? otp : undefined
+            // Only return OTP in development for easier testing
+            ...(process.env.NODE_ENV === 'development' ? { dev_otp: otp } : {})
         });
 
     } catch (error) {

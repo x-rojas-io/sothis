@@ -8,6 +8,8 @@ export default function MyBookingsPage() {
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const [activeTab, setActiveTab] = useState<'upcoming' | 'past' | 'cancelled'>('upcoming');
+
     useEffect(() => {
         if (status === 'unauthenticated') {
             signIn(undefined, { callbackUrl: '/my-bookings' });
@@ -41,6 +43,18 @@ export default function MyBookingsPage() {
 
     if (!session) return null; // Will redirect
 
+    // Filter Logic
+    const filteredBookings = bookings.filter(booking => {
+        const date = new Date(booking.time_slot.date + 'T00:00:00');
+        const isUpcoming = date >= new Date();
+        const isCancelled = booking.status === 'cancelled';
+
+        if (activeTab === 'cancelled') return isCancelled;
+        if (activeTab === 'upcoming') return isUpcoming && !isCancelled;
+        if (activeTab === 'past') return !isUpcoming && !isCancelled;
+        return true;
+    });
+
     return (
         <div className="min-h-screen bg-stone-50 flex flex-col">
             <main className="flex-grow pt-32 pb-16 px-6">
@@ -57,36 +71,61 @@ export default function MyBookingsPage() {
                         </a>
                     </div>
 
+                    {/* Filter Tabs */}
+                    <div className="flex space-x-1 bg-stone-200 p-1 rounded-lg mb-8 w-fit">
+                        {['upcoming', 'past', 'cancelled'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab as any)}
+                                className={`px-4 py-2 rounded-md text-sm font-medium transition-all capitalize ${activeTab === tab
+                                        ? 'bg-white text-stone-900 shadow-sm'
+                                        : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
+                                    }`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
+
                     <div className="space-y-6">
-                        {bookings.length === 0 ? (
+                        {filteredBookings.length === 0 ? (
                             <div className="bg-white rounded-lg p-12 text-center border border-stone-200">
-                                <h3 className="text-lg font-medium text-stone-900">No bookings found</h3>
-                                <p className="mt-2 text-stone-600">You haven't made any appointments yet.</p>
-                                <a href="/book" className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium">
-                                    Book your first massage &rarr;
-                                </a>
+                                <h3 className="text-lg font-medium text-stone-900">No {activeTab} bookings found</h3>
+                                <p className="mt-2 text-stone-600">
+                                    {activeTab === 'upcoming'
+                                        ? "You don't have any upcoming appointments."
+                                        : activeTab === 'past'
+                                            ? "You don't have any past appointments."
+                                            : "You don't have any cancelled appointments."}
+                                </p>
+                                {activeTab === 'upcoming' && (
+                                    <a href="/book" className="inline-block mt-4 text-blue-600 hover:text-blue-800 font-medium">
+                                        Book a massage &rarr;
+                                    </a>
+                                )}
                             </div>
                         ) : (
-                            bookings.map((booking) => {
+                            filteredBookings.map((booking) => {
                                 const date = new Date(booking.time_slot.date + 'T00:00:00');
                                 const isUpcoming = date >= new Date();
 
                                 return (
                                     <div
                                         key={booking.id}
-                                        className={`bg-white rounded-lg border p-6 transition-all ${isUpcoming ? 'border-l-4 border-l-stone-900 shadow-sm' : 'border-stone-200 opacity-75'
+                                        className={`bg-white rounded-lg border p-6 transition-all ${isUpcoming && booking.status !== 'cancelled'
+                                                ? 'border-l-4 border-l-stone-900 shadow-sm'
+                                                : 'border-stone-200'
                                             }`}
                                     >
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <span className={`text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                                        booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                                            'bg-stone-100 text-stone-800'
+                                                            booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                                                'bg-stone-100 text-stone-800'
                                                         }`}>
                                                         {booking.status}
                                                     </span>
-                                                    {!isUpcoming && <span className="text-xs text-stone-500 font-medium border border-stone-200 px-2 py-1 rounded-full">Past</span>}
                                                 </div>
                                                 <h3 className="text-xl font-bold text-stone-900">Therapeutic Massage</h3>
                                                 <div className="mt-2 space-y-1 text-stone-600">

@@ -24,6 +24,11 @@ export default function Header() {
     const pathname = usePathname();
     const t = useTranslations('Navigation');
 
+    // Hide Header on Admin Pages
+    if (pathname && pathname.startsWith('/admin') || pathname?.includes('/admin/')) {
+        return null;
+    }
+
     return (
         <>
             <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-stone-100">

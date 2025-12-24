@@ -9,7 +9,12 @@ type Message = {
     content: string;
 };
 
+import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+
 export default function ChatWidget() {
+    const pathname = usePathname();
+    const { data: session } = useSession();
     const [isOpen, setIsOpen] = useState(false);
     const [showPrompt, setShowPrompt] = useState(false);
 
@@ -76,6 +81,10 @@ export default function ChatWidget() {
             setIsLoading(false);
         }
     };
+
+    // Strict Role Check: Hide for Admins/Providers on ALL pages
+    const role = (session?.user as any)?.role;
+    if (pathname?.includes('/admin') || role === 'admin' || role === 'provider') return null;
 
     return (
         <>

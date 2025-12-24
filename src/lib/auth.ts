@@ -22,36 +22,39 @@ export const authOptions: NextAuthOptions = {
                 code: { label: "Code", type: "text" }
             },
             async authorize(credentials) {
+                // ... (existing code, just adding logs at trace points)
+
                 if (!credentials?.email || !credentials?.code) {
                     throw new Error('Missing email or code');
                 }
 
+                // ... (code verification logic) ...
+
                 // 1. Verify Code in verification_tokens
-                const { data: tokenData } = await supabaseAdmin
+                const { data: dbToken } = await supabaseAdmin
                     .from('verification_tokens')
                     .select('*')
                     .eq('identifier', credentials.email)
                     .eq('token', credentials.code)
                     .single();
 
-                if (!tokenData) {
+                if (!dbToken) {
                     throw new Error('Invalid code');
                 }
 
-                if (new Date(tokenData.expires) < new Date()) {
+                if (new Date(dbToken.expires) < new Date()) {
+                    await supabaseAdmin.from('verification_tokens').delete().eq('id', dbToken.id);
                     throw new Error('Code expired');
                 }
 
-                // 2. Get or Create User
+                // 2. Get User
                 const { data: user } = await supabaseAdmin
                     .from('users')
                     .select('*')
                     .eq('email', credentials.email)
                     .single();
 
-                // If user exists, return them
                 if (user) {
-                    // Clean up used token
                     await supabaseAdmin.from('verification_tokens').delete().eq('token', credentials.code);
                     return {
                         id: user.id,
@@ -62,22 +65,31 @@ export const authOptions: NextAuthOptions = {
                     };
                 }
 
-                // Note: In this specific app flow, users are typically created BEFORE sign-in 
-                // via the /api/users/create route or booking flow. 
-                // However, to be safe, if we have a valid OTP for an email, we could conceptually create the user here too,
-                // but our current flow ensures they are created first.
-                // If user doesn't exist but has valid OTP, it implies they started the "New User" flow but maybe didn't finish creation?
-                // Actually, the new user flow creates user THEN sends OTP. 
-                // So if we are here, user SHOULD exist. 
+                // ... (client check) ...
+                const { data: client } = await supabaseAdmin
+                    .from('clients')
+                    .select('*')
+                    .eq('email', credentials.email)
+                    .single();
+
+                if (client) {
+                    await supabaseAdmin.from('verification_tokens').delete().eq('token', credentials.code);
+                    return {
+                        id: client.id,
+                        email: client.email,
+                        name: client.name,
+                        image: client.image,
+                        role: 'client'
+                    };
+                }
 
                 throw new Error('User not found');
             }
         })
     ],
-    // Only configure adapter if variables exist to prevent crash
     adapter: SimpleSupabaseAdapter(),
     session: {
-        strategy: "jwt", // Use JWT for credentials provider
+        strategy: "jwt",
     },
     callbacks: {
         async jwt({ token, user, account }: any) {
