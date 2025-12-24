@@ -1,34 +1,42 @@
 const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config({ path: '.env.local' });
 
-const url = 'https://mmqystevqgvgpfymfqzk.supabase.co';
-const anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tcXlzdGV2cWd2Z3BmeW1mcXprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNTYxOTksImV4cCI6MjA4MDYzMjE5OX0.38Hzs2sLSAGt-0qeHnXu8j13pLMG4GrqJ4Qb5fLFGK8';
-const serviceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTA1NjE5OSwiZXhwIjoyMDgwNjMyMTk5fQ.5Enj4PIY3ewv0XlogkQOcipLJqG28qmI-uYJvy86fI8';
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-console.log('--- HARDCODED KEY CHECK ---');
-console.log('URL:', url);
-console.log('Anon Key Length:', anonKey.length);
-console.log('Service Key Length:', serviceKey.length);
+console.log('--- ENVIRONMENT VARIABLE CHECK ---');
+console.log('URL:', url ? '✅ Found' : '❌ Missing');
+console.log('Anon Key:', anonKey ? `✅ Found (Length: ${anonKey.length})` : '❌ Missing');
+console.log('Service Key:', serviceKey ? `✅ Found (Length: ${serviceKey.length})` : '❌ Missing');
 
 async function testConnection() {
+    if (!url || !anonKey || !serviceKey) {
+        console.error('❌ Cannot test connection due to missing variables.');
+        return;
+    }
+
     try {
-        console.log('\nTesting connection to availability_templates...');
+        console.log('\nTesting connection with Anon Key...');
         const supabase = createClient(url, anonKey);
+        // Using a public table implies we might need RLS, but 'availability_templates' was used in the original script.
+        // We just check if we can connect; even a 401 is better than a hardcoded key.
         const { data, error } = await supabase.from('availability_templates').select('count', { count: 'exact', head: true });
 
         if (error) {
-            console.error('❌ Anon Key Error:', JSON.stringify(error, null, 2));
+            console.error('⚠️ Anon Key Connection Issue (might be RLS):', error.message);
         } else {
-            console.log('✅ Anon Key Success. Count:', data);
+            console.log('✅ Anon Key Connection Success.');
         }
 
-        console.log('\nTesting Service Role Key...');
+        console.log('\nTesting connection with Service Role Key...');
         const supabaseService = createClient(url, serviceKey);
-        const { data: serviceData, error: serviceError } = await supabaseService.from('users').select('count', { count: 'exact', head: true });
+        const { error: serviceError } = await supabaseService.from('users').select('count', { count: 'exact', head: true });
 
         if (serviceError) {
-            console.error('❌ Service Key Error:', JSON.stringify(serviceError, null, 2));
+            console.error('❌ Service Key Error:', serviceError.message);
         } else {
-            console.log('✅ Service Key Success.');
+            console.log('✅ Service Key Connection Success.');
         }
 
     } catch (err) {
