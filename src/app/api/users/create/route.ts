@@ -32,18 +32,7 @@ export async function POST(request: Request) {
                 address,
                 city,
                 state,
-                zip,
-                // These fields will be available after schema update
-                email_verified: new Date().toISOString(), 
-                // We default to verified since they verify via OTP to login anyway? 
-                // Actually, this is registration before OTP. 
-                // But the flow is Register -> Send OTP -> Verify OTP.
-                // So verification happens at login. 
-                // But we can set it to null or current date if we trust the immediate OTP flow.
-                // Let's set it to null for now or just rely on the table default. 
-                // But wait, the previous code didn't set it. 
-                // I will NOT set email_verified here, let the OTP verification handle it if we want strictness, 
-                // or just leave it. 
+                zip
             })
             .select()
             .single();
@@ -52,7 +41,7 @@ export async function POST(request: Request) {
             console.error('Error creating client:', error);
             // Fallback: If column missing (schema not updated), retry without them?
             // No, user instructions say schema update is part of task.
-            return NextResponse.json({ error: 'Failed to create user' }, { status: 500 });
+            return NextResponse.json({ error: `Failed to create user: ${error.message}` }, { status: 500 });
         }
 
         return NextResponse.json(newClient);
