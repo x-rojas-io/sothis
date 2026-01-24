@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
     try {
-        const { startDate, endDate } = await request.json();
+        const { startDate, endDate, providerId } = await request.json();
+
+        console.log(`[GenerateSlots] Request: ${startDate} to ${endDate}, Provider: ${providerId}`);
 
         if (!startDate || !endDate) {
             return NextResponse.json(
@@ -13,10 +15,21 @@ export async function POST(request: Request) {
         }
 
         // Fetch availability templates
-        const { data: templates, error: templatesError } = await supabaseAdmin
+        let query = supabaseAdmin
             .from('availability_templates')
             .select('*')
             .eq('is_active', true);
+
+        if (providerId) {
+            query = query.eq('provider_id', providerId);
+        }
+
+        const { data: templates, error: templatesError } = await query;
+
+        console.log(`[GenerateSlots] Found ${templates?.length} templates for provider ${providerId}`);
+        if (templates && templates.length > 0) {
+            console.log(`[GenerateSlots] Template Sample ProviderID: ${templates[0].provider_id}`);
+        }
 
         if (templatesError) throw templatesError;
         if (!templates || templates.length === 0) {
@@ -52,11 +65,17 @@ export async function POST(request: Request) {
                 const slotStart = formatTime(currentTime);
                 const slotEnd = formatTime(currentTime + slotDuration);
 
+                // Log one slot for debugging
+                if (slots.length === 0) {
+                    console.log(`[GenerateSlots] Generating slot with provider_id: ${template.provider_id}`);
+                }
+
                 slots.push({
                     date: dateStr,
                     start_time: slotStart,
                     end_time: slotEnd,
-                    status: 'available'
+                    status: 'available',
+                    provider_id: template.provider_id
                 });
 
                 // Add slot duration + buffer for next slot
