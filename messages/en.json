@@ -57,25 +57,31 @@
                 "title": "Therapeutic Massage",
                 "description": "A customized blend of techniques tailored to your specific needs. Ideal for stress relief, pain management, muscle tension, and overall relaxation. Each session includes a consultation to ensure personalized care focused on your wellness goals.",
                 "duration": "60 / 90 min",
-                "price": "Contact for pricing"
+                "price": "$120"
             },
             "deepTissue": {
                 "title": "Deep Tissue Massage",
                 "description": "Ideal for releasing persistent muscle knots and relieving chronic pain in areas such as the lower back and shoulders.",
                 "duration": "60 / 90 min",
-                "price": "Contact for pricing"
+                "price": "$125"
             },
             "sports": {
                 "title": "Sports Massage",
                 "description": "Designed for athletes; focuses on injury prevention, post-training muscle recovery, and pre-event preparation.",
                 "duration": "60 / 90 min",
-                "price": "Contact for pricing"
+                "price": "$125"
             },
             "triggerPoint": {
                 "title": "Trigger Point Therapy",
                 "description": "Application of sustained and specific pressure on hypersensitive points to relieve referred pain and restore muscle function.",
                 "duration": "60 / 90 min",
-                "price": "Contact for pricing"
+                "price": "$120"
+            },
+            "prenatal": {
+                "title": "Prenatal Massage",
+                "description": "Prenatal massage therapy reduces anxiety, relieves pregnancy-related muscle aches and joint pain, and improves circulation, providing significant physical and mental relief. It helps alleviate sciatica, back pain, and swelling while lowering stress hormones, which can lead to better sleep, improved immune response, and positive labor outcomes.",
+                "duration": "60 / 90 min",
+                "price": "$130"
             }
         },
         "benefits": {

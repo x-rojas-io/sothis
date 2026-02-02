@@ -18,10 +18,11 @@ export default function ServicesPage() {
     const t = useTranslations('ServicesPage');
 
     const services = [
-        { key: 'therapeutic', image: '/images/services/therapeutic.png' },
-        { key: 'deepTissue', image: '/images/services/deep-tissue.png' },
-        { key: 'sports', image: '/images/services/sports.png' },
-        { key: 'triggerPoint', image: '/images/services/trigger-point.png' }
+        { key: 'therapeutic', image: '/images/services/sothis-therapeutic-massage.jpg' },
+        { key: 'deepTissue', image: '/images/services/sothis-deep-tissue-massage.jpg' },
+        { key: 'sports', image: '/images/services/sothis-sports-massage.jpg' },
+        { key: 'triggerPoint', image: '/images/services/sothis-trigger-point-massage.jpg' },
+        { key: 'prenatal', image: '/images/services/sothis-prenal-massage.jpg' }
     ] as const;
 
     return (
@@ -55,7 +56,7 @@ export default function ServicesPage() {
                                 <img
                                     src={image}
                                     alt={t(`items.${key}.title`)}
-                                    className="w-full h-auto block"
+                                    className="w-full h-64 object-cover block"
                                 />
                             </div>
                             <CardContent className="pt-6">

@@ -57,7 +57,7 @@
                 "title": "Masaje Terapéutico",
                 "description": "Una mezcla personalizada de técnicas adaptadas a sus necesidades específicas. Ideal para aliviar el estrés, el manejo del dolor, la tensión muscular y la relajación general. Cada sesión incluye una consulta para garantizar una atención personalizada centrada en sus objetivos de bienestar.",
                 "duration": "60 / 90 min",
-                "price": "Contactar por precios"
+                "price": "$120"
             },
             "deepTissue": {
                 "title": "Masaje de Tejido Profundo",
@@ -76,6 +76,12 @@
                 "description": "Aplicación de presión sostenida y específica en puntos hipersensibles para aliviar el dolor referido y restablecer la función muscular.",
                 "duration": "60 / 90 min",
                 "price": "Contactar por precios"
+            },
+            "prenatal": {
+                "title": "Masaje Prenatal",
+                "description": "La terapia de masaje prenatal reduce la ansiedad, alivia los dolores musculares y articulares relacionados con el embarazo y mejora la circulación, brindando un alivio físico y mental significativo. Ayuda a aliviar la ciática, el dolor de espalda y la hinchazón, mientras reduce las hormonas del estrés, lo que puede conducir a un mejor sueño, una mejor respuesta inmunológica y resultados positivos en el parto.",
+                "duration": "60 / 90 min",
+                "price": "$130"
             }
         },
         "benefits": {
