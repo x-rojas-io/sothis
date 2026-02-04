@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import type { Booking, TimeSlot } from '@/lib/supabase';
 import ProviderFilter from '@/components/ProviderFilter';
+import Button from '@/components/Button';
 
 export default function AdminDashboard() {
     const [upcomingBookings, setUpcomingBookings] = useState<(Booking & { time_slot: TimeSlot })[]>([]);
@@ -59,6 +60,8 @@ export default function AdminDashboard() {
         }
     }
 
+
+
     // Force HMR update
     return (
         <>
@@ -75,13 +78,16 @@ export default function AdminDashboard() {
                             </p>
                         </div>
 
-                        {/* Provider Filter (Admin Only) */}
-                        {userRole === 'admin' && (
-                            <ProviderFilter
-                                selectedProvider={selectedProvider}
-                                onSelectProvider={setSelectedProvider}
-                            />
-                        )}
+                        <div className="flex items-center gap-2">
+
+                            {/* Provider Filter (Admin Only) */}
+                            {userRole === 'admin' && (
+                                <ProviderFilter
+                                    selectedProvider={selectedProvider}
+                                    onSelectProvider={setSelectedProvider}
+                                />
+                            )}
+                        </div>
                     </div>
 
                     {/* Stats */}

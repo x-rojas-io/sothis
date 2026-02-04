@@ -18,7 +18,7 @@ export default function Home() {
           <p className="mt-6 text-lg leading-8 text-stone-600 max-w-2xl mx-auto">
             {t('Hero.description')}
           </p>
-          <div className="mt-10 flex items-center justify-center gap-x-6">
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-6">
             <Button href="/book" size="lg">{t('Hero.bookNow')}</Button>
             <Button href="/services" size="lg" variant="secondary">{t('Hero.viewServices')}</Button>
             <Link href="/about" className="text-sm font-semibold leading-6 text-stone-900">

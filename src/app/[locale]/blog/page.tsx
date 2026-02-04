@@ -1,5 +1,5 @@
 import React from 'react';
-import { getBlogPosts } from '@/lib/markdown';
+import { getAllBlogPosts } from '@/lib/blog';
 import BlogCard from '@/components/BlogCard';
 import { getTranslations } from 'next-intl/server';
 import { useTranslations } from 'next-intl';
@@ -20,7 +20,7 @@ export default async function BlogPage({
     params: Promise<{ locale: string }>
 }) {
     const { locale } = await params;
-    const posts = getBlogPosts(locale);
+    const posts = await getAllBlogPosts(locale);
     const t = await getTranslations({ locale, namespace: 'BlogPage' });
 
     return (
@@ -41,6 +41,8 @@ export default async function BlogPage({
                             excerpt={post.excerpt}
                             date={post.date}
                             author={post.author}
+                            imageUrl={post.imageUrl}
+                            href={post.href}
                         />
                     ))}
                 </div>
