@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEmbedding, generateChatResponse } from '@/lib/gemini';
 import { supabase } from '@/lib/supabase';
+import { getServicesContext, getAvailabilityContext } from '@/lib/context-providers';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
     try {
@@ -13,8 +16,7 @@ export async function POST(req: NextRequest) {
         // 1. Generate Embedding for the query
         const queryEmbedding = await getEmbedding(message);
 
-        // 2. Search Supabase for similar documents
-        // Threshold 0.5 is a starting point, adjust if needed
+        // 2. Search Supabase for similar documents (RAG)
         const { data: documents, error } = await supabase.rpc('match_documents', {
             query_embedding: queryEmbedding,
             match_threshold: 0.4,
@@ -23,30 +25,32 @@ export async function POST(req: NextRequest) {
 
         if (error) {
             console.error('Supabase search error:', error);
-            // Fallback if search fails (or table doesn't exist yet)
-            return NextResponse.json({
-                reply: "I'm having a little trouble accessing my memory right now. Please try again in a moment or use the contact form."
-            });
+            // Non-blocking error, we proceed with other contexts
         }
 
-        // 2b. Fetch Active Providers for Context
-        const { data: providers } = await supabase
-            .from('providers')
-            .select('name, specialties, bio')
-            .eq('is_active', true);
+        // 3. Fetch Real-time Contexts Parallelly
+        const [servicesCtx, availabilityCtx] = await Promise.all([
+            getServicesContext(),
+            getAvailabilityContext()
+        ]);
 
-        const providerContext = providers?.map((p: any) =>
-            `- ${p.name}: ${p.specialties?.join(', ') || 'General Massage'}.`
-        ).join('\n') || 'No specific providers listed.';
-
-        // 3. Construct Context
+        // 4. Construct Full Context
         const ragContext = documents
             ?.map((doc: any) => doc.content)
             .join('\n\n') || '';
 
-        const fullContext = `Available Therapists:\n${providerContext}\n\nGeneral Information:\n${ragContext}`;
+        const fullContext = `
+REAL-TIME AVAILABILITY:
+${availabilityCtx}
 
-        // 4. Generate Answer
+CURRENT SERVICES & PRICES:
+${servicesCtx}
+
+GENERAL KNOWLEDGE BASE:
+${ragContext}
+        `.trim();
+
+        // 5. Generate Answer
         const reply = await generateChatResponse(fullContext, message);
 
         return NextResponse.json({ reply });
