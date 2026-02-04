@@ -1,11 +1,40 @@
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import Button from '@/components/Button';
 import Card, { CardContent, CardHeader } from '@/components/Card';
 
-export default function Home() {
-  const t = useTranslations('HomePage');
+import { supabase } from '@/lib/supabase';
+import type { Service } from '@/lib/supabase';
+
+// Force dynamic to ensure homepage shows latest service details
+export const dynamic = 'force-dynamic';
+
+async function getFeaturedService() {
+  // Try to find "Therapeutic Massage" first by title (in English), or just get the first one
+  // Since title is JSONB, we can't easily ILIKE on it without specific operator or just fetching all.
+  // Let's just fetch all active and find one that looks like "therapeutic" or default to first.
+  const { data: services } = await supabase
+    .from('services')
+    .select('*')
+    .eq('is_active', true);
+
+  if (!services || services.length === 0) return null;
+
+  // Find therapeutic preferably
+  const featured = services.find(s =>
+    (s.title['en'] && s.title['en'].toLowerCase().includes('therapeutic'))
+  );
+
+  return (featured || services[0]) as Service;
+}
+
+export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'HomePage' });
+  const featuredService = await getFeaturedService();
+  const lang = locale as 'en' | 'es';
 
   return (
     <div className="flex flex-col">
@@ -38,21 +67,27 @@ export default function Home() {
             </p>
           </div>
           <div className="mx-auto mt-16 max-w-2xl">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-2xl font-bold text-stone-900">{t('Services.therapeuticMassage.title')}</h3>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-stone-600 text-lg leading-relaxed">
-                  {t('Services.therapeuticMassage.description')}
-                </p>
-                <div className="mt-6 flex justify-center">
-                  <Button href="/book" size="lg">{t('Services.therapeuticMassage.bookAppointment')}</Button>
-                </div>
-              </CardContent>
-            </Card>
+            {featuredService ? (
+              <Card className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-2xl font-bold text-stone-900">{featuredService.title[lang] || featuredService.title['en']}</h3>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-stone-600 text-lg leading-relaxed">
+                    {featuredService.description[lang] || featuredService.description['en']}
+                  </p>
+                  <div className="mt-6 flex justify-center">
+                    <Button href="/book" size="lg">{t('Services.therapeuticMassage.bookAppointment')}</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="text-center text-stone-500">
+                <p>No services currently available.</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

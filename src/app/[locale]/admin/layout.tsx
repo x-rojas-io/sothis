@@ -36,6 +36,7 @@ export default async function AdminLayout({
                 <>
                   <a href="/admin/clients" className="text-stone-300 hover:text-white transition-colors">Clients</a>
                   <a href="/admin/staff" className="text-stone-300 hover:text-white transition-colors">Staff Users</a>
+                  <a href="/admin/services" className="text-stone-300 hover:text-white transition-colors">Services</a>
                 </>
               )}
             </nav>

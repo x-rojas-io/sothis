@@ -79,3 +79,15 @@ export type Client = {
     created_at: string;
     updated_at: string;
 };
+
+export type Service = {
+    id: string;
+    image_url: string;
+    is_active: boolean;
+    title: { [key: string]: string }; // { en: "...", es: "..." }
+    description: { [key: string]: string };
+    price: { [key: string]: string };
+    duration: { [key: string]: string };
+    created_at: string;
+    updated_at: string;
+};
