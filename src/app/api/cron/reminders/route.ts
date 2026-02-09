@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { Resend } from 'resend';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -8,9 +10,24 @@ export const dynamic = 'force-dynamic'; // Ensure not cached
 
 export async function GET(request: Request) {
     try {
-        // 1. Security Check (Vercel Cron)
+        let authorized = false;
+
+        // 1. Check Cron Secret (Vercel Cron)
         const authHeader = request.headers.get('authorization');
-        if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+        if (authHeader === `Bearer ${process.env.CRON_SECRET}`) {
+            authorized = true;
+        }
+
+        // 2. Check Admin Session (Manual Trigger)
+        if (!authorized) {
+            const session = await getServerSession(authOptions);
+            if (session && session.user.role === 'admin') {
+                authorized = true;
+                console.log(`[Cron] Manual trigger by admin: ${session.user.email}`);
+            }
+        }
+
+        if (!authorized) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 

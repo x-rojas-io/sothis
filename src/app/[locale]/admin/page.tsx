@@ -121,9 +121,33 @@ export default function AdminDashboard() {
                                 <h2 className="text-xl font-semibold text-stone-900">Upcoming Bookings</h2>
                                 {loading && <span className="text-sm text-stone-500 animate-pulse">Updating...</span>}
                             </div>
-                            <Button href="/admin/book">
-                                Book Appointment
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button
+                                    onClick={async () => {
+                                        if (!confirm('Send email reminders for TOMORROW\'s appointments?')) return;
+                                        setLoading(true);
+                                        try {
+                                            const res = await fetch('/api/cron/reminders');
+                                            const data = await res.json();
+                                            if (res.ok) {
+                                                alert(`Success! ${data.processed} reminders sent.`);
+                                            } else {
+                                                alert(`Error: ${data.error || 'Failed to send'}`);
+                                            }
+                                        } catch (e) {
+                                            alert('Failed to trigger reminders');
+                                        } finally {
+                                            setLoading(false);
+                                        }
+                                    }}
+                                    variant="secondary"
+                                >
+                                    📩 Send Reminders
+                                </Button>
+                                <Button href="/admin/book">
+                                    Book Appointment
+                                </Button>
+                            </div>
                         </div>
                         <div className="divide-y divide-stone-200">
                             {upcomingBookings.length === 0 ? (
