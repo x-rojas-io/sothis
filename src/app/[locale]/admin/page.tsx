@@ -117,8 +117,13 @@ export default function AdminDashboard() {
                     {/* Upcoming Bookings */}
                     <div className={`bg-white rounded-lg border border-stone-200 ${loading ? 'opacity-50' : ''}`}>
                         <div className="p-6 border-b border-stone-200 flex justify-between items-center">
-                            <h2 className="text-xl font-semibold text-stone-900">Upcoming Bookings</h2>
-                            {loading && <span className="text-sm text-stone-500 animate-pulse">Updating...</span>}
+                            <div className="flex items-center gap-4">
+                                <h2 className="text-xl font-semibold text-stone-900">Upcoming Bookings</h2>
+                                {loading && <span className="text-sm text-stone-500 animate-pulse">Updating...</span>}
+                            </div>
+                            <Button href="/admin/book">
+                                Book Appointment
+                            </Button>
                         </div>
                         <div className="divide-y divide-stone-200">
                             {upcomingBookings.length === 0 ? (

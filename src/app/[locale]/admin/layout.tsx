@@ -35,6 +35,7 @@ export default async function AdminLayout({
               {isAdmin && (
                 <>
                   <a href="/admin/clients" className="text-stone-300 hover:text-white transition-colors">Clients</a>
+                  <a href="/admin/book" className="text-secondary font-bold hover:text-white transition-colors">Book Appt</a>
                   <a href="/admin/staff" className="text-stone-300 hover:text-white transition-colors">Staff Users</a>
                   <a href="/admin/services" className="text-stone-300 hover:text-white transition-colors">Services</a>
                 </>
