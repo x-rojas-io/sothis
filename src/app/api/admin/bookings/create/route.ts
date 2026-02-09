@@ -36,14 +36,70 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Invalid time format' }, { status: 400 });
         }
         const formattedTime = `${timeParts[0].padStart(2, '0')}:${timeParts[1].padStart(2, '0')}:00`;
-        const endTimeParts = [parseInt(timeParts[0]) + 1, parseInt(timeParts[1])]; // Default 1 hour duration
-        const formattedEndTime = `${endTimeParts[0].toString().padStart(2, '0')}:${endTimeParts[1].toString().padStart(2, '0')}:00`;
+
+        // 1. Set Duration to 2 Hours (120 minutes)
+        const startHour = parseInt(timeParts[0]);
+        const startMin = parseInt(timeParts[1]);
+
+        const endDateObj = new Date();
+        endDateObj.setHours(startHour + 2); // Add 2 hours
+        endDateObj.setMinutes(startMin);
+
+        const endHour = endDateObj.getHours();
+        const endMin = endDateObj.getMinutes();
+
+        const formattedEndTime = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}:00`;
+
+        // 2. Check for Overlaps
+        // Query for any BOOKED slots on the same date and provider that overlap
+        // Overlap Logic: (ExistingStart < NewEnd) AND (ExistingEnd > NewStart)
+        const { data: conflictingSlots, error: conflictError } = await supabaseAdmin
+            .from('time_slots')
+            .select('start_time, end_time')
+            .eq('date', date)
+            .eq('provider_id', provider_id)
+            .eq('status', 'booked') // Only care about booked slots
+            .lt('start_time', formattedEndTime)
+            .gt('end_time', formattedTime);
+
+        if (conflictError) {
+            console.error('Error checking conflicts:', conflictError);
+            throw conflictError;
+        }
+
+        if (conflictingSlots && conflictingSlots.length > 0) {
+            // Conflict found!
+            // Calculate Next Available Time
+            // Strategy: Find the max end_time of conflicts and add 15 min buffer
+            let maxEndTime = formattedEndTime;
+
+            conflictingSlots.forEach(slot => {
+                if (slot.end_time > maxEndTime) {
+                    maxEndTime = slot.end_time;
+                }
+            });
+
+            // Parse maxEndTime to add buffer
+            const [maxH, maxM] = maxEndTime.split(':').map(Number);
+            const nextDate = new Date();
+            nextDate.setHours(maxH);
+            nextDate.setMinutes(maxM + 15); // Add 15 min buffer
+
+            const nextH = nextDate.getHours().toString().padStart(2, '0');
+            const nextM = nextDate.getMinutes().toString().padStart(2, '0');
+            const nextAvailable = `${nextH}:${nextM}`;
+
+            return NextResponse.json({
+                error: 'Time slot conflict',
+                nextAvailable: nextAvailable
+            }, { status: 409 });
+        }
 
 
         // 3. Find or Create Time Slot
         let timeSlotId = null;
 
-        // Check if slot exists
+        // Check if EXACT slot exists (unlikely given custom times, but possible)
         const { data: existingSlot, error: fetchError } = await supabaseAdmin
             .from('time_slots')
             .select('id, status')
@@ -52,19 +108,20 @@ export async function POST(request: Request) {
             .maybeSingle();
 
         if (fetchError && fetchError.code !== 'PGRST116') {
-            console.error('Error fetching slot:', fetchError);
-            // Proceed to create if error is just "not found", but here we handle DB errors
+            // ... error handling
         }
 
         if (existingSlot) {
             timeSlotId = existingSlot.id;
-            // Optionally update status to 'booked' if it was 'available'
-            if (existingSlot.status === 'available') {
-                await supabaseAdmin
-                    .from('time_slots')
-                    .update({ status: 'booked' })
-                    .eq('id', timeSlotId);
-            }
+            // Update to booked if available
+            await supabaseAdmin
+                .from('time_slots')
+                .update({
+                    status: 'booked',
+                    end_time: formattedEndTime // Enforce 2 hour duration even if reusing slot
+                })
+                .eq('id', timeSlotId);
+
         } else {
             // Create new slot
             const { data: newSlot, error: createError } = await supabaseAdmin
@@ -73,17 +130,15 @@ export async function POST(request: Request) {
                     date,
                     start_time: formattedTime,
                     end_time: formattedEndTime,
-                    provider_id: provider_id, // Important: assign to provider
-                    status: 'booked'  // Created specifically for this booking
+                    provider_id: provider_id,
+                    status: 'booked'
                 })
                 .select()
                 .single();
 
+            // ... error handling ...
             if (createError) {
-                // Handle Race Condition (Unique Constraint)
                 if (createError.code === '23505') {
-                    // It was created just now by someone else? Retry fetch?
-                    // Or more likely, logic above failed to find it.
                     return NextResponse.json({ error: 'Time slot conflict. Please try again.' }, { status: 409 });
                 }
                 throw createError;

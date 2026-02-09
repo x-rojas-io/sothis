@@ -125,6 +125,8 @@ export default function AdminBookingPage() {
     };
 
     // 4. Submit Booking
+    const [conflictSuggestion, setConflictSuggestion] = useState<string | null>(null);
+
     const handleBooking = async () => {
         if (!selectedProvider || !date || !time) {
             setMessage('Please fill in all booking details.');
@@ -133,6 +135,7 @@ export default function AdminBookingPage() {
 
         setIsLoading(true);
         setMessage('');
+        setConflictSuggestion(null);
 
         try {
             const res = await fetch('/api/admin/bookings/create', {
@@ -141,7 +144,7 @@ export default function AdminBookingPage() {
                 body: JSON.stringify({
                     client_name: clientData.name,
                     client_email: clientData.email,
-                    client_phone: clientData.phone || regForm.phone, // Fallback if old client record incomplete
+                    client_phone: clientData.phone || regForm.phone,
                     client_address: clientData.address,
                     client_city: clientData.city,
                     client_state: clientData.state,
@@ -154,11 +157,92 @@ export default function AdminBookingPage() {
             });
 
             const data = await res.json();
+
+            if (res.status === 409 && data.nextAvailable) {
+                setConflictSuggestion(data.nextAvailable);
+                setMessage(''); // Clear generic error
+                return; // Stop here, wait for user input
+            }
+
             if (!res.ok) throw new Error(data.error || 'Booking failed');
 
             setStep('confirm');
             setMessage('Booking confirmed successfully!');
 
+        } catch (err: any) {
+            setMessage(`Error: ${err.message}`);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const applySuggestion = () => {
+        if (conflictSuggestion) {
+            setTime(conflictSuggestion);
+            setConflictSuggestion(null);
+            // Optional: immediately trigger booking? 
+            // Better to let them review the new time in the input, then click Confirm again.
+            // But user said "Book now?", implying immediate action.
+            // Let's update time and auto-submit? 
+            // Actually, updating state 'time' and then calling handleBooking might rely on stale state if not careful.
+            // Safest: Update 'time' state, and the user clicks 'Confirm' again?
+            // "Book now?" implies a button that does it.
+            // I will create a specific function for this.
+
+            // Actually, I can just call handleBooking with the new time directly? NO, handleBooking reads from state `time`.
+            // So I must update state.
+        }
+    };
+
+    // Helper to book specifically the suggested time immediately
+    const bookSuggested = async () => {
+        if (!conflictSuggestion) return;
+        setTime(conflictSuggestion); // Update UI
+
+        // We need to bypass the state update lag for the immediate API call, or just rely on the user clicking the specific button which we will implement to call the API with the explicit value.
+        // Copying handleBooking logic is messy.
+        // Let's just update the time and let them click "Confirm" again? 
+        // User prompt: "Book now?"
+        // I'll make the "Book now" button update the time state AND call the API (or a modified version).
+
+        // Actually, easiest way: Update time state, and show a message "Time updated to HH:MM. Click Confirm to proceed."
+        // BUT the user asked for "Book now?".
+
+        // Let's use a ref or just pass the time to a helper.
+        // For now, I will implement `confirmSuggestedBooking` which calls the API with the explicit `conflictSuggestion` time.
+        confirmSuggestedBooking(conflictSuggestion);
+    };
+
+    const confirmSuggestedBooking = async (overrideTime: string) => {
+        setIsLoading(true);
+        setMessage('');
+        setConflictSuggestion(null);
+        setTime(overrideTime); // Update UI for visual consistency
+
+        try {
+            const res = await fetch('/api/admin/bookings/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    client_name: clientData.name,
+                    client_email: clientData.email,
+                    client_phone: clientData.phone || regForm.phone,
+                    client_address: clientData.address,
+                    client_city: clientData.city,
+                    client_state: clientData.state,
+                    client_zip: clientData.zip,
+                    notes,
+                    provider_id: selectedProvider,
+                    date,
+                    time: overrideTime // Use the passed time
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Booking failed');
+
+            setStep('confirm');
+            setMessage('Booking confirmed successfully!');
         } catch (err: any) {
             setMessage(`Error: ${err.message}`);
         } finally {
@@ -340,6 +424,24 @@ export default function AdminBookingPage() {
                                         placeholder="Internal notes or client requests..."
                                     />
                                 </div>
+
+                                {conflictSuggestion && (
+                                    <div className="bg-amber-50 border border-amber-200 rounded-md p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-amber-600 text-xl">⚠️</span>
+                                            <p className="text-amber-800 font-medium">
+                                                This time is not available for the appointment. Next available is {conflictSuggestion}. Book now?
+                                            </p>
+                                        </div>
+                                        <Button
+                                            onClick={bookSuggested}
+                                            variant="secondary"
+                                            className="whitespace-nowrap"
+                                        >
+                                            Book {conflictSuggestion}
+                                        </Button>
+                                    </div>
+                                )}
 
                                 <Button
                                     onClick={handleBooking}
