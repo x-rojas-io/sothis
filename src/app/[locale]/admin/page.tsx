@@ -7,6 +7,9 @@ import type { Booking, TimeSlot } from '@/lib/supabase';
 import ProviderFilter from '@/components/ProviderFilter';
 import Button from '@/components/Button';
 
+import BookingNoteModal from '@/components/BookingNoteModal';
+import { getLastNote } from '@/lib/notes';
+
 export default function AdminDashboard() {
     const [upcomingBookings, setUpcomingBookings] = useState<(Booking & { time_slot: TimeSlot })[]>([]);
     const [stats, setStats] = useState({
@@ -20,6 +23,10 @@ export default function AdminDashboard() {
     // Role & Filter State
     const [userRole, setUserRole] = useState<string>('');
     const [selectedProvider, setSelectedProvider] = useState<string>('all');
+
+    // Notes Modal
+    const [selectedBooking, setSelectedBooking] = useState<any>(null);
+    const [noteModalOpen, setNoteModalOpen] = useState(false);
 
     useEffect(() => {
         fetchDashboardData();
@@ -60,6 +67,23 @@ export default function AdminDashboard() {
         }
     }
 
+    async function saveBookingNote(newNotes: string) {
+        if (!selectedBooking) return;
+
+        const res = await fetch('/api/admin/bookings', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: selectedBooking.id,
+                notes: newNotes
+            })
+        });
+
+        if (!res.ok) throw new Error('Failed to update notes');
+
+        // Optimistic update
+        setUpcomingBookings(prev => prev.map(b => b.id === selectedBooking.id ? { ...b, notes: newNotes } : b));
+    }
 
 
     // Force HMR update
@@ -69,6 +93,19 @@ export default function AdminDashboard() {
                 <div className="text-center py-12">Loading...</div>
             ) : (
                 <div className="space-y-8">
+                    {/* Note Modal */}
+                    {selectedBooking && (
+                        <BookingNoteModal
+                            isOpen={noteModalOpen}
+                            onClose={() => setNoteModalOpen(false)}
+                            bookingId={selectedBooking.id}
+                            clientName={selectedBooking.client_name}
+                            date={selectedBooking.time_slot.date}
+                            initialNotes={selectedBooking.notes}
+                            onSave={saveBookingNote}
+                        />
+                    )}
+
                     {/* Header with Filter */}
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                         <div>
@@ -156,9 +193,11 @@ export default function AdminDashboard() {
                                 </div>
                             ) : (
                                 upcomingBookings.map((booking: any) => (
-                                    <div key={booking.id} className="p-6 hover:bg-stone-50">
-                                        <div className="flex justify-between items-start">
-                                            <div>
+                                    <div key={booking.id} className="p-6 hover:bg-stone-50 border-b border-stone-100 last:border-0">
+                                        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+
+                                            {/* Column 1: Client Info (3 cols) - Made smaller to give room to notes */}
+                                            <div className="md:col-span-3">
                                                 <div className="font-semibold text-stone-900 flex items-center gap-2">
                                                     {booking.client_name}
                                                     {/* Show Provider badge if Admin viewing All */}
@@ -172,12 +211,46 @@ export default function AdminDashboard() {
                                                 {booking.client_phone && (
                                                     <div className="text-sm text-stone-600">{booking.client_phone}</div>
                                                 )}
-                                                <div className="text-sm text-stone-500 mt-2">
+                                                <div className="text-sm text-stone-500 mt-2 font-medium bg-stone-100 inline-block px-2 py-1 rounded">
                                                     {booking.service_type}
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <div className="font-medium text-stone-900">
+
+                                            {/* Column 2: Notes (6 cols) - Wider */}
+                                            <div className="md:col-span-6">
+                                                <div
+                                                    onClick={() => {
+                                                        setSelectedBooking(booking);
+                                                        setNoteModalOpen(true);
+                                                    }}
+                                                    className="group cursor-pointer relative"
+                                                >
+                                                    <label className="text-xs font-bold text-stone-400 uppercase tracking-wider mb-1 block group-hover:text-secondary transition-colors">Latest Note</label>
+                                                    <div className="text-sm p-3 rounded border border-stone-200 bg-stone-50 group-hover:bg-white group-hover:border-secondary/50 group-hover:shadow-sm transition-all h-full min-h-[80px]">
+                                                        <span className={booking.notes ? 'text-stone-700 line-clamp-3' : 'text-stone-400 italic'}>
+                                                            {booking.notes ? getLastNote(booking.notes) : 'No notes recorded.'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Column 3: Edit Button (1 col) - Next to notes */}
+                                            <div className="md:col-span-1 flex justify-center">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedBooking(booking);
+                                                        setNoteModalOpen(true);
+                                                    }}
+                                                    className="p-2 text-stone-400 hover:text-secondary hover:bg-stone-100 rounded-full transition-colors"
+                                                    title="Edit Notes"
+                                                >
+                                                    ✏️
+                                                </button>
+                                            </div>
+
+                                            {/* Column 4: Date & Time (2 cols) */}
+                                            <div className="md:col-span-2 text-right">
+                                                <div className="font-medium text-stone-900 text-lg">
                                                     {(() => {
                                                         const [y, m, d] = booking.time_slot.date.split('-').map(Number);
                                                         const localDate = new Date(y, m - 1, d);
@@ -188,8 +261,15 @@ export default function AdminDashboard() {
                                                         });
                                                     })()}
                                                 </div>
-                                                <div className="text-sm text-stone-600 mt-1">
-                                                    {booking.time_slot.start_time.slice(0, 5)}
+                                                <div className="text-stone-600 font-mono mt-1 text-lg">
+                                                    {/* Convert 24h to 12h */}
+                                                    {(() => {
+                                                        const [hours, minutes] = booking.time_slot.start_time.split(':');
+                                                        const h = parseInt(hours, 10);
+                                                        const ampm = h >= 12 ? 'PM' : 'AM';
+                                                        const h12 = h % 12 || 12;
+                                                        return `${h12}:${minutes} ${ampm}`;
+                                                    })()}
                                                 </div>
                                             </div>
                                         </div>

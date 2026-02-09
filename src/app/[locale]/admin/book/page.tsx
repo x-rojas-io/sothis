@@ -138,6 +138,21 @@ export default function AdminBookingPage() {
         setConflictSuggestion(null);
 
         try {
+            // Format notes with timestamp if present
+            let formattedNotes = notes;
+            if (notes.trim()) {
+                const now = new Date();
+                const timestamp = now.toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                formattedNotes = `[${timestamp}]: ${notes}`;
+            }
+
             const res = await fetch('/api/admin/bookings/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -149,7 +164,7 @@ export default function AdminBookingPage() {
                     client_city: clientData.city,
                     client_state: clientData.state,
                     client_zip: clientData.zip,
-                    notes,
+                    notes: formattedNotes,
                     provider_id: selectedProvider,
                     date,
                     time
@@ -220,6 +235,21 @@ export default function AdminBookingPage() {
         setTime(overrideTime); // Update UI for visual consistency
 
         try {
+            // Format notes with timestamp if present
+            let formattedNotes = notes;
+            if (notes.trim()) {
+                const now = new Date();
+                const timestamp = now.toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                formattedNotes = `[${timestamp}]: ${notes}`;
+            }
+
             const res = await fetch('/api/admin/bookings/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -231,7 +261,7 @@ export default function AdminBookingPage() {
                     client_city: clientData.city,
                     client_state: clientData.state,
                     client_zip: clientData.zip,
-                    notes,
+                    notes: formattedNotes,
                     provider_id: selectedProvider,
                     date,
                     time: overrideTime // Use the passed time

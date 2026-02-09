@@ -27,6 +27,9 @@ type MasterSlot = TimeSlot & {
     booking?: Booking; // Attached if status === 'booked'
 };
 
+import BookingNoteModal from '@/components/BookingNoteModal';
+import { getLastNote } from '@/lib/notes';
+
 export default function MasterCalendarPage() {
     const [slots, setSlots] = useState<MasterSlot[]>([]);
     const [loading, setLoading] = useState(true);
@@ -37,6 +40,10 @@ export default function MasterCalendarPage() {
 
     // Filter State
     const [selectedProvider, setSelectedProvider] = useState<string>('all');
+
+    // Notes Modal
+    const [selectedBooking, setSelectedBooking] = useState<any>(null);
+    const [noteModalOpen, setNoteModalOpen] = useState(false);
 
     useEffect(() => {
         // Check URL params for filter to auto-set view
@@ -85,6 +92,24 @@ export default function MasterCalendarPage() {
         } finally {
             setLoading(false);
         }
+    }
+
+    async function saveBookingNote(newNotes: string) {
+        if (!selectedBooking) return;
+
+        const res = await fetch('/api/admin/bookings', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: selectedBooking.id,
+                notes: newNotes
+            })
+        });
+
+        if (!res.ok) throw new Error('Failed to update notes');
+
+        // Refresh data to update UI
+        await fetchMasterData();
     }
 
     // --- Actions ---
@@ -174,6 +199,19 @@ export default function MasterCalendarPage() {
 
     return (
         <div className="space-y-6">
+            {/* Notes Modal */}
+            {selectedBooking && (
+                <BookingNoteModal
+                    isOpen={noteModalOpen}
+                    onClose={() => setNoteModalOpen(false)}
+                    bookingId={selectedBooking.id}
+                    clientName={selectedBooking.client_name}
+                    date={selectedBooking.time_slot?.date || ''}
+                    initialNotes={selectedBooking.notes}
+                    onSave={saveBookingNote}
+                />
+            )}
+
             {/* Top Nav: Back to Dashboard */}
             <div>
                 <Link href="/admin" className="inline-flex items-center text-stone-500 hover:text-stone-900 transition-colors mb-4">
@@ -333,11 +371,22 @@ export default function MasterCalendarPage() {
                                                                     </h3>
                                                                     <div className="text-secondary font-medium mt-1">💆 {booking.service_type}</div>
                                                                 </div>
-
                                                                 {/* Notes Highlight */}
-                                                                <div className="bg-white border border-stone-200 rounded p-3 text-stone-800 leading-relaxed shadow-sm">
-                                                                    <span className="text-xs font-bold text-stone-500 uppercase tracking-widest block mb-1">Notes</span>
-                                                                    {booking.notes || <span className="text-stone-400 italic">No notes</span>}
+                                                                <div
+                                                                    onClick={() => {
+                                                                        setSelectedBooking(booking);
+                                                                        setNoteModalOpen(true);
+                                                                    }}
+                                                                    className="bg-white border border-stone-200 rounded p-3 text-stone-800 leading-relaxed shadow-sm cursor-pointer hover:border-secondary hover:ring-1 hover:ring-secondary/50 transition-all max-h-32 overflow-hidden"
+                                                                    title="Click to view full history and edit"
+                                                                >
+                                                                    <div className="flex justify-between items-center mb-1">
+                                                                        <span className="text-xs font-bold text-stone-500 uppercase tracking-widest">Latest Note</span>
+                                                                        <span className="text-xs text-stone-400 group-hover:text-secondary">✎ Edit</span>
+                                                                    </div>
+                                                                    <div className="line-clamp-3">
+                                                                        {booking.notes ? getLastNote(booking.notes) : <span className="text-stone-400 italic">No notes</span>}
+                                                                    </div>
                                                                 </div>
 
                                                                 <div className="text-sm text-stone-500 flex gap-4 pt-2">

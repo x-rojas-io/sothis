@@ -3,15 +3,18 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session || session.user.role !== 'admin') {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
+        const { searchParams } = new URL(request.url);
+        const clientEmail = searchParams.get('client_email');
+
         // Fetch all bookings with time slot details
-        const { data, error } = await supabaseAdmin
+        let query = supabaseAdmin
             .from('bookings')
             .select(`
                 *,
@@ -19,13 +22,14 @@ export async function GET() {
             `)
             .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        // Filter by client email if provided
+        if (clientEmail) {
+            query = query.eq('client_email', clientEmail);
+        }
 
-        // Sort by Booking Date (Time Slot Date) instead of creation date if preferred, 
-        // but typically "New Bookings" at top is good.
-        // Let's sort by Appointment Date for the "Schedule" view? 
-        // Or user can sort. Let's return them by Appointment Date desc (newest appointments first or future first?)
-        // Let's stick with database sort for now, or refine.
+        const { data, error } = await query;
+
+        if (error) throw error;
 
         // Sorting in JS for simplicity on nested field
         const allBookings = data?.sort((a: any, b: any) => {
@@ -48,34 +52,25 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { id, status } = await request.json();
+        const body = await request.json();
+        const { id, status, notes } = body;
 
-        if (!id || !status) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        if (!id) {
+            return NextResponse.json({ error: 'Missing booking ID' }, { status: 400 });
         }
+
+        const updateData: any = {};
+        if (status) updateData.status = status;
+        if (notes !== undefined) updateData.notes = notes;
 
         const { data, error } = await supabaseAdmin
             .from('bookings')
-            .update({ status })
+            .update(updateData)
             .eq('id', id)
             .select()
             .single();
 
         if (error) throw error;
-
-        // If cancelling, ensure the time slot is freed? 
-        // Logic: if booking is cancelled, the slot remains "available"? 
-        // Or strictly speaking, the slot is linked to the booking. 
-        // If booking is cancelled, we might want to free the slot.
-        // But our schema links booking -> slot. Slot has specific status? 
-        // Let's check schema. Usually slot has 'booked' status if we update it.
-        // Wait, 'src/app/api/bookings/route.ts' creates booking but doesn't seem to update time_slot status to 'booked' explicitly?
-        // Let's check 'src/app/api/bookings/route.ts' again.
-
-        // Actually, let's keep it simple: Update booking status.
-        // If we need to free the slot, we should do it here. 
-        // But 'bookings' table usually drives availability if we query 'left join'.
-        // For now, just updating booking status is the user request.
 
         return NextResponse.json({ success: true, data });
     } catch (error) {

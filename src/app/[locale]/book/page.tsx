@@ -305,15 +305,35 @@ function BookingContent() {
     const handleConfirmBooking = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedSlot) return;
+
+        // Validate Notes (Mandatory)
+        if (!formData.notes || formData.notes.trim().length === 0) {
+            setMessage('❌ Please include a note or reason for your visit.');
+            return;
+        }
+
         setProcessing(true);
 
         try {
+            // Timestamp the note
+            const now = new Date();
+            const timestamp = now.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            const formattedNotes = `[${timestamp}]: ${formData.notes}`;
+
             const bookingRes = await fetch('/api/bookings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     time_slot_id: selectedSlot.id,
-                    ...formData
+                    ...formData,
+                    notes: formattedNotes // Send timestamped note
                 })
             });
 
@@ -842,7 +862,9 @@ function BookingContent() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-2">{t('confirm.reasonLabel')}</label>
+                                <label className="block text-sm font-medium text-stone-700 mb-2">
+                                    {t('confirm.reasonLabel')} <span className="text-red-500">*</span>
+                                </label>
                                 <textarea
                                     required rows={3}
                                     value={formData.notes}
