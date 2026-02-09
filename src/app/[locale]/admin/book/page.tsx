@@ -5,14 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Button from '@/components/Button';
 import { supabase } from '@/lib/supabase';
+import type { Provider, Service } from '@/lib/supabase'; // Import Service type
 import { ChevronLeftIcon } from '@heroicons/react/24/solid';
 
-type Provider = {
-    id: string;
-    name: string;
-    image_url?: string;
-    color_code?: string;
-};
+// ... (imports)
 
 export default function AdminBookingPage() {
     const router = useRouter();
@@ -25,11 +21,13 @@ export default function AdminBookingPage() {
 
     // Data
     const [email, setEmail] = useState('');
-    const [clientData, setClientData] = useState<any>(null); // Found or created client
+    const [clientData, setClientData] = useState<any>(null);
     const [providers, setProviders] = useState<Provider[]>([]);
+    const [services, setServices] = useState<Service[]>([]); // New: Services state
 
     // Booking Form
     const [selectedProvider, setSelectedProvider] = useState<string>('');
+    const [selectedService, setSelectedService] = useState<Service | null>(null); // New: Selected Service
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
     const [notes, setNotes] = useState('');
@@ -51,22 +49,36 @@ export default function AdminBookingPage() {
             if (session?.user?.role !== 'admin' && session?.user?.role !== 'provider') {
                 router.push('/');
             }
-            fetchProviders();
+            fetchData(); // Renamed to fetchData
         } else if (status === 'unauthenticated') {
             router.push('/admin/login');
         }
     }, [status, session, router]);
 
-    const fetchProviders = async () => {
-        const { data } = await supabase.from('providers').select('*').eq('is_active', true);
-        if (data && data.length > 0) {
-            setProviders(data);
-            // Default to the first provider (Nancy)
-            setSelectedProvider(data[0].id);
+    const fetchData = async () => {
+        setIsLoading(true);
+        // Fetch Providers
+        const { data: provData } = await supabase.from('providers').select('*').eq('is_active', true);
+        if (provData && provData.length > 0) {
+            setProviders(provData);
+            setSelectedProvider(provData[0].id);
         }
+
+        // Fetch Services
+        const { data: servData } = await supabase
+            .from('services')
+            .select('*')
+            .eq('is_active', true)
+            .order('created_at', { ascending: true });
+
+        if (servData && servData.length > 0) {
+            setServices(servData);
+            setSelectedService(servData[0]); // Default to first service
+        }
+        setIsLoading(false);
     };
 
-    // 2. Client Lookup
+    // 2. Lookup Client
     const handleLookup = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -76,7 +88,7 @@ export default function AdminBookingPage() {
             const res = await fetch(`/api/auth/check-user?email=${encodeURIComponent(email)}`);
             const data = await res.json();
 
-            if (data.exists) {
+            if (data.exists && data.user) {
                 setClientData(data.user);
                 setMessage('Client found!');
                 setStep('details');
@@ -84,9 +96,8 @@ export default function AdminBookingPage() {
                 setMessage('Client not found. Please register.');
                 setStep('register');
             }
-        } catch (err) {
-            console.error(err);
-            setMessage('Error checking client.');
+        } catch (err: any) {
+            setMessage(`Error: ${err.message}`);
         } finally {
             setIsLoading(false);
         }
@@ -107,15 +118,12 @@ export default function AdminBookingPage() {
                     ...regForm
                 })
             });
+            const data = await res.json();
 
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || 'Failed to create client');
-            }
+            if (!res.ok) throw new Error(data.error || 'Failed to create client');
 
-            const newClient = await res.json();
-            setClientData(newClient);
-            setMessage('Client created successfully.');
+            setClientData({ email, ...regForm, id: data.id });
+            setMessage('Client registered successfully!');
             setStep('details');
         } catch (err: any) {
             setMessage(`Error: ${err.message}`);
@@ -123,12 +131,10 @@ export default function AdminBookingPage() {
             setIsLoading(false);
         }
     };
-
-    // 4. Submit Booking
     const [conflictSuggestion, setConflictSuggestion] = useState<string | null>(null);
 
     const handleBooking = async () => {
-        if (!selectedProvider || !date || !time) {
+        if (!selectedProvider || !date || !time || !selectedService) {
             setMessage('Please fill in all booking details.');
             return;
         }
@@ -166,6 +172,7 @@ export default function AdminBookingPage() {
                     client_zip: clientData.zip,
                     notes: formattedNotes,
                     provider_id: selectedProvider,
+                    service_type: selectedService.title['en'], // Send English title as service_type
                     date,
                     time
                 })
@@ -175,8 +182,8 @@ export default function AdminBookingPage() {
 
             if (res.status === 409 && data.nextAvailable) {
                 setConflictSuggestion(data.nextAvailable);
-                setMessage(''); // Clear generic error
-                return; // Stop here, wait for user input
+                setMessage('');
+                return;
             }
 
             if (!res.ok) throw new Error(data.error || 'Booking failed');
@@ -191,48 +198,20 @@ export default function AdminBookingPage() {
         }
     };
 
-    const applySuggestion = () => {
-        if (conflictSuggestion) {
-            setTime(conflictSuggestion);
-            setConflictSuggestion(null);
-            // Optional: immediately trigger booking? 
-            // Better to let them review the new time in the input, then click Confirm again.
-            // But user said "Book now?", implying immediate action.
-            // Let's update time and auto-submit? 
-            // Actually, updating state 'time' and then calling handleBooking might rely on stale state if not careful.
-            // Safest: Update 'time' state, and the user clicks 'Confirm' again?
-            // "Book now?" implies a button that does it.
-            // I will create a specific function for this.
 
-            // Actually, I can just call handleBooking with the new time directly? NO, handleBooking reads from state `time`.
-            // So I must update state.
-        }
-    };
 
     // Helper to book specifically the suggested time immediately
     const bookSuggested = async () => {
         if (!conflictSuggestion) return;
-        setTime(conflictSuggestion); // Update UI
-
-        // We need to bypass the state update lag for the immediate API call, or just rely on the user clicking the specific button which we will implement to call the API with the explicit value.
-        // Copying handleBooking logic is messy.
-        // Let's just update the time and let them click "Confirm" again? 
-        // User prompt: "Book now?"
-        // I'll make the "Book now" button update the time state AND call the API (or a modified version).
-
-        // Actually, easiest way: Update time state, and show a message "Time updated to HH:MM. Click Confirm to proceed."
-        // BUT the user asked for "Book now?".
-
-        // Let's use a ref or just pass the time to a helper.
-        // For now, I will implement `confirmSuggestedBooking` which calls the API with the explicit `conflictSuggestion` time.
         confirmSuggestedBooking(conflictSuggestion);
     };
 
     const confirmSuggestedBooking = async (overrideTime: string) => {
+        if (!selectedService) return;
         setIsLoading(true);
         setMessage('');
         setConflictSuggestion(null);
-        setTime(overrideTime); // Update UI for visual consistency
+        setTime(overrideTime);
 
         try {
             // Format notes with timestamp if present
@@ -263,8 +242,9 @@ export default function AdminBookingPage() {
                     client_zip: clientData.zip,
                     notes: formattedNotes,
                     provider_id: selectedProvider,
+                    service_type: selectedService.title['en'],
                     date,
-                    time: overrideTime // Use the passed time
+                    time: overrideTime
                 })
             });
 
@@ -289,6 +269,9 @@ export default function AdminBookingPage() {
         setNotes('');
         setRegForm({ name: '', phone: '', address: '', city: '', state: '', zip: '' });
         setMessage('');
+        setConflictSuggestion(null);
+        if (providers.length > 0) setSelectedProvider(providers[0].id);
+        if (services.length > 0) setSelectedService(services[0]);
     };
 
     if (status === 'loading') return <div className="p-12 text-center">Loading...</div>;
@@ -383,7 +366,7 @@ export default function AdminBookingPage() {
                         </div>
                     )}
 
-                    {/* STEP 3: DETAILS (Provider & Time) */}
+                    {/* STEP 3: DETAILS (Provider, Service & Time) */}
                     {step === 'details' && clientData && (
                         <div className="max-w-2xl mx-auto space-y-8">
                             <div className="bg-blue-50 p-4 rounded-lg flex justify-between items-center">
@@ -416,8 +399,33 @@ export default function AdminBookingPage() {
                                     </div>
                                 </div>
 
+                                {/* New: Service Selection */}
                                 <div>
-                                    <label className="block text-lg font-serif font-bold text-stone-900 mb-3">2. Date & Time</label>
+                                    <label className="block text-lg font-serif font-bold text-stone-900 mb-3">2. Select Service</label>
+                                    <div className="space-y-3">
+                                        {services.map(service => (
+                                            <button
+                                                key={service.id}
+                                                onClick={() => setSelectedService(service)}
+                                                className={`w-full p-4 rounded-lg border text-left flex justify-between items-center transition-all ${selectedService?.id === service.id
+                                                    ? 'border-secondary bg-secondary/5 ring-1 ring-secondary'
+                                                    : 'border-stone-200 hover:border-stone-300'
+                                                    }`}
+                                            >
+                                                <div>
+                                                    <div className="font-medium text-stone-900">{service.title['en']}</div>
+                                                    <div className="text-xs text-stone-500">{service.duration['en']}</div>
+                                                </div>
+                                                <div className="font-bold text-stone-900">
+                                                    {service.price['en']}
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-lg font-serif font-bold text-stone-900 mb-3">3. Date & Time</label>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm text-stone-600 mb-1">Date</label>
@@ -446,7 +454,7 @@ export default function AdminBookingPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-lg font-serif font-bold text-stone-900 mb-3">3. Notes (Optional)</label>
+                                    <label className="block text-lg font-serif font-bold text-stone-900 mb-3">4. Notes (Optional)</label>
                                     <textarea
                                         value={notes}
                                         onChange={e => setNotes(e.target.value)}
@@ -475,10 +483,10 @@ export default function AdminBookingPage() {
 
                                 <Button
                                     onClick={handleBooking}
-                                    disabled={isLoading || !selectedProvider || !date || !time}
+                                    disabled={isLoading || !selectedProvider || !selectedService || !date || !time}
                                     className="w-full justify-center text-lg py-4"
                                 >
-                                    {isLoading ? 'Booking...' : 'Confirm Appointment'}
+                                    {isLoading ? 'Booking...' : `Confirm Appointment ${selectedService ? `(${selectedService.price['en']})` : ''}`}
                                 </Button>
                             </div>
                         </div>

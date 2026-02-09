@@ -17,6 +17,7 @@ export async function POST(request: Request) {
             client_zip,
             notes,
             provider_id,
+            service_type, // New field
             date,       // "YYYY-MM-DD"
             time        // "HH:MM" (e.g. "14:30")
         } = body;
@@ -158,7 +159,7 @@ export async function POST(request: Request) {
                 client_city,
                 client_state,
                 client_zip,
-                service_type: 'Therapeutic Massage',
+                service_type: service_type || 'Therapeutic Massage', // Fallback just in case
                 notes,
                 status: 'confirmed'
                 // provider_id: removed as it's not in bookings schema, linked via time_slot_id
@@ -199,7 +200,7 @@ export async function POST(request: Request) {
                         <p style="margin: 10px 0;"><strong>Date:</strong> ${new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
                         <p style="margin: 10px 0;"><strong>Time:</strong> ${formattedTime.slice(0, 5)}</p>
                         <p style="margin: 10px 0;"><strong>Provider:</strong> ${providerName}</p>
-                        <p style="margin: 10px 0;"><strong>Service:</strong> Therapeutic Massage</p>
+                        <p style="margin: 10px 0;"><strong>Service:</strong> ${service_type || 'Therapeutic Massage'}</p>
                         <p style="margin: 10px 0;"><strong>Location:</strong> Edgewater, NJ</p>
                     </div>
                 </div>

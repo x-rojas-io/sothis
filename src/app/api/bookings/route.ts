@@ -7,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { time_slot_id, client_name, client_email, client_phone, client_address, client_city, client_state, client_zip, notes } = body;
+        const { time_slot_id, client_name, client_email, client_phone, client_address, client_city, client_state, client_zip, notes, service_type } = body;
 
         // Validate input
         if (!time_slot_id || !client_name || !client_email) {
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
                 client_city,
                 client_state,
                 client_zip,
-                service_type: 'Therapeutic Massage',
+                service_type: service_type || 'Therapeutic Massage', // Fallback
                 notes,
                 status: 'confirmed'
             }])
@@ -146,7 +146,7 @@ export async function POST(request: Request) {
                         <p style="margin: 10px 0;"><strong>Date:</strong> ${new Date(slot.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
                         <p style="margin: 10px 0;"><strong>Time:</strong> ${slot.start_time.slice(0, 5)}</p>
                         <p style="margin: 10px 0;"><strong>Provider:</strong> ${providerName}</p>
-                        <p style="margin: 10px 0;"><strong>Service:</strong> Therapeutic Massage</p>
+                        <p style="margin: 10px 0;"><strong>Service:</strong> ${service_type || 'Therapeutic Massage'}</p>
                     </div>
                     
                     <p style="color: #44403c; line-height: 1.6;">

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
-import type { TimeSlot, Provider } from '@/lib/supabase';
+import type { TimeSlot, Provider, Service } from '@/lib/supabase';
 import { useSession, signIn } from 'next-auth/react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Button from '@/components/Button';
@@ -44,15 +44,27 @@ function BookingContent() {
     const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
     // Auth Flow State
-    const [step, setStep] = useState<'auth' | 'register' | 'verify' | 'provider' | 'slots' | 'confirm'>('auth');
+    const [step, setStep] = useState<'auth' | 'register' | 'verify' | 'provider' | 'service' | 'slots' | 'confirm'>('auth');
     const [providers, setProviders] = useState<Provider[]>([]);
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+    const [services, setServices] = useState<Service[]>([]);
+    const [selectedService, setSelectedService] = useState<Service | null>(null);
 
-    // Fetch providers on mount
+    // Fetch providers and services on mount
     useEffect(() => {
-        supabase.from('providers').select('*').eq('is_active', true).then(({ data }) => {
-            if (data) setProviders(data);
-        });
+        // Fetch Providers and Services
+        const fetchData = async () => {
+            const { data: provData } = await supabase.from('providers').select('*').eq('is_active', true);
+            if (provData) setProviders(provData);
+
+            const { data: servData } = await supabase
+                .from('services')
+                .select('*')
+                .eq('is_active', true)
+                .order('created_at', { ascending: true });
+            if (servData) setServices(servData);
+        };
+        fetchData();
     }, []);
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
@@ -297,6 +309,18 @@ function BookingContent() {
         }
     };
 
+    const handleProviderSelect = (provider: Provider) => {
+        setSelectedProvider(provider);
+        // Automatically fetch slots or move to next step?
+        // Let's move to Service Selection
+        setStep('service');
+    };
+
+    const handleServiceSelect = (service: Service) => {
+        setSelectedService(service);
+        setStep('slots');
+    };
+
     const handleSlotSelect = (slot: TimeSlot) => {
         setSelectedSlot(slot);
         setStep('confirm');
@@ -304,7 +328,7 @@ function BookingContent() {
 
     const handleConfirmBooking = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedSlot) return;
+        if (!selectedSlot || !selectedService) return; // Ensure service is selected
 
         // Validate Notes (Mandatory)
         if (!formData.notes || formData.notes.trim().length === 0) {
@@ -332,6 +356,7 @@ function BookingContent() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     time_slot_id: selectedSlot.id,
+                    service_type: selectedService.title['en'], // Add service type
                     ...formData,
                     notes: formattedNotes // Send timestamped note
                 })
@@ -579,7 +604,7 @@ function BookingContent() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Option: Any Provider */}
                                 <button
-                                    onClick={() => { setSelectedProvider(null); setStep('slots'); }}
+                                    onClick={() => { setSelectedProvider(null); setStep('service'); }}
                                     className="p-6 rounded-xl border-2 border-dashed border-stone-300 hover:border-secondary hover:bg-stone-50 transition-all text-left flex items-center gap-4 group"
                                 >
                                     <div className="w-12 h-12 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 font-bold group-hover:bg-secondary/10 group-hover:text-secondary">
@@ -595,7 +620,7 @@ function BookingContent() {
                                 {providers.map(provider => (
                                     <button
                                         key={provider.id}
-                                        onClick={() => { setSelectedProvider(provider); setStep('slots'); }}
+                                        onClick={() => { setSelectedProvider(provider); setStep('service'); }}
                                         className="p-6 rounded-xl border border-stone-200 hover:border-secondary hover:bg-stone-50 transition-all text-left flex items-center gap-4 bg-white shadow-sm group"
                                     >
                                         {provider.image_url ? (
@@ -613,6 +638,49 @@ function BookingContent() {
                                             {provider.specialties && provider.specialties.length > 0 && (
                                                 <p className="text-sm text-stone-500">{provider.specialties.join(', ')}</p>
                                             )}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STEP 1.9: SERVICE SELECTION */}
+                    {step === 'service' && (
+                        <div className="space-y-6">
+                            <button
+                                onClick={() => setStep('provider')}
+                                className="flex items-center text-sm text-stone-500 hover:text-stone-900"
+                            >
+                                <ChevronLeftIcon className="w-4 h-4 mr-1" />
+                                Back to Providers
+                            </button>
+                            <h2 className="text-2xl font-serif font-bold text-stone-900 text-center mb-6">Select a Service</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {services.map(service => (
+                                    <button
+                                        key={service.id}
+                                        onClick={() => handleServiceSelect(service)}
+                                        className="text-left bg-white border border-stone-200 rounded-xl overflow-hidden hover:border-secondary hover:shadow-md transition-all group flex flex-col h-full"
+                                    >
+                                        <div className="h-40 bg-stone-100 relative w-full">
+                                            {service.image_url && (
+                                                <img src={service.image_url} alt={service.title['en']} className="w-full h-full object-cover" />
+                                            )}
+                                        </div>
+                                        <div className="p-6 flex flex-col flex-1">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h3 className="font-bold text-stone-900 group-hover:text-secondary transition-colors text-lg">
+                                                    {service.title['en']}
+                                                </h3>
+                                            </div>
+                                            <p className="text-secondary font-bold text-lg mb-3">{service.price['en']}</p>
+                                            <p className="text-sm text-stone-500 line-clamp-3 mb-4 flex-1">
+                                                {service.description['en']}
+                                            </p>
+                                            <div className="text-xs font-medium text-stone-400 uppercase tracking-wider pt-4 border-t border-stone-100 w-full">
+                                                Duration: {service.duration['en']}
+                                            </div>
                                         </div>
                                     </button>
                                 ))}
