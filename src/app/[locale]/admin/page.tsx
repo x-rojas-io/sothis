@@ -154,11 +154,15 @@ export default function AdminDashboard() {
                                             </div>
                                             <div className="text-right">
                                                 <div className="font-medium text-stone-900">
-                                                    {new Date(booking.time_slot.date).toLocaleDateString('en-US', {
-                                                        weekday: 'short',
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                    })}
+                                                    {(() => {
+                                                        const [y, m, d] = booking.time_slot.date.split('-').map(Number);
+                                                        const localDate = new Date(y, m - 1, d);
+                                                        return localDate.toLocaleDateString('en-US', {
+                                                            weekday: 'short',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                        });
+                                                    })()}
                                                 </div>
                                                 <div className="text-sm text-stone-600 mt-1">
                                                     {booking.time_slot.start_time.slice(0, 5)}
