@@ -1,0 +1,28 @@
+name: AI Health Check
+
+on:
+  schedule:
+    # Run at 13:00 UTC (9:00 AM EST) every day
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+jobs:
+  check-ai-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check AI Endpoint
+        run: |
+          # Replace with your actual production URL
+          # If the request fails (non-200), curl will exit with error due to -f
+          response=$(curl -f -s -w "\n%{http_code}" https://sothistherapeutic.com/api/health/ai)
+          http_code=$(echo "$response" | tail -n1)
+          content=$(echo "$response" | head -n-1)
+          
+          if [ "$http_code" -ne 200 ]; then
+            echo "Health check failed with status $http_code"
+            echo "Response: $content"
+            exit 1
+          fi
+          
+          echo "Health check passed!"
+          echo "Response: $content"

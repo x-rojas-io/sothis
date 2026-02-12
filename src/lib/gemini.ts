@@ -7,13 +7,15 @@ if (!process.env.GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function getEmbedding(text: string) {
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const modelName = process.env.GEMINI_EMBEDDING_MODEL || "models/gemini-embedding-001";
+    const model = genAI.getGenerativeModel({ model: modelName });
     const result = await model.embedContent(text);
     return result.embedding.values;
 }
 
 export async function generateChatResponse(context: string, query: string) {
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const modelName = process.env.GEMINI_CHAT_MODEL || "gemini-flash-latest";
+    const model = genAI.getGenerativeModel({ model: modelName });
 
     const prompt = `
 You are the AI Receptionist for Sothis Therapeutic Massage in Edgewater, NJ.
