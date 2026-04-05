@@ -57,31 +57,37 @@
                 "title": "Therapeutic Massage",
                 "description": "A customized blend of techniques tailored to your specific needs. Ideal for stress relief, pain management, muscle tension, and overall relaxation. Each session includes a consultation to ensure personalized care focused on your wellness goals.",
                 "duration": "60 / 90 min",
-                "price": "$120"
+                "price": "$120 / $180"
             },
-            "deepTissue": {
-                "title": "Deep Tissue Massage",
-                "description": "Ideal for releasing persistent muscle knots and relieving chronic pain in areas such as the lower back and shoulders.",
+            "aromatherapyBliss": {
+                "title": "Aromatherapy Bliss Massage",
+                "description": "A relaxing massage treatment that combines therapeutic massage techniques with aromatic essential oils to enhance both physical and emotional well-being. Essential oils are chosen based on the client's needs to promote relaxation, stress relief, improve mood, or increase energy.",
                 "duration": "60 / 90 min",
-                "price": "$125"
-            },
-            "sports": {
-                "title": "Sports Massage",
-                "description": "Designed for athletes; focuses on injury prevention, post-training muscle recovery, and pre-event preparation.",
-                "duration": "60 / 90 min",
-                "price": "$125"
-            },
-            "triggerPoint": {
-                "title": "Trigger Point Therapy",
-                "description": "Application of sustained and specific pressure on hypersensitive points to relieve referred pain and restore muscle function.",
-                "duration": "60 / 90 min",
-                "price": "$120"
+                "price": "$130 / $195"
             },
             "prenatal": {
                 "title": "Prenatal Massage",
                 "description": "Prenatal massage therapy reduces anxiety, relieves pregnancy-related muscle aches and joint pain, and improves circulation, providing significant physical and mental relief. It helps alleviate sciatica, back pain, and swelling while lowering stress hormones, which can lead to better sleep, improved immune response, and positive labor outcomes.",
                 "duration": "60 / 90 min",
-                "price": "$130"
+                "price": "$130 / $195"
+            },
+            "athleticRecovery": {
+                "title": "Athletic Recovery Massage",
+                "description": "Designed for athletes; focuses on injury prevention, post-training muscle recovery, and pre-event preparation. It helps athletes of all levels maintain peak performance and recover faster from intense physical activity.",
+                "duration": "60 / 90 min",
+                "price": "$135 / $200"
+            },
+            "hotStone": {
+                "title": "Hot Stone Therapy",
+                "description": "A relaxing therapeutic treatment that uses smooth, heated Basalt stones placed on specific areas of the body. Stones are also used to gently massage the muscles. The heat from the stones helps warm and loosen tight muscles, allowing deeper relaxation and relief without the need for intense pressure.",
+                "duration": "60 / 90 min",
+                "price": "$130 / $195"
+            },
+            "triggerPoint": {
+                "title": "Trigger Point Therapy",
+                "description": "Application of sustained and specific pressure on hypersensitive points to relieve referred pain and restore muscle function. Effective for chronic muscle tightness, headaches, and reduced mobility.",
+                "duration": "60 / 90 min",
+                "price": "$120 / $180"
             }
         },
         "benefits": {

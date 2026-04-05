@@ -57,31 +57,37 @@
                 "title": "Masaje Terapéutico",
                 "description": "Una mezcla personalizada de técnicas adaptadas a sus necesidades específicas. Ideal para aliviar el estrés, el manejo del dolor, la tensión muscular y la relajación general. Cada sesión incluye una consulta para garantizar una atención personalizada centrada en sus objetivos de bienestar.",
                 "duration": "60 / 90 min",
-                "price": "$120"
+                "price": "$120 / $180"
             },
-            "deepTissue": {
-                "title": "Masaje de Tejido Profundo",
-                "description": "Ideal para liberar nudos musculares persistentes y aliviar el dolor crónico en zonas como la espalda baja y los hombros.",
+            "aromatherapyBliss": {
+                "title": "Masaje Aromaterapia Bliss",
+                "description": "Tratamiento de masaje relajante que combina técnicas de masaje terapéutico con aceites esenciales aromáticos para mejorar el bienestar físico y emocional. Los aceites esenciales se eligen según sus necesidades para promover la relajación, el alivio del estrés, mejorar el estado de ánimo o aumentar la energía.",
                 "duration": "60 / 90 min",
-                "price": "Contactar por precios"
-            },
-            "sports": {
-                "title": "Masaje Deportivo",
-                "description": "Diseñado para atletas; se enfoca en la prevención de lesiones, la recuperación muscular post-entrenamiento y la preparación pre-evento.",
-                "duration": "60 / 90 min",
-                "price": "Contactar por precios"
-            },
-            "triggerPoint": {
-                "title": "Terapia de Puntos Gatillo",
-                "description": "Aplicación de presión sostenida y específica en puntos hipersensibles para aliviar el dolor referido y restablecer la función muscular.",
-                "duration": "60 / 90 min",
-                "price": "Contactar por precios"
+                "price": "$130 / $195"
             },
             "prenatal": {
                 "title": "Masaje Prenatal",
                 "description": "La terapia de masaje prenatal reduce la ansiedad, alivia los dolores musculares y articulares relacionados con el embarazo y mejora la circulación, brindando un alivio físico y mental significativo. Ayuda a aliviar la ciática, el dolor de espalda y la hinchazón, mientras reduce las hormonas del estrés, lo que puede conducir a un mejor sueño, una mejor respuesta inmunológica y resultados positivos en el parto.",
                 "duration": "60 / 90 min",
-                "price": "$130"
+                "price": "$130 / $195"
+            },
+            "athleticRecovery": {
+                "title": "Masaje de Recuperación Atlética",
+                "description": "Diseñado para atletas; se enfoca en la prevención de lesiones, la recuperación muscular post-entrenamiento y la preparación pre-evento. Ayuda a los atletas de todos los niveles a mantener el máximo rendimiento y recuperarse más rápido de la actividad física intensa.",
+                "duration": "60 / 90 min",
+                "price": "$135 / $200"
+            },
+            "hotStone": {
+                "title": "Terapia de Piedras Calientes",
+                "description": "Tratamiento terapéutico relajante que utiliza piedras de basalto lisas y calientes colocadas en áreas específicas del cuerpo. Las piedras también se utilizan para masajear suavemente los músculos. El calor de las piedras ayuda a calentar y relajar los músculos tensos, permitiendo una relajación más profunda y alivio sin necesidad de una presión intensa.",
+                "duration": "60 / 90 min",
+                "price": "$130 / $195"
+            },
+            "triggerPoint": {
+                "title": "Terapia de Puntos Gatillo",
+                "description": "Aplicación de presión sostenida y específica en puntos hipersensibles para aliviar el dolor referido y restablecer la función muscular. Eficaz para la tensión muscular crónica, dolores de cabeza y movilidad reducida.",
+                "duration": "60 / 90 min",
+                "price": "$120 / $180"
             }
         },
         "benefits": {

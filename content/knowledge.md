@@ -2,7 +2,7 @@
 *Edit this file to add more knowledge to Nancy's brain. After editing, run `npx tsx scripts/seed-knowledge.ts` locally.*
 
 ## Identity
-I am Nancy, a Licensed Massage Therapist (LMT) and the owner of SOTHIS in Edgewater, NJ. I specialize in Therapeutic Massage, Deep Tissue, and Sports Massage. My goal is to help you heal and relax.
+I am Nancy, a Licensed Massage Therapist (LMT) and the owner of SOTHIS in Edgewater, NJ. I specialize in Therapeutic Massage, Athletic Recovery Massage, Aromatherapy Bliss, and Hot Stone Therapy. My goal is to help you heal and relax.
 
 ## Location & Contact
 Address: 473 River Rd suite 161, Edgewater, NJ 07020, United States.
@@ -34,9 +34,7 @@ No! All our therapists will ask you to remove clothing only as far as you feel c
 ### I’m self-conscious about my weight, hair, scars, or potential acne. What should I do?
 Please don't let this stop you from getting help from a massage therapist. If you're sensitive about a particular area, ask them to avoid it. You can also opt for a fully clothed massage. Whatever your concerns, know that your therapists are friendly, supportive and judgment-free.
 
-### Should I see a Massage Therapist if I’m not in pain?
-Massage therapy is a great natural solution when you want relief from pain, but it can also be used as a preventive treatment too. Seeing your massage therapist regularly can help lower cortisol and raise serotonin levels to calm and relax your body, and loosen tight muscles/increase blood flow.
-We offer many modalities including Swedish Massage, Neuromuscular Therapy, Connective Tissue Therapy, Deep Tissue Therapy, Joint Mobilization, or Stone Therapy.
+We offer many modalities including Swedish Massage, Neuromuscular Therapy, Connective Tissue Therapy, Athletic Recovery Massage, Joint Mobilization, Aromatherapy Bliss, or Hot Stone Therapy.
 
 ### What if I fall asleep and drool or snore?
 It's normal to fall asleep during a massage. You might be feeling stressed and sleep-deprived, so falling asleep is normal once you're in a relaxed state. There's zero judgment from us if you snore. Drooling is also common, especially if you're on your front. Ask us for a tissue, and we'll be glad to grab one for you.
@@ -80,8 +78,14 @@ Massage therapy, when applied correctly, may require more than one session to ac
 ### What is Trigger Point Therapy?
 It is a specialized massage technique that targets painful, tight knots in muscles called "trigger points," applying sustained pressure with fingers or tools to release tension, improve circulation, and restore normal muscle function, relieving both local pain and referred pain (pain felt elsewhere). It's effective for chronic muscle tightness, headaches, and reduced mobility, often used by physiotherapists, massage therapists, and chiropractors.
 
-### What is Deep Tissue Therapeutic Massage?
-It targets deep layers of muscle and connective tissue using slow strokes and intense pressure to release chronic pain, stiffness, and muscle knots (adhesions) by breaking down scar tissue and improving circulation, making it ideal for postural issues, injury recovery, and chronic tension, though it involves more intense pressure than Swedish massage.
+### What is Athletic Recovery Massage? (Formerly Sports Massage)
+Designed for athletes; focuses on injury prevention, post-training muscle recovery, and pre-event preparation. It helps athletes of all levels maintain peak performance and recover faster from intense physical activity.
+
+### What is Aromatherapy Bliss Massage?
+A relaxing massage treatment that combines therapeutic massage techniques with aromatic essential oils to enhance both physical and emotional well-being. Essential oils are chosen based on the client's needs to promote relaxation, stress relief, improve mood, or increase energy.
+
+### What is Hot Stone Therapy?
+A relaxing therapeutic treatment that uses smooth, heated Basalt stones placed on specific areas of the body. Stones are also used to gently massage the muscles. The heat from the stones helps warm and loosen tight muscles, allowing deeper relaxation and relief without the need for intense pressure.
 
 ### What does Sothis mean?
 Sothis is associated with the goddess Sopdet, who was associated with fertility, rebirth, the flooding of the Nile, and the start of a new year—a symbol of renewal and new beginnings. Inspired by this symbolism, Sothis Massage embodies renewal, balance, and the flow of energy, supporting your journey toward wellness, healing, and a fresh beginning in your body and mind.
