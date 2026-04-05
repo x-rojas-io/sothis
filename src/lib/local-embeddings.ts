@@ -2,7 +2,9 @@ import { pipeline, env } from '@xenova/transformers';
 
 // Optimization for Vercel: Force WASM backend to avoid 
 // native Linux library dependencies (libonnxruntime.so).
-env.backends.onnx.wasm.numThreads = 1;
+(env.backends.onnx as any).wasm.numThreads = 1;
+(env.backends.onnx as any).wasm.simd = false;
+(env.backends.onnx as any).wasm.proxy = false;
 env.allowLocalModels = false;
 
 /**

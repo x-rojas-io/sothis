@@ -27,6 +27,7 @@
     "next-auth": "^4.24.13",
     "next-intl": "^4.6.1",
     "nodemailer": "^7.0.11",
+    "onnxruntime-web": "^1.24.3",
     "react": "^19.2.1",
     "react-big-calendar": "^1.19.4",
     "react-dom": "^19.2.1",
