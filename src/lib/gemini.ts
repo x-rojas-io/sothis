@@ -7,9 +7,12 @@ if (!process.env.GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function getEmbedding(text: string) {
-    const modelName = process.env.GEMINI_EMBEDDING_MODEL || "models/gemini-embedding-001";
+    const modelName = "text-embedding-004";
     const model = genAI.getGenerativeModel({ model: modelName });
-    const result = await model.embedContent(text);
+    const result = await model.embedContent({
+        content: { parts: [{ text }], role: 'user' },
+        outputDimensionality: 384,
+    } as any);
     return result.embedding.values;
 }
 

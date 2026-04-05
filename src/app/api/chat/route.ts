@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateChatResponse } from '@/lib/gemini';
-import { getLocalEmbedding } from '@/lib/local-embeddings';
+import { getReliableEmbedding } from '@/lib/embeddings';
 import { supabase } from '@/lib/supabase';
 import { getServicesContext, getAvailabilityContext } from '@/lib/context-providers';
 
@@ -14,19 +14,36 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Message is required' }, { status: 400 });
         }
 
-        // 1. Generate Local Embedding for search (Reliable & Private)
-        const queryEmbedding = await getLocalEmbedding(message);
+        // 1. Generate Reliable Embedding for search (Production-ready)
+        let queryEmbedding: number[] | null = null;
+        try {
+            queryEmbedding = await getReliableEmbedding(message);
+        } catch (e) {
+            console.error('Embedding Generation Failed:', e);
+        }
 
         // 2. Search Supabase for similar documents (RAG)
-        const { data: documents, error } = await supabase.rpc('match_documents', {
-            query_embedding: queryEmbedding,
-            match_threshold: 0.4,
-            match_count: 5
-        });
+        let documents: any[] | null = null;
+        
+        if (queryEmbedding) {
+            const { data, error } = await supabase.rpc('match_documents', {
+                query_embedding: queryEmbedding,
+                match_threshold: 0.4,
+                match_count: 5
+            });
+            if (!error) documents = data;
+        }
 
-        if (error) {
-            console.error('Supabase search error:', error);
-            // Non-blocking error, we proceed with other contexts
+        // 2.5 FALLBACK: Keyword Search (If vector search failed or returned nothing)
+        if (!documents || documents.length === 0) {
+            console.log('Falling back to keyword search...');
+            const { data, error } = await supabase
+                .from('documents')
+                .select('content, metadata')
+                .ilike('content', `%${message.substring(0, 50)}%`)
+                .limit(3);
+            
+            if (!error) documents = data;
         }
 
         // 3. Fetch Real-time Contexts Parallelly

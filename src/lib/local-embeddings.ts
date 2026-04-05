@@ -1,7 +1,8 @@
 import { pipeline, env } from '@xenova/transformers';
 
-// Optimization for Vercel: Disable local model check to avoid 
-// read-only filesystem errors and force loading from CDN/HuggingFace.
+// Optimization for Vercel: Force WASM backend to avoid 
+// native Linux library dependencies (libonnxruntime.so).
+env.backends.onnx.wasm.numThreads = 1;
 env.allowLocalModels = false;
 
 /**
