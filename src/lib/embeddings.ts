@@ -20,10 +20,14 @@ export async function getReliableEmbedding(text: string): Promise<number[]> {
 
     // 2. Try Local Embedding (Secondary Fallback)
     try {
-        console.log('Using Local model for embedding...');
-        return await getLocalEmbedding(text);
+        console.log('Attempting Local model embedding...');
+        const localEmbedding = await getLocalEmbedding(text);
+        if (localEmbedding) return localEmbedding;
     } catch (error) {
         console.error('Local Embedding Fallback Error:', error);
-        throw new Error('All embedding methods failed');
     }
+
+    // 3. Final Fallback: Return empty or throw handled
+    console.warn('All embedding methods failed. Falling back to keyword search.');
+    return []; // Return empty so the route can trigger keyword search
 }

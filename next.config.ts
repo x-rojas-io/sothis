@@ -16,7 +16,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["@xenova/transformers"],
+  serverExternalPackages: [],
   webpack: (config) => {
     // Force the builder to ignore native ONNX runtime binaries
     config.resolve.alias = {
