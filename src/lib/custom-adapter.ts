@@ -28,7 +28,7 @@ export function SimpleSupabaseAdapter(): Adapter {
             }
             return { ...data, emailVerified: data.email_verified };
         },
-        async getUser(id) {
+        async getUser(id: string) {
             const { data, error } = await supabaseAdmin
                 .from('users')
                 .select('*')
@@ -37,7 +37,7 @@ export function SimpleSupabaseAdapter(): Adapter {
             if (error) return null;
             return { ...data, emailVerified: data.email_verified };
         },
-        async getUserByEmail(email) {
+        async getUserByEmail(email: string) {
             const { data, error } = await supabaseAdmin
                 .from('users')
                 .select('*')
@@ -46,7 +46,7 @@ export function SimpleSupabaseAdapter(): Adapter {
             if (error) return null;
             return { ...data, emailVerified: data.email_verified };
         },
-        async getUserByAccount({ provider, providerAccountId }) {
+        async getUserByAccount({ provider, providerAccountId }: { provider: string, providerAccountId: string }) {
             const { data, error } = await supabaseAdmin
                 .from('accounts')
                 .select('users (*)')
@@ -57,7 +57,7 @@ export function SimpleSupabaseAdapter(): Adapter {
             const user = data.users as any;
             return { ...user, emailVerified: user.email_verified };
         },
-        async updateUser(user) {
+        async updateUser(user: any) {
             const { emailVerified, ...rest } = user;
             // Explicitly only allow known columns to prevent PGRST204 if extra props exist
             const updates: any = {
@@ -85,7 +85,7 @@ export function SimpleSupabaseAdapter(): Adapter {
                 emailVerified: data.email_verified ? new Date(data.email_verified) : null
             };
         },
-        async deleteUser(userId) {
+        async deleteUser(userId: string) {
             await supabaseAdmin.from('users').delete().eq('id', userId);
         },
         async linkAccount(account: any) {
@@ -101,11 +101,11 @@ export function SimpleSupabaseAdapter(): Adapter {
             if (error) throw error;
             return account;
         },
-        async unlinkAccount({ provider, providerAccountId }) {
+        async unlinkAccount({ provider, providerAccountId }: { provider: string, providerAccountId: string }) {
             await supabaseAdmin.from('accounts').delete().match({ provider, provideraccountid: providerAccountId });
         },
         // Session management
-        async createSession({ sessionToken, userId, expires }) {
+        async createSession({ sessionToken, userId, expires }: { sessionToken: string, userId: string, expires: Date }) {
             const { data, error } = await supabaseAdmin
                 .from('sessions')
                 .insert({
@@ -123,7 +123,7 @@ export function SimpleSupabaseAdapter(): Adapter {
                 expires: new Date(data.expires)
             };
         },
-        async getSessionAndUser(sessionToken) {
+        async getSessionAndUser(sessionToken: string) {
             const { data, error } = await supabaseAdmin
                 .from('sessions')
                 .select('*, users(*)')
@@ -144,7 +144,7 @@ export function SimpleSupabaseAdapter(): Adapter {
                 } as any,
             };
         },
-        async updateSession(session) {
+        async updateSession(session: any) {
             const updates: any = {};
             if (session.expires) updates.expires = session.expires;
             if (session.userId) updates.userid = session.userId;
@@ -163,11 +163,11 @@ export function SimpleSupabaseAdapter(): Adapter {
                 expires: new Date(data.expires)
             };
         },
-        async deleteSession(sessionToken) {
+        async deleteSession(sessionToken: string) {
             await supabaseAdmin.from('sessions').delete().eq('sessiontoken', sessionToken);
         },
         // Verification tokens for Magic Link
-        async createVerificationToken(token) {
+        async createVerificationToken(token: any) {
             const { data, error } = await supabaseAdmin
                 .from('verification_tokens')
                 .insert(token)
@@ -182,7 +182,7 @@ export function SimpleSupabaseAdapter(): Adapter {
                 expires: new Date(data.expires)
             };
         },
-        async useVerificationToken({ identifier, token }) {
+        async useVerificationToken({ identifier, token }: { identifier: string; token: string }) {
             const { data, error } = await supabaseAdmin
                 .from('verification_tokens')
                 .delete()
