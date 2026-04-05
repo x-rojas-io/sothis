@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getEmbedding, generateChatResponse } from '@/lib/gemini';
+import { generateChatResponse } from '@/lib/gemini';
+import { getLocalEmbedding } from '@/lib/local-embeddings';
 import { supabase } from '@/lib/supabase';
 import { getServicesContext, getAvailabilityContext } from '@/lib/context-providers';
 
@@ -13,8 +14,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Message is required' }, { status: 400 });
         }
 
-        // 1. Generate Embedding for the query
-        const queryEmbedding = await getEmbedding(message);
+        // 1. Generate Local Embedding for search (Reliable & Private)
+        const queryEmbedding = await getLocalEmbedding(message);
 
         // 2. Search Supabase for similar documents (RAG)
         const { data: documents, error } = await supabase.rpc('match_documents', {
@@ -50,10 +51,33 @@ GENERAL KNOWLEDGE BASE:
 ${ragContext}
         `.trim();
 
-        // 5. Generate Answer
-        const reply = await generateChatResponse(fullContext, message);
+        // 5. Generate Answer (with Fallback for Reliability)
+        let reply: string;
+        try {
+            reply = await generateChatResponse(fullContext, message);
+        } catch (genError: any) {
+            console.error('Generative AI Fallback Triggered:', genError.message);
+            // Fallback: Provide a structured response based on the retrieved context
+            reply = "I'm currently experiencing high demand, but I've found some information that might help you:\n\n" + 
+                    (ragContext || "Please contact us directly at sothistherapeutic@gmail.com for assistance.");
+        }
 
-        return NextResponse.json({ reply });
+        // 6. Component Suggestion (Future UI)
+        // Detect if the user is asking about booking or availability to suggest a component
+        const lowercaseMsg = message.toLowerCase();
+        let uiPayload = null;
+
+        if (lowercaseMsg.includes('book') || lowercaseMsg.includes('appt') || lowercaseMsg.includes('available')) {
+            uiPayload = {
+                type: 'appointment-slots',
+                data: availabilityCtx.split('\n').filter(line => line.includes('at')) // Simplistic extraction
+            };
+        }
+
+        return NextResponse.json({ 
+            reply, 
+            ui: uiPayload 
+        });
 
     } catch (error) {
         console.error('Chat API Error:', error);

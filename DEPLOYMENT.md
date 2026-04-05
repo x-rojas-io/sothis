@@ -55,12 +55,21 @@ Vercel will auto-detect Next.js settings:
 - **Output Directory**: `.next` ✅
 
 ### 3.4 Add Environment Variables
-Click **Environment Variables** and add:
+Click **Environment Variables** and add these required keys:
 
-| Name | Value |
-|------|-------|
-| `RESEND_API_KEY` | `re_xxxxx...` (your Resend API key) |
-| `CONTACT_EMAIL` | `sothistherapeutic@gmail.com` |
+| Category | Name | Value |
+|----------|------|-------|
+| **AI** | `GEMINI_API_KEY` | Your Google AI Studio Key |
+| **AI** | `GEMINI_EMBEDDING_MODEL` | `models/gemini-embedding-001` |
+| **AI** | `GEMINI_CHAT_MODEL` | `gemini-flash-latest` |
+| **Database**| `NEXT_PUBLIC_SUPABASE_URL` | Your Project URL |
+| **Database**| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Anon Key |
+| **Database**| `SUPABASE_SERVICE_ROLE_KEY` | Your Service Role Key (Keep Private) |
+| **Auth** | `NEXTAUTH_URL` | `https://your-site.vercel.app` |
+| **Auth** | `NEXTAUTH_SECRET` | Generate a random 32+ char string |
+| **Email** | `RESEND_API_KEY` | `re_xxxxx...` |
+| **Email** | `CONTACT_EMAIL` | `sothistherapeutic@gmail.com` |
+| **Email** | `EMAIL_FROM` | `appointments@sothistherapeutic.com` |
 
 ### 3.5 Deploy!
 1. Click **Deploy**
@@ -102,7 +111,29 @@ Please check:
 Let me know if you'd like any changes!
 ```
 
-## Step 6: After Approval - Custom Domain
+## Step 6: Configure AI Knowledge Base (Required)
+
+Nancy the AI Receptionist needs access to your clinic's documents and schedule in production.
+
+### 6.1 Database Migration
+1. Go to your **Production Supabase Dashboard**.
+2. Open the **SQL Editor**.
+3. Copy and run the code from [knowledge_base_setup.sql](file:///Users/nestor/sothis/supabase/knowledge_base_setup.sql).
+4. This enables `pgvector` and creates the search index.
+
+### 6.2 Knowledge Synchronization
+Run the seed script from your local terminal, but pointed at the **Production** Supabase project:
+```bash
+# Set your production keys temporarily in the terminal
+export NEXT_PUBLIC_SUPABASE_URL=your_prod_url
+export SUPABASE_SERVICE_ROLE_KEY=your_prod_service_key
+export GEMINI_API_KEY=your_key
+
+# Run the sync
+npx tsx scripts/seed-knowledge.ts
+```
+
+## Step 7: After Approval - Custom Domain
 
 ### 6.1 In Vercel Dashboard
 1. Go to your project

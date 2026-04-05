@@ -16,7 +16,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  serverExternalPackages: ["@xenova/transformers"],
 };
 
 export default withPWA(withNextIntl(nextConfig));

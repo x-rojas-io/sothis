@@ -1,10 +1,10 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
+import { getLocalEmbedding } from '../src/lib/local-embeddings.js';
 
 // Load environment variables manually
 const __filename = fileURLToPath(import.meta.url);
@@ -16,14 +16,9 @@ if (!process.env.GEMINI_API_KEY || !process.env.NEXT_PUBLIC_SUPABASE_URL || !pro
     process.exit(1);
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-async function getEmbedding(text: string) {
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
-    const result = await model.embedContent(text);
-    return result.embedding.values;
-}
+// Removed internal getEmbedding in favor of the shared local library
 
 async function seed() {
     console.log('🌱 Starting knowledge seeding...');
@@ -66,6 +61,42 @@ async function seed() {
         metadata: { topic: "benefits" }
     });
 
+    // 2. Blog Posts
+    try {
+        const blogPath = path.join(__dirname, '../content/blog');
+        if (fs.existsSync(blogPath)) {
+            const files = fs.readdirSync(blogPath).filter(f => f.endsWith('.md') && !f.endsWith('.es.md'));
+            files.forEach(file => {
+                const content = fs.readFileSync(path.join(blogPath, file), 'utf8');
+                // Simple cleanup: remove frontmatter if it exists
+                const text = content.replace(/^---[\s\S]*?---/, '').trim();
+                chunks.push({
+                    content: `Blog Post (${file}): ${text.substring(0, 1000)}`,
+                    metadata: { topic: "blog", filename: file }
+                });
+            });
+            console.log(`📝 Loaded ${files.length} blog posts.`);
+        }
+    } catch (e) {
+        console.error('Error reading blog posts:', e);
+    }
+
+    // 3. Reviews / Testimonials
+    try {
+        const reviews = [messages.HomePage.Testimonials.review1, messages.HomePage.Testimonials.review2];
+        reviews.forEach((review, index) => {
+            if (review) {
+                chunks.push({
+                    content: `Client Review: ${review}`,
+                    metadata: { topic: "review", index }
+                });
+            }
+        });
+        console.log(`⭐ Loaded ${reviews.length} reviews.`);
+    } catch (e) {
+        console.error('Error reading reviews:', e);
+    }
+
     // 3. Read from Custom Knowledge File (knowledge.md)
     try {
         const knowledgePath = path.join(__dirname, '../content/knowledge.md');
@@ -97,7 +128,7 @@ async function seed() {
 
     for (const chunk of chunks) {
         try {
-            const embedding = await getEmbedding(chunk.content);
+            const embedding = await getLocalEmbedding(chunk.content);
 
             const { error } = await supabase.from('documents').insert({
                 content: chunk.content,
