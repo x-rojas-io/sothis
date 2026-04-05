@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 export async function getServicesContext(): Promise<string> {
     const { data: services } = await supabase
         .from('services')
-        .select('title, price, duration')
+        .select('title, price, duration, description')
         .eq('is_active', true);
 
     if (!services || services.length === 0) return "No specific services found.";
@@ -12,7 +12,8 @@ export async function getServicesContext(): Promise<string> {
         const title = s.title?.en || 'Service';
         const price = s.price?.en || 'Price varies';
         const duration = s.duration?.en || 'Duration varies';
-        return `- ${title}: ${price} (${duration})`;
+        const description = s.description?.en || s.description || '';
+        return `- ${title}: ${price} (${duration})\n  Description: ${description}`;
     }).join('\n');
 }
 
