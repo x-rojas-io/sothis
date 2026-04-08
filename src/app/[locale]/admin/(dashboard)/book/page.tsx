@@ -31,6 +31,11 @@ export default function AdminBookingPage() {
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
     const [notes, setNotes] = useState('');
+    
+    // Intake Selection State
+    const [intakeHistory, setIntakeHistory] = useState<any[]>([]);
+    const [selectedIntakeId, setSelectedIntakeId] = useState<string>('new');
+    const [loadingIntake, setLoadingIntake] = useState(false);
 
     // Registration Form
     const [regForm, setRegForm] = useState({
@@ -92,6 +97,9 @@ export default function AdminBookingPage() {
                 setClientData(data.user);
                 setMessage('Client found!');
                 setStep('details');
+                
+                // Fetch intake history for the found client
+                fetchIntakeHistory(data.user.email);
             } else {
                 setMessage('Client not found. Please register.');
                 setStep('register');
@@ -125,6 +133,8 @@ export default function AdminBookingPage() {
             setClientData({ email, ...regForm, id: data.id });
             setMessage('Client registered successfully!');
             setStep('details');
+            setSelectedIntakeId('new'); // New client = new intake request
+            setIntakeHistory([]);
         } catch (err: any) {
             setMessage(`Error: ${err.message}`);
         } finally {
@@ -132,6 +142,25 @@ export default function AdminBookingPage() {
         }
     };
     const [conflictSuggestion, setConflictSuggestion] = useState<string | null>(null);
+
+    const fetchIntakeHistory = async (clientEmail: string) => {
+        setLoadingIntake(true);
+        try {
+            const res = await fetch(`/api/user/intake?history=all&email=${encodeURIComponent(clientEmail)}`, { cache: 'no-store' });
+            const data = await res.json();
+            if (data.history && data.history.length > 0) {
+                setIntakeHistory(data.history);
+                setSelectedIntakeId(data.history[0].id); // Default to most recent
+            } else {
+                setIntakeHistory([]);
+                setSelectedIntakeId('new');
+            }
+        } catch (error) {
+            console.error('Admin: Failed to fetch client intake history:', error);
+        } finally {
+            setLoadingIntake(false);
+        }
+    };
 
     const handleBooking = async () => {
         if (!selectedProvider || !date || !time || !selectedService) {
@@ -174,7 +203,8 @@ export default function AdminBookingPage() {
                     provider_id: selectedProvider,
                     service_type: selectedService.title['en'], // Send English title as service_type
                     date,
-                    time
+                    time,
+                    intake_form_id: selectedIntakeId === 'new' ? null : selectedIntakeId
                 })
             });
 
@@ -244,7 +274,8 @@ export default function AdminBookingPage() {
                     provider_id: selectedProvider,
                     service_type: selectedService.title['en'],
                     date,
-                    time: overrideTime
+                    time: overrideTime,
+                    intake_form_id: selectedIntakeId === 'new' ? null : selectedIntakeId
                 })
             });
 
@@ -272,6 +303,9 @@ export default function AdminBookingPage() {
         setConflictSuggestion(null);
         if (providers.length > 0) setSelectedProvider(providers[0].id);
         if (services.length > 0) setSelectedService(services[0]);
+        setIntakeHistory([]);
+        setSelectedIntakeId('new');
+        setLoadingIntake(false);
     };
 
     if (status === 'loading') return <div className="p-12 text-center">Loading...</div>;
@@ -461,6 +495,68 @@ export default function AdminBookingPage() {
                                         className="w-full rounded-md border border-stone-300 px-4 py-3 h-24"
                                         placeholder="Internal notes or client requests..."
                                     />
+                                </div>
+
+                                <div className="bg-stone-50 p-6 rounded-xl border border-stone-200">
+                                    <label className="block text-lg font-serif font-bold text-stone-900 mb-4">
+                                        Clinical Profile Management
+                                    </label>
+                                    
+                                    {loadingIntake ? (
+                                        <div className="flex items-center gap-2 text-stone-500 py-2">
+                                            <div className="w-4 h-4 border-2 border-stone-400 border-t-transparent rounded-full animate-spin"></div>
+                                            Loading historical records...
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {intakeHistory.length > 0 && (
+                                                <div className="space-y-2">
+                                                    <p className="text-[10px] uppercase tracking-wider text-stone-500 font-bold">Use Legacy Profile</p>
+                                                    {intakeHistory.map(form => (
+                                                        <label key={form.id} className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${selectedIntakeId === form.id ? 'bg-white border-secondary shadow-sm ring-1 ring-secondary' : 'bg-white border-stone-100 hover:border-stone-300'}`}>
+                                                            <input 
+                                                                type="radio" 
+                                                                name="intake_select" 
+                                                                value={form.id} 
+                                                                checked={selectedIntakeId === form.id}
+                                                                onChange={() => setSelectedIntakeId(form.id)}
+                                                                className="text-secondary focus:ring-secondary"
+                                                            />
+                                                            <div className="flex-1">
+                                                                <div className="text-sm font-bold text-stone-800">
+                                                                    Treatment Date: {new Date(form.created_at).toLocaleDateString()}
+                                                                </div>
+                                                                {form.concentrate_on && (
+                                                                    <div className="text-xs text-stone-500 mt-1 italic">Reason: {form.concentrate_on}</div>
+                                                                )}
+                                                            </div>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <div className="pt-2">
+                                                <label className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${selectedIntakeId === 'new' ? 'bg-white border-secondary shadow-sm ring-1 ring-secondary' : 'bg-white border-stone-100 hover:border-stone-300'}`}>
+                                                    <input 
+                                                        type="radio" 
+                                                        name="intake_select" 
+                                                        value="new" 
+                                                        checked={selectedIntakeId === 'new'}
+                                                        onChange={() => setSelectedIntakeId('new')}
+                                                        className="text-secondary focus:ring-secondary"
+                                                    />
+                                                    <div className="flex-1">
+                                                        <div className="text-sm font-bold text-stone-800">
+                                                            Request Health Profile Update
+                                                        </div>
+                                                        <div className="text-xs text-stone-500 mt-1">
+                                                            Client will receive a secure link in their confirmation email to complete a new form.
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {conflictSuggestion && (

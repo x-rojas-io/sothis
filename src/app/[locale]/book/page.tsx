@@ -25,7 +25,7 @@ import {
     addDays,
     subDays,
 } from 'date-fns';
-import { ChevronLeftIcon, ChevronRightIcon, CalendarDaysIcon, ArrowLeftIcon } from '@heroicons/react/24/solid';
+import { ChevronLeftIcon, ChevronRightIcon, CalendarDaysIcon, ArrowLeftIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
 
 // Wrap the content in a separate component to use useSearchParams
 function BookingContent() {
@@ -44,11 +44,16 @@ function BookingContent() {
     const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
     // Auth Flow State
-    const [step, setStep] = useState<'auth' | 'register' | 'verify' | 'provider' | 'service' | 'slots' | 'confirm'>('auth');
+    const [step, setStep] = useState<'auth' | 'register' | 'verify' | 'provider' | 'service' | 'slots' | 'confirm' | 'success'>('auth');
     const [providers, setProviders] = useState<Provider[]>([]);
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
     const [services, setServices] = useState<Service[]>([]);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
+    
+    // Intake Selection State
+    const [intakeHistory, setIntakeHistory] = useState<any[]>([]);
+    const [selectedIntakeId, setSelectedIntakeId] = useState<string>('new');
+    const [loadingIntake, setLoadingIntake] = useState(false);
 
     // Fetch providers and services on mount
     useEffect(() => {
@@ -79,6 +84,7 @@ function BookingContent() {
         client_state: '',
         client_zip: '',
         notes: '',
+        data_consent: false, // Mandatory Signup Consent
     });
     const [message, setMessage] = useState('');
 
@@ -125,7 +131,29 @@ function BookingContent() {
         if (step === 'slots') {
             fetchAvailableSlots();
         }
-    }, [step, currentDate]);
+        if (step === 'confirm' && status === 'authenticated') {
+            fetchIntakeHistory();
+        }
+    }, [step, currentDate, status]);
+
+    async function fetchIntakeHistory() {
+        setLoadingIntake(true);
+        try {
+            const res = await fetch('/api/user/intake?history=all', { cache: 'no-store' });
+            const data = await res.json();
+            if (data.history && data.history.length > 0) {
+                setIntakeHistory(data.history);
+                // Default to the most recent one if available
+                setSelectedIntakeId(data.history[0].id);
+            } else {
+                setSelectedIntakeId('new');
+            }
+        } catch (error) {
+            console.error('Failed to fetch intake history:', error);
+        } finally {
+            setLoadingIntake(false);
+        }
+    }
 
 
     async function fetchAvailableSlots() {
@@ -261,8 +289,14 @@ function BookingContent() {
             return;
         }
 
+        if (!formData.data_consent) {
+            setMessage('❌ Please authorize the collection of your personal data to continue.');
+            setProcessing(false);
+            return;
+        }
+
         try {
-            // Create User Account (Unverified conceptually, but we create them)
+            // Create User Account
             const userRes = await fetch('/api/users/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -273,7 +307,9 @@ function BookingContent() {
                     address: formData.client_address,
                     city: formData.client_city,
                     state: formData.client_state,
-                    zip: formData.client_zip
+                    zip: formData.client_zip,
+                    consent_at: new Date().toISOString(),
+                    consent_version: 'v1.0-2024-04'
                 })
             });
 
@@ -358,7 +394,8 @@ function BookingContent() {
                     time_slot_id: selectedSlot.id,
                     service_type: selectedService.title['en'], // Add service type
                     ...formData,
-                    notes: formattedNotes // Send timestamped note
+                    notes: formattedNotes, // Send timestamped note
+                    intake_form_id: selectedIntakeId === 'new' ? null : selectedIntakeId
                 })
             });
 
@@ -367,10 +404,17 @@ function BookingContent() {
                 throw new Error(err.error || 'Failed to create booking');
             }
 
-            setMessage(t('errors.bookingConfirmed'));
-            setTimeout(() => {
-                router.push('/my-bookings');
-            }, 2000);
+            const bookingData = await bookingRes.json();
+            const newBookingId = bookingData.booking?.id;
+
+            setMessage('');
+            
+            // If "Create New" was selected, jump to intake form with booking context
+            if (selectedIntakeId === 'new') {
+                router.push(`/intake-form?booking_id=${newBookingId}`);
+            } else {
+                setStep('success');
+            }
         } catch (error: any) {
             setMessage(`❌ ${error.message}`);
         } finally {
@@ -519,7 +563,7 @@ function BookingContent() {
 
                     {/* STEP 1.5: REGISTRATION */}
                     {step === 'register' && (
-                        <form onSubmit={handleRegister} className="space-y-4">
+                        <form onSubmit={handleRegister} className="space-y-4 text-left">
                             <h3 className="font-semibold text-lg text-stone-900 mb-4">{t('register.title')}</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="md:col-span-2">
@@ -583,7 +627,24 @@ function BookingContent() {
                                         />
                                     </div>
                                 </div>
+
+                                {/* CONSENT CHECKBOX */}
+                                <div className="md:col-span-2 mt-4 p-4 bg-white border border-stone-200 rounded-lg shadow-sm">
+                                    <label className="flex items-start gap-4 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            required
+                                            checked={formData.data_consent}
+                                            onChange={e => setFormData({ ...formData, data_consent: e.target.checked })}
+                                            className="mt-1 w-5 h-5 rounded border-stone-300 text-secondary focus:ring-secondary"
+                                        />
+                                        <span className="text-sm text-stone-600 leading-relaxed font-medium">
+                                            I authorize Sothis Therapeutic Massage to collect and process my personal data for the purpose of providing specialized massage therapy services and maintaining my clinical profile.
+                                        </span>
+                                    </label>
+                                </div>
                             </div>
+
                             <Button type="submit" disabled={processing} className="w-full justify-center mt-6">
                                 {processing ? t('register.processing') : t('register.submit')}
                             </Button>
@@ -943,6 +1004,69 @@ function BookingContent() {
                                 />
                             </div>
 
+                            {/* Intake Selection */}
+                            <div className="bg-stone-100/50 p-4 rounded-xl border border-stone-200">
+                                <label className="block text-sm font-bold text-stone-800 mb-4">
+                                    Clinical Intake & Health Profile
+                                </label>
+                                
+                                {loadingIntake ? (
+                                    <div className="flex items-center gap-2 text-stone-500 text-xs py-2">
+                                        <div className="w-3 h-3 border-2 border-stone-400 border-t-transparent rounded-full animate-spin"></div>
+                                        Fetching clinical history...
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {intakeHistory.length > 0 && (
+                                            <div className="space-y-2">
+                                                <p className="text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-1">Use Existing Profile</p>
+                                                {intakeHistory.map(form => (
+                                                    <label key={form.id} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedIntakeId === form.id ? 'bg-white border-secondary shadow-sm' : 'bg-white/50 border-stone-200 hover:border-stone-300'}`}>
+                                                        <input 
+                                                            type="radio" 
+                                                            name="intake_select" 
+                                                            value={form.id} 
+                                                            checked={selectedIntakeId === form.id}
+                                                            onChange={() => setSelectedIntakeId(form.id)}
+                                                            className="text-secondary focus:ring-secondary"
+                                                        />
+                                                        <div className="flex-1">
+                                                            <div className="text-xs font-bold text-stone-800">
+                                                                Profile from {new Date(form.created_at).toLocaleDateString()}
+                                                            </div>
+                                                            {form.concentrate_on && (
+                                                                <div className="text-[10px] text-stone-500 mt-0.5 italic">Focus: {form.concentrate_on}</div>
+                                                            )}
+                                                        </div>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        <div className="pt-2">
+                                            <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedIntakeId === 'new' ? 'bg-white border-secondary shadow-sm' : 'bg-white/50 border-stone-200 hover:border-stone-300'}`}>
+                                                <input 
+                                                    type="radio" 
+                                                    name="intake_select" 
+                                                    value="new" 
+                                                    checked={selectedIntakeId === 'new'}
+                                                    onChange={() => setSelectedIntakeId('new')}
+                                                    className="text-secondary focus:ring-secondary"
+                                                />
+                                                <div className="flex-1">
+                                                    <div className="text-xs font-bold text-stone-800">
+                                                        Create a New Clinical Profile
+                                                    </div>
+                                                    <div className="text-[10px] text-stone-500 mt-0.5">
+                                                        Best for new treatments or updated medical history
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
                             <Button type="submit" disabled={processing} className="w-full justify-center">
                                 {processing ? t('confirm.processing') : t('confirm.submit')}
                             </Button>
@@ -955,6 +1079,42 @@ function BookingContent() {
                                 {t('confirm.back')}
                             </button>
                         </form>
+                    )}
+
+                    {/* STEP 4: SUCCESS & INTAKE SUGGESTION */}
+                    {step === 'success' && (
+                        <div className="bg-green-50 border border-green-200 rounded-2xl p-8 md:p-12 text-center animate-fade-in shadow-sm">
+                            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
+                                <CheckCircleIcon className="w-12 h-12" />
+                            </div>
+                            <h3 className="text-3xl font-serif font-bold text-stone-900 mb-4">Appointment Confirmed!</h3>
+                            <p className="text-stone-600 mb-10 max-w-md mx-auto leading-relaxed text-lg">
+                                Your therapeutic session has been successfully booked. We've sent a confirmation email with all the details.
+                            </p>
+
+                            <div className="bg-white border border-stone-100 rounded-2xl p-8 mb-10 shadow-sm text-left max-w-md mx-auto relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-bl-full -translate-y-4 translate-x-4"></div>
+                                <h4 className="font-bold text-stone-800 flex items-center gap-2 mb-3 text-lg">
+                                    <span className="text-2xl">📋</span> Complete Your Profile
+                                </h4>
+                                <p className="text-sm text-stone-500 leading-relaxed mb-6">
+                                    To help your therapist prepare the best treatment plan, please complete your optional clinical intake and medical history.
+                                </p>
+                                <Button 
+                                    onClick={() => router.push('/intake-form')} 
+                                    className="w-full bg-secondary hover:bg-secondary/90 justify-center shadow-md font-bold py-4 text-lg"
+                                >
+                                    Start Health Intake
+                                </Button>
+                            </div>
+
+                            <button 
+                                onClick={() => router.push('/my-bookings')} 
+                                className="text-stone-500 text-sm font-medium hover:text-stone-900 transition-colors py-2 border-b border-transparent hover:border-stone-900"
+                            >
+                                Skip for now, view my bookings
+                            </button>
+                        </div>
                     )}
 
                     {message && (

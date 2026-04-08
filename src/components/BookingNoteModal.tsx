@@ -39,7 +39,7 @@ export default function BookingNoteModal({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[70] animate-in fade-in duration-200">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
                 <div className="px-6 py-4 border-b border-stone-200 flex justify-between items-center bg-stone-50">
                     <div>

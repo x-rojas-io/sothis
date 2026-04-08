@@ -19,7 +19,8 @@ export async function POST(request: Request) {
             provider_id,
             service_type, // New field
             date,       // "YYYY-MM-DD"
-            time        // "HH:MM" (e.g. "14:30")
+            time,        // "HH:MM" (e.g. "14:30")
+            intake_form_id // Optional link to clinical profile
         } = body;
 
         // 1. Validate Input
@@ -52,8 +53,6 @@ export async function POST(request: Request) {
         const formattedEndTime = `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}:00`;
 
         // 2. Check for Overlaps
-        // Query for any BOOKED slots on the same date and provider that overlap
-        // Overlap Logic: (ExistingStart < NewEnd) AND (ExistingEnd > NewStart)
         const { data: conflictingSlots, error: conflictError } = await supabaseAdmin
             .from('time_slots')
             .select('start_time, end_time')
@@ -69,22 +68,18 @@ export async function POST(request: Request) {
         }
 
         if (conflictingSlots && conflictingSlots.length > 0) {
-            // Conflict found!
-            // Calculate Next Available Time
-            // Strategy: Find the max end_time of conflicts and add 15 min buffer
+            // Conflict found logic...
             let maxEndTime = formattedEndTime;
-
             conflictingSlots.forEach(slot => {
                 if (slot.end_time > maxEndTime) {
                     maxEndTime = slot.end_time;
                 }
             });
 
-            // Parse maxEndTime to add buffer
             const [maxH, maxM] = maxEndTime.split(':').map(Number);
             const nextDate = new Date();
             nextDate.setHours(maxH);
-            nextDate.setMinutes(maxM + 15); // Add 15 min buffer
+            nextDate.setMinutes(maxM + 15);
 
             const nextH = nextDate.getHours().toString().padStart(2, '0');
             const nextM = nextDate.getMinutes().toString().padStart(2, '0');
@@ -100,7 +95,6 @@ export async function POST(request: Request) {
         // 3. Find or Create Time Slot
         let timeSlotId = null;
 
-        // Check if EXACT slot exists (unlikely given custom times, but possible)
         const { data: existingSlot, error: fetchError } = await supabaseAdmin
             .from('time_slots')
             .select('id, status')
@@ -108,23 +102,17 @@ export async function POST(request: Request) {
             .eq('start_time', formattedTime)
             .maybeSingle();
 
-        if (fetchError && fetchError.code !== 'PGRST116') {
-            // ... error handling
-        }
-
         if (existingSlot) {
             timeSlotId = existingSlot.id;
-            // Update to booked if available
             await supabaseAdmin
                 .from('time_slots')
                 .update({
                     status: 'booked',
-                    end_time: formattedEndTime // Enforce 2 hour duration even if reusing slot
+                    end_time: formattedEndTime
                 })
                 .eq('id', timeSlotId);
 
         } else {
-            // Create new slot
             const { data: newSlot, error: createError } = await supabaseAdmin
                 .from('time_slots')
                 .insert({
@@ -137,13 +125,7 @@ export async function POST(request: Request) {
                 .select()
                 .single();
 
-            // ... error handling ...
-            if (createError) {
-                if (createError.code === '23505') {
-                    return NextResponse.json({ error: 'Time slot conflict. Please try again.' }, { status: 409 });
-                }
-                throw createError;
-            }
+            if (createError) throw createError;
             timeSlotId = newSlot.id;
         }
 
@@ -159,10 +141,10 @@ export async function POST(request: Request) {
                 client_city,
                 client_state,
                 client_zip,
-                service_type: service_type || 'Therapeutic Massage', // Fallback just in case
+                service_type: service_type || 'Therapeutic Massage',
                 notes,
+                intake_form_id: intake_form_id || null, // Link the profile
                 status: 'confirmed'
-                // provider_id: removed as it's not in bookings schema, linked via time_slot_id
             }])
             .select()
             .single();
@@ -180,6 +162,7 @@ export async function POST(request: Request) {
 
         // 6. Send Emails
         const fromEmail = 'bookings@sothistherapeutic.com';
+        const baseUrl = process.env.NEXTAUTH_URL || 'https://sothistherapeutic.com';
 
         // Client Email
         await resend.emails.send({
@@ -203,6 +186,28 @@ export async function POST(request: Request) {
                         <p style="margin: 10px 0;"><strong>Service:</strong> ${service_type || 'Therapeutic Massage'}</p>
                         <p style="margin: 10px 0;"><strong>Location:</strong> Edgewater, NJ</p>
                     </div>
+
+                    ${!intake_form_id ? `
+                    <div style="background-color: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <h3 style="color: #92400e; margin-top: 0;">Action Required: Health Profile Update</h3>
+                        <p style="color: #92400e; line-height: 1.6;">
+                            Our therapist has requested an updated health profile for this session. Please complete your clinical intake form before your arrival:
+                        </p>
+                        <div style="margin-top: 15px;">
+                            <a href="${baseUrl}/intake-form?booking_id=${booking.id}" 
+                               style="background-color: #f5a623; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                                Complete Health Profile
+                            </a>
+                        </div>
+                        <p style="color: #92400e; font-size: 12px; margin-top: 10px;">
+                            * If you cannot click the button, copy this link: ${baseUrl}/intake-form?booking_id=${booking.id}
+                        </p>
+                    </div>
+                    ` : ''}
+
+                    <p style="color: #44403c; line-height: 1.6;">
+                        If you need to change your appointment, please contact us at sothistherapeutic@gmail.com.
+                    </p>
                 </div>
             `
         });

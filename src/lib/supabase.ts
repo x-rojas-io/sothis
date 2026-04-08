@@ -76,6 +76,41 @@ export type Client = {
     state?: string;
     zip?: string;
     notes?: string;
+    consent_at?: string; // Audit Trail: General Privacy Consent
+    consent_version?: string; // e.g. "v1.0-2024-04"
+    created_at: string;
+    updated_at: string;
+};
+
+export type IntakeForm = {
+    id: string;
+    client_id: string;
+    medical_history: {
+        professional_massage_before?: boolean;
+        frequency?: string;
+        difficulty_lying?: string;
+        allergies_skin?: string;
+        sensitive_skin?: boolean;
+        devices?: string[]; // contacts, dentures, etc.
+        lifestyle?: string;
+        repetitive_motion?: string;
+        stress_experience?: string;
+        stress_symptoms?: string[];
+        medical_supervision?: string;
+        chiropractor?: string;
+        medications?: string;
+        conditions?: string[];
+        pregnancy_months?: string;
+        additional_notes?: string;
+    };
+    emergency_contact: {
+        name: string;
+        phone: string;
+    };
+    concentrate_on: string[]; // List of body region IDs from SVG
+    signature_name: string;
+    signature_date: string;
+    consent_version: string;
     created_at: string;
     updated_at: string;
 };

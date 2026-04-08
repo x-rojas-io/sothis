@@ -7,7 +7,19 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { time_slot_id, client_name, client_email, client_phone, client_address, client_city, client_state, client_zip, notes, service_type } = body;
+        const { 
+            time_slot_id, 
+            client_name, 
+            client_email, 
+            client_phone, 
+            client_address, 
+            client_city, 
+            client_state, 
+            client_zip, 
+            notes, 
+            service_type,
+            intake_form_id // Optional link to clinical profile
+        } = body;
 
         // Validate input
         if (!time_slot_id || !client_name || !client_email) {
@@ -51,6 +63,7 @@ export async function POST(request: Request) {
                 client_zip,
                 service_type: service_type || 'Therapeutic Massage', // Fallback
                 notes,
+                intake_form_id: intake_form_id || null, // Persist the linkage
                 status: 'confirmed'
             }])
             .select()

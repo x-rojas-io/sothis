@@ -5,10 +5,14 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { name, email, phone, address, city, state, zip } = body;
+        const { name, email, phone, address, city, state, zip, consent_at, consent_version } = body;
 
         if (!email || !name) {
             return NextResponse.json({ error: 'Name and Email are required' }, { status: 400 });
+        }
+
+        if (!consent_at) {
+            return NextResponse.json({ error: 'Data processing consent is required' }, { status: 400 });
         }
 
         // Check if client already exists
@@ -32,7 +36,9 @@ export async function POST(request: Request) {
                 address,
                 city,
                 state,
-                zip
+                zip,
+                consent_at,
+                consent_version: consent_version || 'v1.0-2024-04'
             })
             .select()
             .single();
