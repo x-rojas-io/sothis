@@ -9,7 +9,7 @@ import { useSession } from 'next-auth/react';
 import BookingNoteModal from '@/components/BookingNoteModal';
 import IntakeFormFields from '@/components/IntakeFormFields';
 import { 
-    IntakeState, 
+    IntakeState,
     INITIAL_STATE, 
     TABS 
 } from '@/lib/intake-constants';
