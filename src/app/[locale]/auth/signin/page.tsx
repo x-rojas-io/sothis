@@ -12,6 +12,8 @@ export default function SignInPage() {
     const [step, setStep] = useState<'email' | 'verify'>('email');
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
+    const { data: session, status } = useSession();
+    const router = useRouter();
     const searchParams = useSearchParams();
     const callbackUrl = searchParams.get('callbackUrl');
 
