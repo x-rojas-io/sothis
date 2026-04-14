@@ -15,7 +15,7 @@ ADD COLUMN IF NOT EXISTS initial_visit_date DATE,
 ADD COLUMN IF NOT EXISTS consent_name TEXT,
 ADD COLUMN IF NOT EXISTS consent_at TIMESTAMPTZ,
 ADD COLUMN IF NOT EXISTS therapist_signature_at TIMESTAMPTZ,
-ADD COLUMN IF NOT EXISTS updated_by UUID REFERENCES auth.users(id),
+ADD COLUMN IF NOT EXISTS updated_by UUID,
 ADD COLUMN IF NOT EXISTS ip_address TEXT,
 ADD COLUMN IF NOT EXISTS therapist_signature_name TEXT,
 ADD COLUMN IF NOT EXISTS therapist_signature_ip TEXT;
@@ -38,7 +38,8 @@ ALTER TABLE intake_forms ALTER COLUMN signature_date DROP NOT NULL;
 CREATE TABLE IF NOT EXISTS intake_form_audit (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     intake_form_id UUID NOT NULL REFERENCES intake_forms(id) ON DELETE CASCADE,
-    modified_by UUID REFERENCES auth.users(id),
+    modified_by UUID,
+    modified_by_email TEXT,
     snapshot JSONB NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     ip_address TEXT,
