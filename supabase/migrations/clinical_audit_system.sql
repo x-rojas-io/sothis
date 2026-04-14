@@ -20,6 +20,16 @@ ADD COLUMN IF NOT EXISTS ip_address TEXT,
 ADD COLUMN IF NOT EXISTS therapist_signature_name TEXT,
 ADD COLUMN IF NOT EXISTS therapist_signature_ip TEXT;
 
+-- Explicitly drop blocking foreign key constraints if they exist from previous migration attempts
+-- This ensures patients (who are not in auth.users) can successfully submit/update forms.
+DO $$
+BEGIN
+    -- Drop updated_by FK if it exists
+    IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'intake_forms_updated_by_fkey') THEN
+        ALTER TABLE intake_forms DROP CONSTRAINT intake_forms_updated_by_fkey;
+    END IF;
+END $$;
+
 -- Ensure unique_intake_client_email constraint is idempotent
 DO $$
 BEGIN
@@ -51,6 +61,15 @@ ALTER TABLE intake_form_audit ADD COLUMN IF NOT EXISTS modified_by_email TEXT;
 ALTER TABLE intake_form_audit ADD COLUMN IF NOT EXISTS ip_address TEXT;
 ALTER TABLE intake_form_audit ADD COLUMN IF NOT EXISTS therapist_signature_name TEXT;
 ALTER TABLE intake_form_audit ADD COLUMN IF NOT EXISTS therapist_signature_ip TEXT;
+
+-- Explicitly drop blocking foreign key constraints from the audit table
+DO $$
+BEGIN
+    -- Drop modified_by FK if it exists
+    IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'intake_form_audit_modified_by_fkey') THEN
+        ALTER TABLE intake_form_audit DROP CONSTRAINT intake_form_audit_modified_by_fkey;
+    END IF;
+END $$;
 
 -- 4. Enable RLS on Audit Table
 ALTER TABLE intake_form_audit ENABLE ROW LEVEL SECURITY;
