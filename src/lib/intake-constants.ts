@@ -9,7 +9,10 @@ import {
 export interface IntakeState {
     id?: string;
     client_id?: string;
+    client_email?: string;
     updated_by?: string;
+    updated_by_email?: string;
+    ip_address?: string;
     full_name: string;
     phone_day: string;
     address: string;
@@ -65,6 +68,7 @@ export const INITIAL_STATE: IntakeState = {
     full_name: '', phone_day: '',
     address: '', city_state_zip: '',
     occupation: '', emergency_contact: '', emergency_phone: '',
+    client_email: '', ip_address: '', updated_by_email: '',
     initial_visit_date: new Date().toISOString().split('T')[0],
     date_of_birth: '',
     questions: {
