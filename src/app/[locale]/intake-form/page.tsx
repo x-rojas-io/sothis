@@ -73,7 +73,7 @@ export default function IntakeForm() {
                             date_of_birth: targetIntake.date_of_birth || '',
                             emergency_contact: targetIntake.emergency_contact || '',
                             emergency_phone: targetIntake.emergency_phone || '',
-                            client_email: targetIntake.client_email || session.user.email
+                            client_email: targetIntake.client_email || session?.user?.email || ''
                         });
                         setIsLocked(false);
                     } else {
