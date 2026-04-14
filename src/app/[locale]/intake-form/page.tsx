@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
     CheckCircleIcon
 } from '@heroicons/react/24/outline';
-import { useSession } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
@@ -17,7 +17,7 @@ import IntakeFormFields from '@/components/IntakeFormFields';
 import Button from '@/components/Button';
 
 export default function IntakeForm() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     const router = useRouter();
     const searchParams = useSearchParams();
     const formId = searchParams.get('id');
@@ -31,14 +31,22 @@ export default function IntakeForm() {
 
     const [form, setForm] = useState<IntakeState>(INITIAL_STATE);
 
-    // 1. Fetch Data on Load
+    // 1. Auth Monitoring & Data Loading
     useEffect(() => {
-        if (session?.user?.email) {
-            fetchIntakeData();
+        if (status === 'unauthenticated') {
+            const callbackUrl = window.location.pathname + window.location.search;
+            signIn(undefined, { callbackUrl });
+            return;
         }
-    }, [session, formId]);
 
-    async function fetchIntakeData() {
+        if (session?.user?.email) {
+            // Mode New: We still fetch demographic data but reset clinical questions
+            const isNewMode = searchParams.get('mode') === 'new';
+            fetchIntakeData(isNewMode);
+        }
+    }, [session, status, formId]);
+
+    async function fetchIntakeData(isNewMode: boolean = false) {
         try {
             // If fetching history, we might need a specific ID
             const url = formId ? `/api/user/intake?history=all` : `/api/user/intake`;
@@ -53,20 +61,35 @@ export default function IntakeForm() {
                 }
 
                 if (targetIntake) {
-                    // Check 1-year lock
-                    const createdAt = new Date(targetIntake.created_at);
-                    const oneYearAgo = new Date();
-                    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-                    if (createdAt < oneYearAgo) {
-                        setIsLocked(true);
-                    }
+                    if (isNewMode) {
+                        // PRESERVE Demographics, CLEAR clinical/medical questions
+                        setForm({
+                            ...INITIAL_STATE,
+                            full_name: targetIntake.full_name || data.client_name || '',
+                            phone_day: targetIntake.phone_day || '',
+                            address: targetIntake.address || '',
+                            city_state_zip: targetIntake.city_state_zip || '',
+                            occupation: targetIntake.occupation || '',
+                            date_of_birth: targetIntake.date_of_birth || '',
+                            emergency_contact: targetIntake.emergency_contact || '',
+                            emergency_phone: targetIntake.emergency_phone || '',
+                            client_email: targetIntake.client_email || session.user.email
+                        });
+                        setIsLocked(false);
+                    } else {
+                        // Check 1-year lock
+                        const createdAt = new Date(targetIntake.created_at);
+                        const oneYearAgo = new Date();
+                        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+                        if (createdAt < oneYearAgo && !formId) {
+                            setIsLocked(true);
+                        }
 
-                    setForm({
-                        ...INITIAL_STATE,
-                        ...targetIntake,
-                        full_name: data.client_name || targetIntake.full_name, // Prioritize registry name
-                        questions: { ...INITIAL_STATE.questions, ...targetIntake.medical_history }
-                    });
+                        setForm({
+                            ...targetIntake,
+                            questions: { ...INITIAL_STATE.questions, ...targetIntake.medical_history }
+                        });
+                    }
                 } else if (data.client_name) {
                     // New form, pre-fill name from registry
                     setForm(prev => ({ ...prev, full_name: data.client_name }));

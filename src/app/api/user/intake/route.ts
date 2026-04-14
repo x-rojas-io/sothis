@@ -45,7 +45,7 @@ export async function GET(request: Request) {
                     providers (name)
                 )
             `)
-            .or(`client_email.ilike."${userEmail.trim()}",client_id.eq.${clientId}`)
+            .eq('client_email', userEmail.trim())
             .eq('status', 'confirmed')
             .order('created_at', { ascending: false })
             .limit(1)
@@ -124,9 +124,10 @@ export async function POST(request: Request) {
         if (!session?.user?.email) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-
         const body = await request.json();
         const { 
+            id,
+            client_id,
             full_name, 
             phone_day, 
             address, 
@@ -140,53 +141,84 @@ export async function POST(request: Request) {
             medical_history, 
             concentrate_on, 
             consent_name, 
-            consent_at, 
+            consent_at,
+            therapist_signature_name,
             therapist_signature_at,
-            booking_id // Optional link to a specific booking
+            therapist_signature_ip,
+            booking_id
         } = body;
+
+        const role = (session.user as any)?.role;
+        const isProvider = role === 'admin' || role === 'provider';
+
+        // 1. Identify Target Client
+        let targetClientId = client_id;
+        
+        if (!isProvider || !targetClientId) {
+            // Patient view or missing ID: Lookup by session email
+            const { data: client } = await supabaseAdmin
+                .from('clients')
+                .select('id')
+                .eq('email', session.user.email)
+                .single();
+
+            if (!client) {
+                return NextResponse.json({ error: 'Client profile not found' }, { status: 404 });
+            }
+            targetClientId = client.id;
+        }
+        
+        // Extract IP Address for forensic clinical audit
+        const forwarded = request.headers.get('x-forwarded-for');
+        const ip = forwarded ? forwarded.split(',')[0] : (request as any).ip || '127.0.0.1';
 
         const medicalHistoryObj = medical_history || questions;
 
-        if (!consent_name) {
-            return NextResponse.json({ error: 'Clinical signature is required' }, { status: 400 });
+        // Finalize Therapist Signature Metadata if signing now
+        let finalTherapistSigAt = therapist_signature_at;
+        let finalTherapistSigIp = therapist_signature_ip;
+
+        if (isProvider && therapist_signature_name && !therapist_signature_at) {
+            finalTherapistSigAt = new Date().toISOString();
+            finalTherapistSigIp = ip;
         }
 
-        // Get Client ID from email
-        const { data: client } = await supabaseAdmin
-            .from('clients')
-            .select('id')
-            .eq('email', session.user.email)
-            .single();
+        // 2. Upsert Intake Form
+        const intakeInsertPayload = {
+            id: id, 
+            client_id: targetClientId,
+            client_email: body.client_email || session.user.email, // Preserve patient email
+            full_name,
+            phone_day,
+            address,
+            city_state_zip,
+            occupation,
+            emergency_contact,
+            emergency_phone,
+            initial_visit_date,
+            date_of_birth,
+            medical_history: medicalHistoryObj,
+            concentrate_on,
+            consent_name,
+            consent_at: consent_at || new Date().toISOString(),
+            therapist_signature_name,
+            therapist_signature_at: finalTherapistSigAt,
+            therapist_signature_ip: finalTherapistSigIp,
+            signature_name: consent_name, // Legacy support
+            signature_date: new Date().toISOString(),
+            updated_by: (session.user as any)?.id, 
+            updated_by_email: session.user.email,
+            ip_address: ip
+        };
 
-        if (!client) {
-            return NextResponse.json({ error: 'Client profile not found' }, { status: 404 });
+        // If no ID provided, remove it to let Supabase generate one
+        if (!intakeInsertPayload.id) {
+            delete intakeInsertPayload.id;
         }
 
-        // 1. Insert New Intake Form (Supports multiple treatments/years)
         const { data: intake, error: intakeError } = await supabaseAdmin
             .from('intake_forms')
-            .insert({
-                client_id: client.id,
-                client_email: session.user.email,
-                full_name,
-                phone_day,
-                address,
-                city_state_zip,
-                occupation,
-                emergency_contact,
-                emergency_phone,
-                initial_visit_date,
-                date_of_birth,
-                medical_history: medicalHistoryObj, // Map questions/medical_history object
-                concentrate_on,
-                consent_name,
-                consent_at: consent_at || new Date().toISOString(),
-                therapist_signature_at,
-                signature_name: consent_name, // Legacy support
-                signature_date: new Date().toISOString(),
-                updated_by: (session.user as any)?.id, // Capture UUID (Client or Staff)
-                updated_by_email: session.user.email // Capture Actor Email for Clinical Audit
-            })
+            .upsert(intakeInsertPayload, { onConflict: 'id' })
             .select()
             .single();
 
@@ -213,6 +245,7 @@ export async function POST(request: Request) {
                 modified_by: (session.user as any)?.id,
                 modified_by_email: session.user.email,
                 snapshot: body,
+                ip_address: ip,
                 created_at: new Date().toISOString()
             });
 

@@ -21,6 +21,7 @@ interface IntakeFormFieldsProps {
     setActiveTab: (tab: number) => void;
     isReadOnly?: boolean;
     isNameDisabled?: boolean;
+    isTherapistView?: boolean;
 }
 
 export default function IntakeFormFields({ 
@@ -29,7 +30,8 @@ export default function IntakeFormFields({
     activeTab, 
     setActiveTab,
     isReadOnly = false,
-    isNameDisabled = false
+    isNameDisabled = false,
+    isTherapistView = false
 }: IntakeFormFieldsProps) {
 
     // Helper: Yes/No Pills
@@ -352,10 +354,10 @@ export default function IntakeFormFields({
                                         >
                                             {region.id === 'head_front' && <ellipse cx="40" cy="16" rx="13" ry="15" />}
                                             {region.id === 'neck' && <rect x="34" y="30" width="12" height="9" rx="2" />}
-                                            {region.id === 'chest_left' && <rect x="24" y="39" width="16" height="22" rx="2" />}
-                                            {region.id === 'chest_right' && <rect x="40" y="39" width="16" height="22" rx="2" />}
-                                            {region.id === 'abdomen_left' && <rect x="24" y="61" width="16" height="20" rx="2" />}
-                                            {region.id === 'abdomen_right' && <rect x="40" y="61" width="16" height="20" rx="2" />}
+                                            {region.id === 'chest_left' && <rect x="23" y="39" width="17" height="22" rx="2" />}
+                                            {region.id === 'chest_right' && <rect x="40" y="39" width="17" height="22" rx="2" />}
+                                            {region.id === 'abdomen_left' && <rect x="23" y="61" width="17" height="20" rx="2" />}
+                                            {region.id === 'abdomen_right' && <rect x="40" y="61" width="17" height="20" rx="2" />}
                                             {region.id === 'left_shoulder' && <rect x="8" y="39" width="16" height="10" rx="4" />}
                                             {region.id === 'left_upper_arm' && <rect x="8" y="49" width="14" height="25" rx="4" />}
                                             {region.id === 'left_forearm' && <rect x="4" y="74" width="14" height="30" rx="4" />}
@@ -396,14 +398,23 @@ export default function IntakeFormFields({
                                             {region.id === 'mid_back_right' && <rect x="40" y="59" width="17" height="15" rx="2" />}
                                             {region.id === 'lower_back_left' && <rect x="23" y="74" width="17" height="15" rx="2" />}
                                             {region.id === 'lower_back_right' && <rect x="40" y="74" width="17" height="15" rx="2" />}
-                                            {region.id === 'glutes_left' && <rect x="21" y="89" width="19" height="20" rx="4" />}
-                                            {region.id === 'glutes_right' && <rect x="40" y="89" width="19" height="20" rx="4" />}
-                                            {region.id === 'left_hamstring' && <rect x="21" y="109" width="19" height="35" rx="4" />}
-                                            {region.id === 'right_hamstring' && <rect x="40" y="109" width="19" height="35" rx="4" />}
-                                            {region.id === 'left_calf' && <rect x="21" y="144" width="19" height="25" rx="4" />}
-                                            {region.id === 'right_calf' && <rect x="40" y="144" width="19" height="25" rx="4" />}
-                                            {region.id === 'left_heel' && <rect x="21" y="169" width="19" height="6" rx="2" />}
-                                            {region.id === 'right_heel' && <rect x="40" y="169" width="19" height="6" rx="2" />}
+                                            {region.id === 'glutes_left' && <rect x="23" y="89" width="17" height="20" rx="4" />}
+                                            {region.id === 'glutes_right' && <rect x="40" y="89" width="17" height="20" rx="4" />}
+                                            {region.id === 'left_hamstring' && <rect x="23" y="109" width="17" height="35" rx="4" />}
+                                            {region.id === 'right_hamstring' && <rect x="40" y="109" width="17" height="35" rx="4" />}
+                                            {region.id === 'left_calf' && <rect x="23" y="144" width="17" height="25" rx="4" />}
+                                            {region.id === 'right_calf' && <rect x="40" y="144" width="17" height="25" rx="4" />}
+                                            {region.id === 'left_heel' && <rect x="23" y="169" width="17" height="6" rx="2" />}
+                                            {region.id === 'right_heel' && <rect x="40" y="169" width="17" height="6" rx="2" />}
+                                            {/* BACK ARMS */}
+                                            {region.id === 'left_shoulder_back' && <rect x="8" y="39" width="15" height="10" rx="4" />}
+                                            {region.id === 'left_upper_arm_back' && <rect x="8" y="49" width="14" height="25" rx="4" />}
+                                            {region.id === 'left_forearm_back' && <rect x="4" y="74" width="14" height="30" rx="4" />}
+                                            {region.id === 'left_hand_back' && <rect x="2" y="104" width="14" height="15" rx="6" />}
+                                            {region.id === 'right_shoulder_back' && <rect x="57" y="39" width="15" height="10" rx="4" />}
+                                            {region.id === 'right_upper_arm_back' && <rect x="58" y="49" width="14" height="25" rx="4" />}
+                                            {region.id === 'right_forearm_back' && <rect x="62" y="74" width="14" height="30" rx="4" />}
+                                            {region.id === 'right_hand_back' && <rect x="64" y="104" width="14" height="15" rx="6" />}
                                         </g>
                                     ))}
                                 </svg>
@@ -437,7 +448,7 @@ export default function IntakeFormFields({
 
                     <div className="space-y-6 pt-10 border-t border-stone-100">
                         <div className="flex flex-wrap items-center gap-4 text-[12.5px]">
-                            <span>10. What are your goals for this treatment session?</span>
+                            <span>10. Do you have any particular goals in mind for this massage session?</span>
                             <div className="flex gap-2">
                                 <YNPill value={true} state={form.questions.q10_goals} onChange={(v) => setForm({...form, questions: {...form.questions, q10_goals: v}})} />
                                 <YNPill value={false} state={form.questions.q10_goals} onChange={(v) => setForm({...form, questions: {...form.questions, q10_goals: v}})} />
@@ -578,25 +589,102 @@ export default function IntakeFormFields({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 animate-tab-in">
                     <div className="p-8 bg-stone-50 border border-stone-200">
                         <h3 className="text-lg font-serif font-black uppercase mb-6 tracking-tight">Consent for Treatment</h3>
-                        <div className="text-[12px] text-stone-600 leading-relaxed space-y-4 italic">
+                        <div className="text-[11px] text-stone-600 leading-relaxed space-y-4 italic text-justify">
                             <p>Draping will be used during the session – only the area being worked on will be uncovered.</p>
                             <p>Clients under the age of 17 must be accompanied by a parent or legal guardian during the entire session.</p>
                             <p>Informed written consent must be provided by parent or legal guardian for any client under the age of 17.</p>
+                            <div className="pt-4 border-t border-stone-200 space-y-3">
+                                <p>
+                                    I, <span className="font-bold border-b border-stone-400 px-4 inline-block min-w-[150px]">{form.consent_name || '_______________________________'}</span> (print name) 
+                                    understand that the massage I receive is provided for the basic purpose of relaxation and relief of muscular tension. 
+                                    If I experience any pain or discomfort during this session, I will immediately inform the therapist so that the pressure and/or strokes 
+                                    may be adjusted to my level of comfort.
+                                </p>
+                                <p>
+                                    I further understand that massage should not be construed as a substitute for medical examination, diagnosis, or treatment and 
+                                    that I should see a physician, chiropractor or other qualified medical specialist for any mental or physical ailment that I am aware of. 
+                                    I understand that massage therapists are not qualified to perform spinal or skeletal adjustments, diagnose, prescribe, or treat any 
+                                    physical or mental illness, and that nothing said in the course of the session given should be construed as such.
+                                </p>
+                                <p>
+                                    Because massage should not be performed under certain medical conditions, I affirm that I have stated all my known medical conditions, 
+                                    and answered all questions honestly. I agree to keep the therapist updated as to any changes in my medical profile and understand 
+                                    that there shall be no liability on the therapist’s part should I fail to do so.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
                     <div className="space-y-8 pt-4">
                         <div className="flex flex-col gap-2">
-                            <span className="text-[10px] uppercase tracking-widest text-stone-400 font-bold">Patient Signature (Type Full Name)</span>
-                            <input disabled={isReadOnly} type="text" value={form.consent_name} onChange={e => setForm({...form, consent_name: e.target.value})} className={`text-2xl font-serif italic border-0 border-b-2 border-stone-800 ${FIELD_BG} px-2 py-2 outline-none focus:bg-white`} placeholder="Full Name" />
+                            <span className="text-[10px] uppercase tracking-widest text-stone-400 font-bold">Patient Signature</span>
+                            {form.consent_at ? (
+                                <div className="space-y-1">
+                                    <div className="text-3xl font-serif italic text-stone-900 border-b-2 border-stone-800 pb-1">
+                                        {form.consent_name}
+                                    </div>
+                                    <div className="text-[10px] font-mono uppercase tracking-tighter text-stone-400 font-bold">
+                                        DIGITALLY SIGNED ON {new Date(form.consent_at).toISOString().replace('T', ' ').split('.')[0]}
+                                    </div>
+                                </div>
+                            ) : (
+                                <input 
+                                    disabled={isReadOnly} 
+                                    type="text" 
+                                    value={form.consent_name} 
+                                    onChange={e => setForm({...form, consent_name: e.target.value})} 
+                                    className={`text-2xl font-serif italic border-0 border-b-2 border-stone-800 ${FIELD_BG} px-2 py-2 outline-none focus:bg-white`} 
+                                    placeholder="Type Full Name to Sign" 
+                                />
+                            )}
                         </div>
                         <div className="flex gap-4">
                             <div className="flex-1 flex flex-col gap-2">
                                 <span className="text-[10px] uppercase tracking-widest text-stone-400 font-bold">Date</span>
-                                <div className="border-b border-stone-300 py-2 font-serif">{new Date().toLocaleDateString()}</div>
+                                <div className="border-b border-stone-300 py-2 font-serif">
+                                    {form.consent_at ? new Date(form.consent_at).toLocaleDateString() : new Date().toLocaleDateString()}
+                                </div>
                             </div>
                         </div>
-                        
+
+                        {/* THERAPIST SIGNATURE */}
+                        <div className="flex flex-col gap-2 pt-8 border-t border-stone-100">
+                            <span className="text-[10px] uppercase tracking-widest text-stone-400 font-bold">Massage Therapist Signature</span>
+                            {form.therapist_signature_at ? (
+                                <div className="space-y-1">
+                                    <div className="text-3xl font-serif italic text-stone-900 border-b-2 border-stone-800 pb-1">
+                                        {form.therapist_signature_name}
+                                    </div>
+                                    <div className="text-[10px] font-mono uppercase tracking-tighter text-[#f5a623] font-bold">
+                                        VERIFIED BY PROVIDER ON {new Date(form.therapist_signature_at).toISOString().replace('T', ' ').split('.')[0]} 
+                                        <span className="ml-2 opacity-50">[IP: {form.therapist_signature_ip}]</span>
+                                    </div>
+                                </div>
+                            ) : isTherapistView ? (
+                                <div className="space-y-4">
+                                    <input 
+                                        type="text" 
+                                        value={form.therapist_signature_name} 
+                                        onChange={e => setForm({...form, therapist_signature_name: e.target.value})} 
+                                        className={`text-2xl font-serif italic border-0 border-b-2 border-[#f5a623] ${FIELD_BG} px-2 py-2 outline-none focus:bg-white`} 
+                                        placeholder="Therapist Signature (Type Name)" 
+                                    />
+                                    <p className="text-[9px] text-stone-400 uppercase tracking-widest font-bold italic">
+                                        Signing as Licensed Massage Therapist · Forensic IP will be logged.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <div className="text-2xl font-serif italic text-stone-300 border-b-2 border-stone-200 pb-2">
+                                        _______________________________
+                                    </div>
+                                    <p className="text-[9px] text-stone-300 uppercase tracking-widest font-bold italic">
+                                        Pending Provider Review & Signature
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
                         {!isReadOnly && (
                             <div className="pt-10 flex justify-between">
                                 <button type="button" onClick={() => setActiveTab(4)} className="text-[#888] font-bold uppercase tracking-widest text-[10px] flex items-center gap-2">

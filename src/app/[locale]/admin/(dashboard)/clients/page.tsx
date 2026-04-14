@@ -39,6 +39,9 @@ export default function ClientsPage() {
     const [intakeAuditHistory, setIntakeAuditHistory] = useState<any[]>([]);
     const [intakeActiveTab, setIntakeActiveTab] = useState(1);
     const [viewingVersion, setViewingVersion] = useState<'current' | string>('current');
+    const [isInvitingNew, setIsInvitingNew] = useState(false);
+    const [inviteData, setInviteData] = useState({ name: '', email: '' });
+    const [sendingInvite, setSendingInvite] = useState<string | null>(null);
 
     useEffect(() => {
         fetchClients();
@@ -117,38 +120,55 @@ export default function ClientsPage() {
         setClientBookings(prev => prev.map(b => b.id === selectedBooking.id ? { ...b, notes: newNotes } : b));
     }
 
+    async function sendIntakeInvite(email: string, name?: string) {
+        setSendingInvite(email);
+        try {
+            const res = await fetch('/api/admin/intake/invite', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ client_email: email, client_name: name })
+            });
+
+            if (res.ok) {
+                setMsg(`Invitation sent to ${email}`);
+                setIsInvitingNew(false);
+                setInviteData({ name: '', email: '' });
+                fetchClients(); // Refresh to show prospective client
+            } else {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to send request');
+            }
+        } catch (error: any) {
+            alert(error.message);
+        } finally {
+            setSendingInvite(null);
+            setTimeout(() => setMsg(''), 3000);
+        }
+    }
+
     const handleIntakeSave = async () => {
         if (!historyClient) return;
         setIntakeLoading(true);
         try {
-            const payload: any = {
-                ...intakeForm,
-                client_id: historyClient.id, // Relational link
-                medical_history: intakeForm.questions,
-                updated_by: (session?.user as any)?.id // Audit
-            };
-            delete (payload as any).questions;
-            
-            // If it's a new record (no ID), let upsert handle it via client_id conflict
-            if (!payload.id) delete payload.id;
+            // Call the centralized API instead of direct Supabase to ensure IP logging & Audit Dual-Write
+            const res = await fetch('/api/user/intake', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...intakeForm,
+                    client_id: historyClient.id,
+                    medical_history: intakeForm.questions
+                })
+            });
 
-            const { data: primaryData, error: primaryError } = await supabase
-                .from('intake_forms')
-                .upsert(payload, { onConflict: 'client_id' })
-                .select()
-                .single();
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error || 'Failed to save clinical record');
+            }
 
-            if (primaryError) throw primaryError;
-
-            // Audit Shadow
-            await supabase.from('intake_form_audit').insert([{
-                intake_form_id: primaryData.id,
-                modified_by: (session?.user as any)?.id,
-                snapshot: payload
-            }]);
-
-            setMsg('Clinical profile updated and audited.');
+            setMsg('Clinical profile verified and audited successfully.');
             setTimeout(() => setMsg(''), 3000);
+            
             // Refresh
             fetchIntake(historyClient!.id);
         } catch (err: any) {
@@ -212,7 +232,48 @@ export default function ClientsPage() {
                     <h1 className="text-4xl font-serif font-black text-stone-900 uppercase tracking-tight">Clinical Registry</h1>
                     <p className="mt-2 text-stone-500 font-serif italic">Administrator view of global client profiles & medical history.</p>
                 </div>
+                <button 
+                    onClick={() => setIsInvitingNew(true)}
+                    className="bg-stone-900 text-white px-6 py-3 rounded-lg hover:bg-stone-800 transition-all font-bold tracking-widest uppercase text-xs shadow-xl flex items-center gap-2"
+                >
+                    <span>✉️</span> Request Intake Form
+                </button>
             </div>
+
+            {isInvitingNew && (
+                <div className="bg-white p-6 rounded-lg border-2 border-stone-900 shadow-xl animate-in slide-in-from-top-4">
+                    <h3 className="text-lg font-serif font-bold mb-4 uppercase tracking-wider">Clinical Intake Request</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input 
+                            placeholder="Patient Name" 
+                            className="border border-stone-200 px-4 py-2 rounded font-serif"
+                            value={inviteData.name}
+                            onChange={e => setInviteData({...inviteData, name: e.target.value})}
+                        />
+                        <input 
+                            placeholder="Patient Email" 
+                            className="border border-stone-200 px-4 py-2 rounded font-serif"
+                            value={inviteData.email}
+                            onChange={e => setInviteData({...inviteData, email: e.target.value})}
+                        />
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={() => sendIntakeInvite(inviteData.email, inviteData.name)}
+                                disabled={!inviteData.email || !!sendingInvite}
+                                className="flex-1 bg-stone-900 text-white px-4 py-2 rounded font-bold uppercase tracking-widest text-[10px] disabled:opacity-50"
+                            >
+                                {sendingInvite ? 'Sending...' : 'Send Request Email'}
+                            </button>
+                            <button 
+                                onClick={() => setIsInvitingNew(false)}
+                                className="px-4 py-2 border border-stone-200 rounded font-bold uppercase tracking-widest text-[10px]"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {msg && <div className="bg-orange-50 border border-orange-200 text-orange-800 p-4 rounded-sm font-bold shadow-sm animate-bounce-subtle">{msg}</div>}
 
@@ -392,6 +453,7 @@ export default function ClientsPage() {
                                                 activeTab={intakeActiveTab}
                                                 setActiveTab={setIntakeActiveTab}
                                                 isReadOnly={viewingVersion !== 'current'}
+                                                isTherapistView={true}
                                             />
                                         </div>
 
@@ -496,6 +558,14 @@ export default function ClientsPage() {
                                     </td>
                                     <td className="px-6 py-4 text-sm text-stone-500 truncate max-w-xs">{client.notes}</td>
                                     <td className="px-6 py-4 text-right space-x-3 whitespace-nowrap">
+                                        <button
+                                            onClick={() => sendIntakeInvite(client.email, client.name)}
+                                            disabled={!!sendingInvite}
+                                            className={`group relative font-bold text-sm px-3 py-1.5 rounded-lg border transition-all ${sendingInvite === client.email ? 'bg-stone-50 text-stone-300' : 'bg-orange-50 text-orange-600 border-orange-100 hover:bg-orange-100'}`}
+                                            title="Send Intake Request Email"
+                                        >
+                                            {sendingInvite === client.email ? '⌛' : '✉️ Request Intake'}
+                                        </button>
                                         <button
                                             onClick={() => { setHistoryClient(client); fetchIntake(client.id); }}
                                             className="group relative text-blue-600 hover:text-blue-900 font-bold text-sm bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100"

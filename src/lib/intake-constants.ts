@@ -56,7 +56,9 @@ export interface IntakeState {
     concentrate_on: string[];
     consent_name: string;
     consent_at: string | null;
+    therapist_signature_name: string;
     therapist_signature_at: string | null;
+    therapist_signature_ip: string | null;
 }
 
 export const INITIAL_STATE: IntakeState = {
@@ -85,7 +87,9 @@ export const INITIAL_STATE: IntakeState = {
     },
     concentrate_on: [] as string[],
     consent_name: '', consent_at: null,
-    therapist_signature_at: null
+    therapist_signature_name: '',
+    therapist_signature_at: null,
+    therapist_signature_ip: null
 };
 
 export const FIELD_BG = 'bg-[#fff8ee]';
@@ -110,7 +114,15 @@ export const BODY_REGIONS = [
     { id: 'glutes_left', label: 'Glutes - left' }, { id: 'glutes_right', label: 'Glutes - right' },
     { id: 'left_hamstring', label: 'Left hamstring' }, { id: 'right_hamstring', label: 'Right hamstring' },
     { id: 'left_calf', label: 'Left calf' }, { id: 'right_calf', label: 'Right calf' },
-    { id: 'left_heel', label: 'Left heel' }, { id: 'right_heel', label: 'Right heel' }
+    { id: 'left_heel', label: 'Left heel' }, { id: 'right_heel', label: 'Right heel' },
+    { id: 'left_shoulder_back', label: 'Left shoulder (back)' },
+    { id: 'left_upper_arm_back', label: 'Left upper arm (back)' },
+    { id: 'left_forearm_back', label: 'Left forearm (back)' },
+    { id: 'left_hand_back', label: 'Left hand (back)' },
+    { id: 'right_shoulder_back', label: 'Right shoulder (back)' },
+    { id: 'right_upper_arm_back', label: 'Right upper arm (back)' },
+    { id: 'right_forearm_back', label: 'Right forearm (back)' },
+    { id: 'right_hand_back', label: 'Right hand (back)' }
 ];
 
 export const CONDITIONS = [

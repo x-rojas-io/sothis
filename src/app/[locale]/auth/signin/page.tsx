@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { signIn, useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@/components/Button';
 import Card, { CardContent, CardHeader } from '@/components/Card';
 
@@ -12,12 +12,18 @@ export default function SignInPage() {
     const [step, setStep] = useState<'email' | 'verify'>('email');
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
-    const router = useRouter();
-    const { data: session, status } = useSession();
+    const searchParams = useSearchParams();
+    const callbackUrl = searchParams.get('callbackUrl');
 
     useEffect(() => {
         if (status === 'authenticated' && session?.user) {
-            // Role-based redirect
+            // Priority 1: Specific callback URL
+            if (callbackUrl) {
+                router.push(callbackUrl);
+                return;
+            }
+
+            // Priority 2: Role-based default redirect
             const role = (session.user as any).role;
             if (role === 'admin' || role === 'provider') {
                 router.push('/admin');
@@ -25,7 +31,7 @@ export default function SignInPage() {
                 router.push('/book');
             }
         }
-    }, [status, session, router]);
+    }, [status, session, router, callbackUrl]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

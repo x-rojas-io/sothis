@@ -134,7 +134,7 @@ export default function MyBookingsPage() {
                                 <>
                                     <div className="flex justify-between items-center mb-4">
                                         <h2 className="text-stone-500 text-xs font-black uppercase tracking-widest">Clinical Records</h2>
-                                        <a href="/intake-form" className="text-orange-600 text-sm font-bold hover:underline flex items-center gap-1">
+                                        <a href="/intake-form?mode=new" className="text-orange-600 text-sm font-bold hover:underline flex items-center gap-1">
                                             + Create New Intake Form
                                         </a>
                                     </div>
@@ -243,7 +243,7 @@ export default function MyBookingsPage() {
                                 <p className="text-orange-800 text-sm mt-1">Help us prepare for your session by sharing your medical history and focus areas securely.</p>
                             </div>
                             <a 
-                                href="/intake-form" 
+                                href="/intake-form?mode=new" 
                                 className="whitespace-nowrap bg-orange-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-orange-700 transition-colors shadow-md"
                             >
                                 Start Intake Form
