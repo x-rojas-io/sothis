@@ -85,6 +85,16 @@ export type Client = {
 export type IntakeForm = {
     id: string;
     client_id: string;
+    full_name?: string;
+    phone_day?: string;
+    address?: string;
+    city_state_zip?: string;
+    client_email?: string;
+    date_of_birth?: string;
+    occupation?: string;
+    emergency_contact?: string | { name: string; phone: string };
+    emergency_phone?: string;
+    initial_visit_date?: string;
     medical_history: {
         professional_massage_before?: boolean;
         frequency?: string;
@@ -103,14 +113,17 @@ export type IntakeForm = {
         pregnancy_months?: string;
         additional_notes?: string;
     };
-    emergency_contact: {
-        name: string;
-        phone: string;
-    };
     concentrate_on: string[]; // List of body region IDs from SVG
-    signature_name: string;
-    signature_date: string;
-    consent_version: string;
+    signature_name?: string;
+    signature_date?: string;
+    consent_name?: string;
+    consent_at?: string;
+    therapist_signature_name?: string;
+    therapist_signature_at?: string;
+    therapist_signature_ip?: string;
+    consent_version?: string;
+    updated_by?: string;
+    ip_address?: string;
     created_at: string;
     updated_at: string;
 };

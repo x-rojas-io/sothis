@@ -34,7 +34,6 @@ ALTER TABLE intake_forms ALTER COLUMN emergency_contact TYPE TEXT USING emergenc
 ALTER TABLE intake_forms ALTER COLUMN signature_name DROP NOT NULL;
 ALTER TABLE intake_forms ALTER COLUMN signature_date DROP NOT NULL;
 
--- 3. Create Audit Snapshot Table
 CREATE TABLE IF NOT EXISTS intake_form_audit (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     intake_form_id UUID NOT NULL REFERENCES intake_forms(id) ON DELETE CASCADE,
@@ -46,6 +45,12 @@ CREATE TABLE IF NOT EXISTS intake_form_audit (
     therapist_signature_name TEXT,
     therapist_signature_ip TEXT
 );
+
+-- Ensure all columns exist even if the table was created by a previous partial migration
+ALTER TABLE intake_form_audit ADD COLUMN IF NOT EXISTS modified_by_email TEXT;
+ALTER TABLE intake_form_audit ADD COLUMN IF NOT EXISTS ip_address TEXT;
+ALTER TABLE intake_form_audit ADD COLUMN IF NOT EXISTS therapist_signature_name TEXT;
+ALTER TABLE intake_form_audit ADD COLUMN IF NOT EXISTS therapist_signature_ip TEXT;
 
 -- 4. Enable RLS on Audit Table
 ALTER TABLE intake_form_audit ENABLE ROW LEVEL SECURITY;
