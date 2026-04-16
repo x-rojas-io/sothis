@@ -77,11 +77,22 @@ export default function MasterCalendarPage() {
 
             // Merge: Attach booking details to the corresponding slot
             const mergedData: MasterSlot[] = slotsData.map(slot => {
-                const bookingDetails = bookingsData.find((b: any) => b.time_slot.id === slot.id || b.time_slot_id === slot.id);
+                const bookingDetails = bookingsData.find((b: any) => {
+                    if (!b.time_slot) return false;
+                    
+                    // Direct ID match
+                    if (b.time_slot.id === slot.id || b.time_slot_id === slot.id) return true;
+                    
+                    // Fuzzy match (Date + Normalized Time)
+                    const bTime = b.time_slot.start_time?.slice(0, 5);
+                    const sTime = slot.start_time?.slice(0, 5);
+                    
+                    return b.client_email && b.time_slot.date === slot.date && bTime === sTime;
+                });
 
-                // If slot says booked but we have booking details, attach them
-                if (slot.status === 'booked' && bookingDetails) {
-                    return { ...slot, booking: bookingDetails };
+                // If a booking exists, it IS a booked slot, regardless of the slot status
+                if (bookingDetails) {
+                    return { ...slot, status: 'booked', booking: bookingDetails };
                 }
                 return slot;
             });

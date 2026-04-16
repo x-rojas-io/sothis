@@ -45,9 +45,9 @@ export async function GET(request: Request) {
         }
 
         // Build the query
-        // We MUST use !inner on time_slots if we want to filter by time_slots.provider_id
-        // Removed 'slug' as it appears to not exist on providers table and is not used by frontend here
-        let query = supabaseAdmin
+        // Join with clients to get the internal client ID and metadata
+        // Join with intake_forms to get clinical history
+        const { data: allBookings, error: bookingsError } = await supabaseAdmin
             .from('bookings')
             .select(`
                 *,
@@ -56,50 +56,68 @@ export async function GET(request: Request) {
                     provider:providers(id, name)
                 )
             `)
-            .eq('status', 'confirmed');
-
-        if (filterProviderId) {
-            query = query.eq('time_slots.provider_id', filterProviderId);
-        }
-
-        const { data: allBookings, error: bookingsError } = await query;
+            .eq('status', 'confirmed')
+            .order('date', { referencedTable: 'time_slots', ascending: true });
 
         if (bookingsError) throw bookingsError;
+
+        // Fetch all clients and their latest intakes to match by email
+        // (This is more robust than a direct Supabase join if client records are created after booking)
+        const [clientsRes, intakeRes] = await Promise.all([
+            supabaseAdmin.from('clients').select('*'),
+            supabaseAdmin
+                .from('intake_forms')
+                .select('client_id, signature_date')
+                .order('signature_date', { ascending: false })
+        ]);
+
+        const clients = clientsRes.data || [];
+        const intakes = intakeRes.data || [];
+
+        // Map for O(1) lookup
+        const clientByEmail: Record<string, any> = {};
+        clients.forEach(c => clientByEmail[c.email.toLowerCase().trim()] = c);
+
+        const intakeByClient: Record<string, any> = {};
+        intakes.forEach(i => {
+            if (!intakeByClient[i.client_id]) intakeByClient[i.client_id] = i;
+        });
 
         // Filter and sort in memory
         const validBookings = allBookings
             ?.filter((b: any) => b.time_slot && b.time_slot.date >= today)
+            .map((b: any) => {
+                const email = b.client_email.toLowerCase().trim();
+                const client = clientByEmail[email] || null;
+                const latestIntake = client ? intakeByClient[client.id] : null;
+
+                return {
+                    ...b,
+                    client: client,
+                    latest_intake: latestIntake,
+                    provider: b.time_slot?.provider
+                };
+            })
+            // Apply provider filter if applicable
+            .filter((b: any) => !filterProviderId || b.time_slot.provider_id === filterProviderId)
             .sort((a: any, b: any) => {
                 const dateA = new Date(a.time_slot.date + 'T' + a.time_slot.start_time).getTime();
                 const dateB = new Date(b.time_slot.date + 'T' + b.time_slot.start_time).getTime();
                 return dateA - dateB;
             })
-            // Map provider up to top level for frontend compatibility
-            .map((b: any) => ({
-                ...b,
-                provider: b.time_slot?.provider
-            }))
             || [];
 
-        // Calculate Stats in memory to avoid complex separate queries
-        // (Since we are fetching all confirmed bookings for the view anyway, or at least a reasonable subset.
-        // If data grows huge, we should move back to COUNT queries, but for now this is efficient enough and simpler for filtering)
-
+        // Calculate Stats
         const stats = {
             todayBookings: validBookings.filter((b: any) => b.time_slot.date === today).length,
             weekBookings: validBookings.filter((b: any) => b.time_slot.date >= today && b.time_slot.date <= weekFromNow).length,
             monthBookings: validBookings.filter((b: any) => b.time_slot.date >= startOfMonth && b.time_slot.date <= endOfMonth).length,
         };
 
-        // For list, we might want to slice it now if we aren't doing frontend filtering
-        // BUT, for Admin filtering, we need ALL future bookings.
-        // Let's send top 50 maybe? Or just all valid upcoming. 
-        // Let's send all valid upcoming for now so Admin can filter.
-
         return NextResponse.json({
             upcomingBookings: validBookings,
             stats: stats,
-            userRole: session.user.role // return role to help frontend
+            userRole: session.user.role 
         });
 
     } catch (error: any) {

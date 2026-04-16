@@ -13,14 +13,17 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const clientEmail = searchParams.get('client_email');
 
-        // Fetch all bookings with time slot details
+        const today = new Date().toISOString().split('T')[0];
+
+        // Fetch bookings from today onwards to keep the payload efficient and reliable
         let query = supabaseAdmin
             .from('bookings')
             .select(`
                 *,
-                time_slot:time_slots(*)
+                time_slot:time_slots!inner(*)
             `)
-            .order('created_at', { ascending: false });
+            .gte('time_slots.date', today)
+            .order('date', { referencedTable: 'time_slots', ascending: true });
 
         // Filter by client email if provided
         if (clientEmail) {
