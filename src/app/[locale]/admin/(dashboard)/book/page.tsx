@@ -37,14 +37,14 @@ export default function AdminBookingPage() {
     const [selectedIntakeId, setSelectedIntakeId] = useState<string>('new');
     const [loadingIntake, setLoadingIntake] = useState(false);
 
-    // Registration Form
     const [regForm, setRegForm] = useState({
         name: '',
         phone: '',
         address: '',
         city: '',
         state: '',
-        zip: ''
+        zip: '',
+        data_consent: false
     });
 
     // 1. Auth & Initial Load
@@ -115,7 +115,11 @@ export default function AdminBookingPage() {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        setMessage('');
+        if (!regForm.data_consent) {
+            setMessage('Error: Data processing consent is required');
+            setIsLoading(false);
+            return;
+        }
 
         try {
             const res = await fetch('/api/users/create', {
@@ -123,7 +127,9 @@ export default function AdminBookingPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     email,
-                    ...regForm
+                    ...regForm,
+                    consent_at: new Date().toISOString(),
+                    consent_version: 'v1.0-2024-04'
                 })
             });
             const data = await res.json();
@@ -298,7 +304,7 @@ export default function AdminBookingPage() {
         setDate('');
         setTime('');
         setNotes('');
-        setRegForm({ name: '', phone: '', address: '', city: '', state: '', zip: '' });
+        setRegForm({ name: '', phone: '', address: '', city: '', state: '', zip: '', data_consent: false });
         setMessage('');
         setConflictSuggestion(null);
         if (providers.length > 0) setSelectedProvider(providers[0].id);
@@ -390,6 +396,22 @@ export default function AdminBookingPage() {
                                             <input type="text" placeholder="State" value={regForm.state} onChange={e => setRegForm({ ...regForm, state: e.target.value })} className="w-1/2 rounded-md border border-stone-300 px-3 py-2" />
                                             <input type="text" placeholder="Zip" value={regForm.zip} onChange={e => setRegForm({ ...regForm, zip: e.target.value })} className="w-1/2 rounded-md border border-stone-300 px-3 py-2" />
                                         </div>
+                                    </div>
+
+                                    {/* CONSENT CHECKBOX */}
+                                    <div className="md:col-span-2 mt-4 p-4 bg-white border border-stone-200 rounded-lg shadow-sm">
+                                        <label className="flex items-start gap-4 cursor-pointer text-left">
+                                            <input
+                                                type="checkbox"
+                                                required
+                                                checked={regForm.data_consent}
+                                                onChange={e => setRegForm({ ...regForm, data_consent: e.target.checked })}
+                                                className="mt-1 w-5 h-5 rounded border-stone-300 text-secondary focus:ring-secondary"
+                                            />
+                                            <span className="text-sm text-stone-600 leading-relaxed font-medium">
+                                                The client has authorized Sothis Therapeutic Massage to collect and process their personal data for the purpose of providing specialized massage therapy services and maintaining their clinical profile.
+                                            </span>
+                                        </label>
                                     </div>
                                 </div>
                                 <div className="flex gap-4 mt-8">
