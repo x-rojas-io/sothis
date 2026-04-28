@@ -44,7 +44,7 @@ function BookingContent() {
     const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
     // Auth Flow State
-    const [step, setStep] = useState<'auth' | 'register' | 'verify' | 'provider' | 'service' | 'slots' | 'confirm' | 'success'>('auth');
+    const [step, setStep] = useState<'auth' | 'register' | 'verify' | 'provider' | 'service' | 'slots' | 'confirm' | 'urgent-request' | 'success'>('auth');
     const [providers, setProviders] = useState<Provider[]>([]);
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
     const [services, setServices] = useState<Service[]>([]);
@@ -131,7 +131,7 @@ function BookingContent() {
         if (step === 'slots') {
             fetchAvailableSlots();
         }
-        if (step === 'confirm' && status === 'authenticated') {
+        if ((step === 'confirm' || step === 'urgent-request') && status === 'authenticated') {
             fetchIntakeHistory();
         }
     }, [step, currentDate, status]);
@@ -159,15 +159,20 @@ function BookingContent() {
     async function fetchAvailableSlots() {
         setLoadingSlots(true);
         try {
-            // Calculate start and end of the calendar view (including padding days)
+            // Calculate start and end of the calendar view
             const monthStart = startOfMonth(currentDate);
             const monthEnd = endOfMonth(currentDate);
             const calendarStart = startOfWeek(monthStart).toISOString().split('T')[0];
             const calendarEnd = endOfWeek(monthEnd).toISOString().split('T')[0];
 
-            // Also ensure we don't show past slots if we are in current month
-            const today = new Date().toISOString().split('T')[0];
-            const fetchStart = calendarStart < today ? today : calendarStart;
+            // POINT 2: Client can only book 7 days in advance
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const leadTimeDate = addDays(today, 7);
+            const minDateStr = leadTimeDate.toISOString().split('T')[0];
+            
+            // We still fetch slots for the next 7 days so we can show "Request Urgent" info
+            const fetchStart = calendarStart < today.toISOString().split('T')[0] ? today.toISOString().split('T')[0] : calendarStart;
 
             let query = supabase
                 .from('time_slots')
@@ -183,9 +188,15 @@ function BookingContent() {
             }
 
             const { data, error } = await query;
-
             if (error) throw error;
-            setAvailableSlots(data || []);
+
+            // Mark slots as "Client-Disabled" if within 7 days
+            const processedSlots = (data || []).map(slot => ({
+                ...slot,
+                isLeadTimeRestricted: slot.date < minDateStr
+            }));
+
+            setAvailableSlots(processedSlots);
         } catch (error) {
             console.error('Error fetching slots:', error);
         } finally {
@@ -364,7 +375,7 @@ function BookingContent() {
 
     const handleConfirmBooking = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!selectedSlot || !selectedService) return; // Ensure service is selected
+        if (!selectedSlot) return; // Ensure slot is selected
 
         // Validate Notes (Mandatory)
         if (!formData.notes || formData.notes.trim().length === 0) {
@@ -392,7 +403,8 @@ function BookingContent() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     time_slot_id: selectedSlot.id,
-                    service_type: selectedService.title['en'], // Add service type
+                    service_type: selectedService ? selectedService.title['en'] : 'Therapeutic Massage', // Add fallback
+
                     ...formData,
                     notes: formattedNotes, // Send timestamped note
                     intake_form_id: selectedIntakeId === 'new' ? null : selectedIntakeId
@@ -458,6 +470,18 @@ function BookingContent() {
     const getSlotsForDate = (date: Date) => {
         const dateStr = format(date, 'yyyy-MM-dd');
         return slotsByDate[dateStr] || [];
+    };
+
+    const isUrgentDate = (date: Date) => {
+        const today = startOfDay(new Date());
+        const sevenDaysFromNow = addDays(today, 7);
+        return isBefore(date, sevenDaysFromNow);
+    };
+
+    const isHiddenDate = (date: Date) => {
+        const today = startOfDay(new Date());
+        const fortyEightHoursFromNow = addDays(today, 2);
+        return isBefore(date, fortyEightHoursFromNow);
     };
 
     const handleDayClick = (day: Date) => {
@@ -821,16 +845,20 @@ function BookingContent() {
                                                             ${isTodayDate ? 'text-secondary font-bold' : ''}
                                                         `}
                                                     >
-                                                        <span className={`
-                                                            inline-flex w-7 h-7 items-center justify-center rounded-full
-                                                            ${isTodayDate ? 'bg-secondary/10' : ''}
-                                                            ${hasSlots && !isPast ? 'md:bg-transparent bg-stone-100' : ''} 
-                                                        `}>
+                                                        <span className={`relative z-10 ${isPast ? 'text-stone-300' : isHiddenDate(day) ? 'text-stone-400' : 'text-stone-700'}`}>
                                                             {format(day, 'd')}
                                                         </span>
 
+                                                        {isUrgentDate(day) && !isHiddenDate(day) && !isPast && (
+                                                            <span className="absolute top-1 right-1 text-[8px] font-black text-amber-500 uppercase leading-none">Review</span>
+                                                        )}
+                                                        
+                                                        {isHiddenDate(day) && !isPast && (
+                                                            <span className="absolute top-1 right-1 text-[8px] font-black text-stone-300 uppercase leading-none">Closed</span>
+                                                        )}
+
                                                         {/* Mobile Dot */}
-                                                        {hasSlots && !isPast && (
+                                                        {hasSlots && !isPast && !isHiddenDate(day) && (
                                                             <div className="md:hidden mx-auto w-1.5 h-1.5 rounded-full bg-green-500 mt-1"></div>
                                                         )}
                                                     </button>
@@ -932,21 +960,48 @@ function BookingContent() {
                                         </div>
 
                                         <div className="p-6">
-                                            {selectedDay && getSlotsForDate(selectedDay).length > 0 ? (
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                                                    {getSlotsForDate(selectedDay).map((slot) => (
-                                                        <button
-                                                            key={slot.id}
-                                                            onClick={() => handleSlotSelect(slot)}
-                                                            className="
-                                                                py-3 px-4 rounded-lg border border-secondary text-secondary font-medium
-                                                                hover:bg-secondary hover:text-white transition-all duration-200
-                                                                focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-1
-                                                            "
-                                                        >
-                                                            {slot.start_time.slice(0, 5)}
-                                                        </button>
-                                                    ))}
+                                            {selectedDay && isHiddenDate(selectedDay) ? (
+                                                <div className="text-center py-12 px-6 bg-stone-50 border border-stone-100 rounded-2xl animate-fade-in">
+                                                    <div className="w-16 h-16 bg-stone-100 text-stone-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                                                        <span className="text-2xl">🚫</span>
+                                                    </div>
+                                                    <h4 className="text-xl font-serif font-bold text-stone-900 mb-3">Notice: 48hr Window</h4>
+                                                    <p className="text-stone-500 max-w-sm mx-auto leading-relaxed mb-6">
+                                                        Our therapists require at least 48 hours notice to prepare for a session. While no specific time slots are guaranteed, you may submit a general urgent request.
+                                                    </p>
+                                                    <Button onClick={() => setStep('urgent-request')} className="w-full justify-center text-lg py-3">
+                                                        Submit Urgent Request
+                                                    </Button>
+                                                </div>
+                                            ) : selectedDay && getSlotsForDate(selectedDay).length > 0 ? (
+                                                <div className="space-y-6">
+                                                    {isUrgentDate(selectedDay) && (
+                                                        <div className="p-4 bg-stone-50 border border-stone-200 rounded-xl flex gap-3 items-start shadow-sm">
+                                                            <span className="text-xl">💬</span>
+                                                            <div className="text-sm">
+                                                                <p className="font-bold text-stone-900">Request Only Period</p>
+                                                                <p className="text-stone-600">The following slots are available but require manual professional confirmation. Click any time to message us on WhatsApp.</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                                        {getSlotsForDate(selectedDay).map((slot) => {
+                                                            return (
+                                                                <button
+                                                                    key={slot.id}
+                                                                    onClick={() => handleSlotSelect(slot)}
+                                                                    className="
+                                                                        py-3 px-4 rounded-lg border border-secondary text-secondary font-medium
+                                                                        hover:bg-secondary hover:text-white transition-all duration-200
+                                                                        focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-1
+                                                                    "
+                                                                >
+                                                                    {slot.start_time.slice(0, 5)}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
                                             ) : (
                                                 <div className="text-center py-12 text-stone-500">
@@ -959,6 +1014,122 @@ function BookingContent() {
                                 </div>
                             )}
                         </div>
+                    )}
+
+                    {/* STEP 2.5: URGENT REQUEST (0-48h) */}
+                    {step === 'urgent-request' && selectedDay && (
+                        <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            if (!formData.notes || formData.notes.trim().length === 0) {
+                                setMessage('❌ Please include a note or reason for your visit.');
+                                return;
+                            }
+                            setProcessing(true);
+                            try {
+                                const now = new Date();
+                                const timestamp = now.toLocaleString('en-US', {
+                                    month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true
+                                });
+                                const formattedNotes = `[${timestamp}]: ${formData.notes}`;
+
+                                const res = await fetch('/api/urgent-request', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        ...formData,
+                                        date: selectedDay.toISOString().split('T')[0],
+                                        notes: formattedNotes,
+                                        intake_form_id: selectedIntakeId === 'new' ? null : selectedIntakeId
+                                    })
+                                });
+
+                                if (!res.ok) {
+                                    const err = await res.json();
+                                    throw new Error(err.error || 'Failed to submit request');
+                                }
+
+                                const data = await res.json();
+                                setMessage('');
+                                
+                                if (selectedIntakeId === 'new') {
+                                    // If no booking_id is returned (because it's a general request), we still redirect to intake but maybe without a booking_id? 
+                                    // The intake form can be filled generically for the user.
+                                    router.push(`/intake-form`);
+                                } else {
+                                    setStep('success');
+                                }
+                            } catch (error: any) {
+                                setMessage(`❌ ${error.message}`);
+                            } finally {
+                                setProcessing(false);
+                            }
+                        }} className="space-y-6">
+                            <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg text-center">
+                                <p className="text-sm font-bold text-amber-800">Urgent Request for</p>
+                                <p className="text-xl font-black text-amber-900 mt-1">
+                                    {format(selectedDay, 'EEEE, MMMM do')}
+                                </p>
+                                <p className="text-xs text-amber-700 mt-2">No specific time slot is guaranteed.</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-stone-600 bg-white p-4 rounded-lg border border-stone-100">
+                                <div><span className="block font-medium text-stone-900">{t('confirm.nameLabel')}</span>{formData.client_name}</div>
+                                <div><span className="block font-medium text-stone-900">{t('confirm.emailLabel')}</span>{formData.client_email}</div>
+                                {formData.client_phone && <div><span className="block font-medium text-stone-900">{t('confirm.phoneLabel')}</span>{formData.client_phone}</div>}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-stone-700 mb-2">
+                                    Preferred Times / Reason for Visit <span className="text-red-500">*</span>
+                                </label>
+                                <textarea required rows={3} value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} className="w-full rounded-md border border-stone-300 px-3 py-2" placeholder="e.g. I need an appointment anytime after 2pm for lower back pain..." autoFocus />
+                            </div>
+
+                            {/* Intake Selection */}
+                            <div className="bg-stone-100/50 p-6 rounded-xl border border-stone-200">
+                                <label className="block text-sm font-bold text-stone-800 mb-4 flex items-center gap-2">
+                                    <span className="w-5 h-5 bg-stone-900 text-white rounded-full flex items-center justify-center text-[10px]">!</span>
+                                    Mandatory Clinical Intake & Health Profile
+                                </label>
+                                {loadingIntake ? (
+                                    <div className="flex items-center gap-2 text-stone-500 text-xs py-2"><div className="w-3 h-3 border-2 border-stone-400 border-t-transparent rounded-full animate-spin"></div>Fetching clinical history...</div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {intakeHistory.length > 0 && (
+                                            <div className="space-y-2">
+                                                <p className="text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-1">Use Latest Profile</p>
+                                                {[intakeHistory[0]].map(form => (
+                                                    <label key={form.id} className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${selectedIntakeId === form.id ? 'bg-white border-secondary shadow-sm ring-2 ring-secondary' : 'bg-white/50 border-stone-200 hover:border-stone-300'}`}>
+                                                        <input type="radio" name="intake_select" value={form.id} checked={selectedIntakeId === form.id} onChange={() => setSelectedIntakeId(form.id)} className="text-secondary focus:ring-secondary"/>
+                                                        <div className="flex-1"><div className="text-sm font-bold text-stone-800">Profile from {new Date(form.created_at).toLocaleDateString()}</div></div>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div className="pt-2">
+                                            <label className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${selectedIntakeId === 'new' ? 'bg-white border-secondary shadow-sm ring-2 ring-secondary' : 'bg-white/50 border-stone-200 hover:border-stone-300'}`}>
+                                                <input type="radio" name="intake_select" value="new" checked={selectedIntakeId === 'new'} onChange={() => setSelectedIntakeId('new')} className="text-secondary focus:ring-secondary"/>
+                                                <div className="flex-1"><div className="text-sm font-bold text-stone-800">Create a New Clinical Profile</div><div className="text-xs text-stone-500 mt-1">Required for new clients or updated history.</div></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                                <p className="text-xs text-blue-700 leading-relaxed font-medium text-center">
+                                    By clicking below, you submit an <strong>urgent appointment request</strong>. We will review and notify you. Your appointment will <strong>NOT</strong> be assigned until your Clinical Health Profile is submitted.
+                                </p>
+                            </div>
+
+                            <Button type="submit" disabled={processing} className="w-full justify-center text-lg py-4 shadow-xl">
+                                {processing ? 'Processing Request...' : '🚀 Submit Urgent Request'}
+                            </Button>
+
+                            <button type="button" onClick={() => setStep('slots')} className="w-full text-center text-sm text-stone-500 hover:text-stone-800">
+                                Back to Calendar
+                            </button>
+                        </form>
                     )}
 
                     {/* STEP 3: CONFIRMATION */}
@@ -1004,10 +1175,11 @@ function BookingContent() {
                                 />
                             </div>
 
-                            {/* Intake Selection */}
-                            <div className="bg-stone-100/50 p-4 rounded-xl border border-stone-200">
-                                <label className="block text-sm font-bold text-stone-800 mb-4">
-                                    Clinical Intake & Health Profile
+                            {/* Intake Selection (Mandatory Check) */}
+                            <div className="bg-stone-100/50 p-6 rounded-xl border border-stone-200">
+                                <label className="block text-sm font-bold text-stone-800 mb-4 flex items-center gap-2">
+                                    <span className="w-5 h-5 bg-stone-900 text-white rounded-full flex items-center justify-center text-[10px]">!</span>
+                                    Mandatory Clinical Intake & Health Profile
                                 </label>
                                 
                                 {loadingIntake ? (
@@ -1016,12 +1188,12 @@ function BookingContent() {
                                         Fetching clinical history...
                                     </div>
                                 ) : (
-                                    <div className="space-y-3">
+                                    <div className="space-y-4">
                                         {intakeHistory.length > 0 && (
                                             <div className="space-y-2">
-                                                <p className="text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-1">Use Existing Profile</p>
-                                                {intakeHistory.map(form => (
-                                                    <label key={form.id} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedIntakeId === form.id ? 'bg-white border-secondary shadow-sm' : 'bg-white/50 border-stone-200 hover:border-stone-300'}`}>
+                                                <p className="text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-1">Use Latest Profile</p>
+                                                {[intakeHistory[0]].map(form => (
+                                                    <label key={form.id} className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${selectedIntakeId === form.id ? 'bg-white border-secondary shadow-sm ring-2 ring-secondary' : 'bg-white/50 border-stone-200 hover:border-stone-300'}`}>
                                                         <input 
                                                             type="radio" 
                                                             name="intake_select" 
@@ -1031,12 +1203,9 @@ function BookingContent() {
                                                             className="text-secondary focus:ring-secondary"
                                                         />
                                                         <div className="flex-1">
-                                                            <div className="text-xs font-bold text-stone-800">
+                                                            <div className="text-sm font-bold text-stone-800">
                                                                 Profile from {new Date(form.created_at).toLocaleDateString()}
                                                             </div>
-                                                            {form.concentrate_on && (
-                                                                <div className="text-[10px] text-stone-500 mt-0.5 italic">Focus: {form.concentrate_on}</div>
-                                                            )}
                                                         </div>
                                                     </label>
                                                 ))}
@@ -1044,7 +1213,7 @@ function BookingContent() {
                                         )}
 
                                         <div className="pt-2">
-                                            <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedIntakeId === 'new' ? 'bg-white border-secondary shadow-sm' : 'bg-white/50 border-stone-200 hover:border-stone-300'}`}>
+                                            <label className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${selectedIntakeId === 'new' ? 'bg-white border-secondary shadow-sm ring-2 ring-secondary' : 'bg-white/50 border-stone-200 hover:border-stone-300'}`}>
                                                 <input 
                                                     type="radio" 
                                                     name="intake_select" 
@@ -1054,21 +1223,35 @@ function BookingContent() {
                                                     className="text-secondary focus:ring-secondary"
                                                 />
                                                 <div className="flex-1">
-                                                    <div className="text-xs font-bold text-stone-800">
+                                                    <div className="text-sm font-bold text-stone-800">
                                                         Create a New Clinical Profile
                                                     </div>
-                                                    <div className="text-[10px] text-stone-500 mt-0.5">
-                                                        Best for new treatments or updated medical history
+                                                    <div className="text-xs text-stone-500 mt-1">
+                                                        Required for new clients or updated history.
                                                     </div>
                                                 </div>
                                             </label>
                                         </div>
+
+                                        {selectedIntakeId === 'new' && (
+                                            <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                                                <p className="text-xs text-amber-800 font-medium leading-relaxed">
+                                                    <strong>Important:</strong> To finalize your request, you must complete the Health Profile form on the next screen. Your appointment will not be reviewed until this is submitted.
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
 
-                            <Button type="submit" disabled={processing} className="w-full justify-center">
-                                {processing ? t('confirm.processing') : t('confirm.submit')}
+                            <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                                <p className="text-xs text-blue-700 leading-relaxed font-medium text-center">
+                                    By clicking below, you submit an <strong>appointment request</strong>. A professional will review the details and reply with the available date and time, which may differ from your requested time. Your appointment will <strong>NOT</strong> be assigned until your Clinical Health Profile is submitted.
+                                </p>
+                            </div>
+
+                            <Button type="submit" disabled={processing} className="w-full justify-center text-lg py-4 shadow-xl">
+                                {processing ? 'Processing Request...' : isUrgentDate(parseISO(selectedSlot.date)) ? '🚀 Request Specific Time' : 'Submit Appointment Request'}
                             </Button>
 
                             <button
@@ -1084,27 +1267,27 @@ function BookingContent() {
                     {/* STEP 4: SUCCESS & INTAKE SUGGESTION */}
                     {step === 'success' && (
                         <div className="bg-green-50 border border-green-200 rounded-2xl p-8 md:p-12 text-center animate-fade-in shadow-sm">
-                            <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
-                                <CheckCircleIcon className="w-12 h-12" />
+                            <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
+                                <span className="text-4xl">⏳</span>
                             </div>
-                            <h3 className="text-3xl font-serif font-bold text-stone-900 mb-4">Appointment Confirmed!</h3>
+                            <h3 className="text-3xl font-serif font-bold text-stone-900 mb-4">Request Received</h3>
                             <p className="text-stone-600 mb-10 max-w-md mx-auto leading-relaxed text-lg">
-                                Your therapeutic session has been successfully booked. We've sent a confirmation email with all the details.
+                                Your appointment request has been sent. <strong>A professional will review the details and confirm your session shortly.</strong>
                             </p>
 
                             <div className="bg-white border border-stone-100 rounded-2xl p-8 mb-10 shadow-sm text-left max-w-md mx-auto relative overflow-hidden group">
                                 <div className="absolute top-0 right-0 w-24 h-24 bg-secondary/5 rounded-bl-full -translate-y-4 translate-x-4"></div>
                                 <h4 className="font-bold text-stone-800 flex items-center gap-2 mb-3 text-lg">
-                                    <span className="text-2xl">📋</span> Complete Your Profile
+                                    <span className="text-2xl">📋</span> Mandatory Health Profile
                                 </h4>
                                 <p className="text-sm text-stone-500 leading-relaxed mb-6">
-                                    To help your therapist prepare the best treatment plan, please complete your optional clinical intake and medical history.
+                                    To finalize your request, please complete the clinical intake form. Your therapist cannot approve the session without this documentation.
                                 </p>
                                 <Button 
                                     onClick={() => router.push('/intake-form')} 
-                                    className="w-full bg-secondary hover:bg-secondary/90 justify-center shadow-md font-bold py-4 text-lg"
+                                    className="w-full bg-stone-900 hover:bg-black justify-center shadow-md font-bold py-4 text-lg"
                                 >
-                                    Start Health Intake
+                                    Start Mandatory Intake
                                 </Button>
                             </div>
 

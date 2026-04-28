@@ -6,6 +6,20 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const mode = searchParams.get('mode');
 
+        if (mode === 'search') {
+            const query = searchParams.get('q');
+            if (!query || query.length < 3) return NextResponse.json([]);
+            
+            const { data, error } = await supabaseAdmin
+                .from('clients')
+                .select('id, name, email, phone, address, city, state, zip')
+                .or(`name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%`)
+                .limit(10);
+                
+            if (error) throw error;
+            return NextResponse.json(data);
+        }
+
         if (mode === 'active') {
             // 1. Fetch Clients, Bookings, and Latest Intakes concurrently
             const [clientsRes, bookingsRes, intakeRes] = await Promise.all([

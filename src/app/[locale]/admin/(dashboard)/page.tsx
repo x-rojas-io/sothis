@@ -7,9 +7,9 @@ import type { Booking, TimeSlot } from '@/lib/supabase';
 import ProviderFilter from '@/components/ProviderFilter';
 import Button from '@/components/Button';
 
-import BookingNoteModal from '@/components/BookingNoteModal';
 import { getLastNote } from '@/lib/notes';
 import ClinicalIntakeModal from '@/components/ClinicalIntakeModal';
+import SoapNoteModal, { SoapNote } from '@/components/SoapNoteModal';
 
 export default function AdminDashboard() {
     const [upcomingBookings, setUpcomingBookings] = useState<any[]>([]);
@@ -25,9 +25,9 @@ export default function AdminDashboard() {
     const [userRole, setUserRole] = useState<string>('');
     const [selectedProvider, setSelectedProvider] = useState<string>('all');
 
-    // Notes Modal
+    // SOAP Note Modal
     const [selectedBooking, setSelectedBooking] = useState<any>(null);
-    const [noteModalOpen, setNoteModalOpen] = useState(false);
+    const [soapModalOpen, setSoapModalOpen] = useState(false);
 
     // Clinical Modal State
     const [intakeClient, setIntakeClient] = useState<any>(null);
@@ -74,20 +74,19 @@ export default function AdminDashboard() {
         }
     }
 
-    async function saveBookingNote(newNotes: string) {
+    async function saveSoapNote(newNote: SoapNote) {
         if (!selectedBooking) return;
 
-        const res = await fetch('/api/admin/bookings', {
-            method: 'PATCH',
+        const res = await fetch('/api/admin/soap-notes', {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: selectedBooking.id,
-                notes: newNotes
-            })
+            body: JSON.stringify(newNote)
         });
 
-        if (!res.ok) throw new Error('Failed to update notes');
-        setUpcomingBookings(prev => prev.map(b => b.id === selectedBooking.id ? { ...b, notes: newNotes } : b));
+        if (!res.ok) throw new Error('Failed to update SOAP notes');
+        
+        // Refresh dashboard to show updated status
+        fetchDashboardData(selectedProvider);
     }
 
     const openIntake = (client: any) => {
@@ -132,16 +131,17 @@ export default function AdminDashboard() {
                 <div className="space-y-8">
                     {msg && <div className="fixed top-24 right-8 bg-orange-50 border border-orange-200 text-orange-800 p-4 rounded shadow-2xl z-50 animate-bounce-subtle font-bold uppercase text-xs tracking-widest">{msg}</div>}
 
-                    {/* Note Modal */}
+                    {/* SOAP Note Modal */}
                     {selectedBooking && !intakeModalOpen && (
-                        <BookingNoteModal
-                            isOpen={noteModalOpen}
-                            onClose={() => setNoteModalOpen(false)}
+                        <SoapNoteModal
+                            isOpen={soapModalOpen}
+                            onClose={() => setSoapModalOpen(false)}
                             bookingId={selectedBooking.id}
                             clientName={selectedBooking.client_name}
+                            clientEmail={selectedBooking.client_email}
                             date={selectedBooking.time_slot.date}
-                            initialNotes={selectedBooking.notes}
-                            onSave={saveBookingNote}
+                            clientNotes={selectedBooking.notes}
+                            onSave={saveSoapNote}
                         />
                     )}
 
@@ -196,12 +196,12 @@ export default function AdminDashboard() {
 
                     {/* Upcoming Bookings */}
                     <div className={`bg-white rounded-lg border border-stone-200 ${loading ? 'opacity-50' : ''}`}>
-                        <div className="p-6 border-b border-stone-200 flex justify-between items-center">
+                        <div className="p-4 md:p-6 border-b border-stone-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                             <div className="flex items-center gap-4">
                                 <h2 className="text-xl font-semibold text-stone-900">Upcoming Bookings</h2>
                                 {loading && <span className="text-sm text-stone-500 animate-pulse">Updating...</span>}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                                 <Button
                                     onClick={async () => {
                                         if (!confirm('Send email reminders for TOMORROW\'s appointments?')) return;
@@ -228,10 +228,10 @@ export default function AdminDashboard() {
                                 upcomingBookings.map((booking: any) => {
                                     const intakeValid = isIntakeValid(booking);
                                     return (
-                                    <div key={booking.id} className="p-8 hover:bg-stone-50/80 transition-all border-b border-stone-100 last:border-0 group">
-                                        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-center">
+                                    <div key={booking.id} className="p-4 md:p-8 hover:bg-stone-50/80 transition-all border-b border-stone-100 last:border-0 group">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-6 lg:gap-10 items-start lg:items-center">
                                             {/* Column 1: Client Identity (3 cols) */}
-                                            <div className="md:col-span-3">
+                                            <div className="lg:col-span-3">
                                                 <div className="font-black text-stone-900 text-lg flex items-center gap-2 group-hover:text-primary transition-colors">
                                                     {booking.client_name}
                                                     {userRole === 'admin' && selectedProvider === 'all' && booking.provider && (
@@ -244,14 +244,14 @@ export default function AdminDashboard() {
                                             </div>
 
                                             {/* Column 2: Clinical Actions (2 cols) - NEW DEDICATED COLUMN */}
-                                            <div className="md:col-span-2 flex items-center">
+                                            <div className="lg:col-span-2 flex items-center">
                                                 {booking.client ? (
                                                     intakeValid ? (
-                                                        <button onClick={() => openIntake(booking.client)} className="text-[11px] font-black uppercase tracking-widest text-blue-700 hover:text-blue-900 bg-blue-50/50 hover:bg-blue-100 border border-blue-100 px-3 py-2 rounded-lg transition-all flex items-center gap-2 whitespace-nowrap">
+                                                        <button onClick={() => openIntake(booking.client)} className="text-[11px] font-black uppercase tracking-widest text-blue-700 hover:text-blue-900 bg-blue-50/50 hover:bg-blue-100 border border-blue-100 px-3 py-2 rounded-lg transition-all flex items-center gap-2">
                                                             <span className="text-base">🩺</span> View Intake
                                                         </button>
                                                     ) : (
-                                                        <button onClick={() => sendIntakeInvite(booking.client_email, booking.client_name)} disabled={!!sendingInvite} className="text-[11px] font-black uppercase tracking-widest text-primary hover:text-stone-900 bg-orange-50 px-3 py-2 rounded-lg border border-orange-100 transition-all flex items-center gap-2 whitespace-nowrap">
+                                                        <button onClick={() => sendIntakeInvite(booking.client_email, booking.client_name)} disabled={!!sendingInvite} className="text-[11px] font-black uppercase tracking-widest text-primary hover:text-stone-900 bg-orange-50 px-3 py-2 rounded-lg border border-orange-100 transition-all flex items-center gap-2">
                                                             <span className="text-base">✉️</span> Request Intake
                                                         </button>
                                                     )
@@ -262,24 +262,40 @@ export default function AdminDashboard() {
                                                 )}
                                             </div>
 
-                                            {/* Column 3: Session Metadata (4 cols) - REDUCED FROM 6 */}
-                                            <div className="md:col-span-4">
-                                                <div onClick={() => { setSelectedBooking(booking); setNoteModalOpen(true); }} className="relative group/note cursor-pointer">
-                                                    <label className="text-[11px] font-black text-stone-400 uppercase tracking-widest mb-2 block group-hover/note:text-primary transition-colors">Clinical Prep Notes</label>
-                                                    <div className="text-sm p-4 rounded-xl border border-stone-200 bg-stone-50 group-hover/note:bg-white group-hover/note:border-primary/30 transition-all min-h-[90px] font-serif leading-relaxed italic text-stone-700 shadow-sm">
-                                                        {booking.notes ? getLastNote(booking.notes) : 'No clinical prep notes recorded.'}
-                                                        <span className="absolute bottom-3 right-3 opacity-0 group-hover/note:opacity-100 text-[10px] font-sans font-bold text-primary transition-opacity bg-white px-2 py-1 rounded shadow-sm border border-primary/10">✎ Edit Note</span>
+                                            {/* Column 3: Client Symptoms & SOAP Documentation (4 cols) */}
+                                            <div className="sm:col-span-2 lg:col-span-4 space-y-3">
+                                                {/* Client Communication (Pre-Session Notes) */}
+                                                <div>
+                                                    <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1 block">Client Symptoms (Pre-Session)</label>
+                                                    <div className="text-xs p-3 rounded-lg border border-stone-200 bg-stone-50 font-serif italic text-stone-600 line-clamp-2 leading-relaxed">
+                                                        {booking.notes || "No specific symptoms communicated beforehand."}
+                                                    </div>
+                                                </div>
+
+                                                {/* Professional SOAP Note Status */}
+                                                <div onClick={() => { setSelectedBooking(booking); setSoapModalOpen(true); }} className="relative group/note cursor-pointer">
+                                                    <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1 block group-hover/note:text-primary transition-colors">Professional Documentation (SOAP)</label>
+                                                    <div className={`text-sm px-4 py-2 rounded-lg border transition-all flex items-center justify-between gap-2 shadow-sm ${booking.soap_note_status === 'completed' ? 'bg-green-50 border-green-100 text-green-700' : booking.soap_note_status === 'draft' ? 'bg-amber-50 border-amber-100 text-amber-700' : 'bg-white border-stone-200 text-stone-400'}`}>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs">
+                                                                {booking.soap_note_status === 'completed' ? '✅' : booking.soap_note_status === 'draft' ? '📝' : '⚪'}
+                                                            </span>
+                                                            <span className="font-black text-[10px] uppercase tracking-widest">
+                                                                {booking.soap_note_status === 'completed' ? 'Signed & Completed' : booking.soap_note_status === 'draft' ? 'Draft in Progress' : 'Not Started'}
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[10px] font-bold uppercase tracking-tight text-primary opacity-0 group-hover/note:opacity-100 transition-opacity">✎ Open Form</span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             {/* Column 4: Status (1 col) */}
-                                            <div className="md:col-span-1 border-stone-100 hidden md:flex items-center justify-center">
+                                            <div className="lg:col-span-1 border-stone-100 hidden lg:flex items-center justify-center">
                                                 <div className="text-[11px] uppercase font-black tracking-[0.3em] text-stone-300 vertical-lr">Audit Ready</div>
                                             </div>
 
                                             {/* Column 5: Date & Time (2 cols) */}
-                                            <div className="md:col-span-2 text-right">
+                                            <div className="lg:col-span-2 text-left lg:text-right border-t lg:border-t-0 pt-4 lg:pt-0 border-stone-100">
                                                 <div className="font-black text-stone-900 text-xl uppercase tracking-tighter">
                                                     {(() => {
                                                         const [y, m, d] = booking.time_slot.date.split('-').map(Number);

@@ -7,6 +7,7 @@ import {
     INITIAL_STATE, 
     TABS 
 } from '@/lib/intake-constants';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
 interface ClinicalIntakeModalProps {
     isOpen: boolean;
@@ -24,6 +25,7 @@ export default function ClinicalIntakeModal({ isOpen, onClose, client, sourceLab
     const [auditHistory, setAuditHistory] = useState<any[]>([]);
     const [activeTab, setActiveTab] = useState(1);
     const [viewingVersion, setViewingVersion] = useState<'current' | string>('current');
+    const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
 
     useEffect(() => {
         if (isOpen && client) {
@@ -61,6 +63,7 @@ export default function ClinicalIntakeModal({ isOpen, onClose, client, sourceLab
         if (v === 'current') {
             setViewingVersion('current');
             fetchIntakeData();
+            setMobileHistoryOpen(false);
         } else {
             setViewingVersion(v.id);
             const snap = v.snapshot;
@@ -69,6 +72,7 @@ export default function ClinicalIntakeModal({ isOpen, onClose, client, sourceLab
                 ...snap,
                 questions: { ...INITIAL_STATE.questions, ...snap.medical_history }
             });
+            setMobileHistoryOpen(false);
         }
     };
 
@@ -107,18 +111,52 @@ export default function ClinicalIntakeModal({ isOpen, onClose, client, sourceLab
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-stone-900/90 backdrop-blur-xl flex items-center justify-center p-4 z-[100]">
-            <div className="bg-[#f2f2f2] w-full max-w-7xl shadow-2xl flex flex-col h-[92vh] relative animate-in zoom-in-95 duration-300 rounded-lg overflow-hidden">
-                <div className="flex flex-1 overflow-hidden">
-                    {/* Sidebar: Identity & History */}
-                    <div className="w-72 bg-stone-900 text-stone-300 p-10 flex flex-col gap-10 border-r border-stone-800">
-                        <div>
+        <div className="fixed inset-0 bg-stone-900/95 backdrop-blur-2xl flex items-center justify-center p-0 md:p-4 z-[100]">
+            <div className="bg-[#f2f2f2] w-full max-w-7xl shadow-2xl flex flex-col h-full md:h-[92vh] relative animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-300 md:rounded-lg overflow-hidden">
+                
+                {/* Mobile Header */}
+                <div className="lg:hidden bg-stone-900 p-4 flex justify-between items-center border-b border-stone-800 shrink-0">
+                    <div>
+                        <h2 className="text-white font-serif font-black uppercase text-sm tracking-tight">{client?.name || "Client Profile"}</h2>
+                        <p className="text-[9px] text-stone-500 uppercase font-bold tracking-widest">{sourceLabel}</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={() => setMobileHistoryOpen(!mobileHistoryOpen)}
+                            className="bg-stone-800 text-white p-2 rounded-md border border-stone-700"
+                        >
+                            <ArrowPathIcon className="w-5 h-5" />
+                        </button>
+                        <button 
+                            onClick={onClose}
+                            className="bg-stone-800 text-white p-2 rounded-md border border-stone-700"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+
+                <div className="flex flex-1 overflow-hidden relative">
+                    
+                    {/* Sidebar: Audit History - Desktop: Fixed, Mobile: Toggleable Slide-over */}
+                    <div className={`
+                        w-72 bg-stone-900 text-stone-300 p-6 lg:p-10 flex flex-col gap-8 lg:gap-10 border-r border-stone-800
+                        fixed lg:relative inset-y-0 left-0 z-[110] lg:z-0 transform transition-transform duration-300
+                        ${mobileHistoryOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                        lg:flex
+                    `}>
+                        {/* Mobile Sidebar Close */}
+                        <div className="lg:hidden flex justify-end mb-4">
+                            <button onClick={() => setMobileHistoryOpen(false)} className="text-stone-500 hover:text-white">✕ Close History</button>
+                        </div>
+
+                        <div className="hidden lg:block">
                             <div className="w-12 h-1 bg-primary mb-6"></div>
                             <h2 className="text-2xl font-serif font-black text-white uppercase tracking-tight leading-tight mb-2">
                                 {client?.name}
                             </h2>
                             <p className="text-[10px] text-stone-500 font-sans font-bold uppercase tracking-[0.3em] mb-10">
-                                {sourceLabel} History
+                                {sourceLabel}
                             </p>
                             
                             <div className="space-y-3 pb-6 border-b border-stone-800">
@@ -129,21 +167,23 @@ export default function ClinicalIntakeModal({ isOpen, onClose, client, sourceLab
                                     ✕ Close View
                                 </button>
 
-                                {viewingVersion === 'current' && !form.therapist_signature_at && (
+                                {viewingVersion === 'current' && form.id && !form.therapist_signature_at && (
                                     <button 
                                         onClick={saveSignature}
                                         disabled={loading}
                                         className="text-[10px] font-black uppercase tracking-[0.2em] bg-primary text-white hover:bg-white hover:text-primary border border-primary px-4 py-3 w-full transition-all shadow-xl disabled:opacity-50"
                                     >
-                                        {loading ? 'Certifying...' : '✍️ Sign & Certify'}
+                                        {loading ? 'Certifying...' : '✍️ Sign & Complete'}
                                     </button>
                                 )}
                             </div>
                         </div>
 
                         <div className="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                            {loading && viewingVersion === 'current' ? (
-                                <div className="text-[10px] animate-pulse">Gathering records...</div>
+                            <h4 className="text-[9px] font-black uppercase tracking-widest text-stone-500">Document Snapshots</h4>
+                            
+                            {loading && auditHistory.length === 0 ? (
+                                <div className="text-xs italic text-stone-500 animate-pulse">Scanning audit trail...</div>
                             ) : (
                                 <>
                                     <button 
@@ -164,7 +204,7 @@ export default function ClinicalIntakeModal({ isOpen, onClose, client, sourceLab
                                         >
                                             <div className="flex justify-between items-center mb-1">
                                                 <span className="font-bold text-[10px] uppercase tracking-widest">Snapshot</span>
-                                                <span className="text-[9px] font-mono opacity-50">{new Date(audit.created_at).toLocaleDateString()}</span>
+                                                <span className="text-[9px] font-mono opacity-50">{new Date(audit.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</span>
                                             </div>
                                             <p className="text-[9px] opacity-60 truncate font-medium">ID: {audit.id.slice(0, 8)}</p>
                                         </button>
@@ -174,29 +214,38 @@ export default function ClinicalIntakeModal({ isOpen, onClose, client, sourceLab
                         </div>
                     </div>
 
+                    {/* Overlay for Mobile Sidebar */}
+                    {mobileHistoryOpen && (
+                        <div 
+                            className="lg:hidden fixed inset-0 bg-black/60 z-[105]"
+                            onClick={() => setMobileHistoryOpen(false)}
+                        />
+                    )}
+
                     {/* Main Content: Form Viewer */}
-                    <div className="flex-1 bg-[#e0e0e0] p-12 overflow-y-auto relative">
-                        <div className="max-w-5xl mx-auto space-y-12">
+                    <div className="flex-1 bg-stone-200 lg:p-12 overflow-y-auto relative custom-scrollbar">
+                        <div className="max-w-5xl mx-auto space-y-6 lg:space-y-12 p-4 lg:p-0">
                             {/* Navigation Tabs */}
-                            <nav className="flex justify-between bg-stone-900/10 backdrop-blur-md p-1.5 shadow-sm gap-1.5 sticky top-0 z-50 rounded-lg">
+                            <nav className="flex justify-between bg-stone-900/10 backdrop-blur-md p-1.5 shadow-sm gap-1 lg:gap-1.5 sticky top-2 z-50 rounded-lg">
                                 {TABS.map((tab) => (
                                     <button 
                                         key={tab.id} 
                                         onClick={() => setActiveTab(tab.id)} 
-                                        className={`flex-1 flex items-center justify-center gap-3 py-3 transition-all duration-300 ${activeTab === tab.id ? 'bg-primary text-white' : 'text-stone-400 hover:bg-stone-50'}`}
+                                        className={`flex-1 flex items-center justify-center gap-2 lg:gap-3 py-3 lg:py-4 transition-all duration-300 rounded-md ${activeTab === tab.id ? 'bg-primary text-white shadow-lg' : 'text-stone-400 hover:bg-stone-50'}`}
                                     >
-                                        <tab.icon className="w-4 h-4" />
+                                        <tab.icon className="w-4 h-4 lg:w-5 h-5" />
                                         <span className="text-[9px] uppercase font-black tracking-widest hidden lg:block">{tab.label}</span>
+                                        <span className="text-xs font-black lg:hidden">{tab.id}</span>
                                     </button>
                                 ))}
                             </nav>
 
                             {/* Clinical Document Rendering */}
-                            <div className="bg-white shadow-2xl p-20 font-serif min-h-[1100px] pointer-events-auto relative border border-stone-200 rounded-sm">
-                                <div className="flex justify-between items-start mb-16 border-b-4 border-stone-900 pb-8 text-stone-900">
+                            <div className="bg-white shadow-2xl p-6 md:p-12 lg:p-20 font-serif min-h-[90vh] pointer-events-auto relative border border-stone-200 rounded-sm">
+                                <div className="flex justify-between items-start mb-10 md:mb-16 border-b-4 border-stone-900 pb-6 md:pb-8 text-stone-900">
                                     <div className="text-left">
-                                        <h1 className="text-4xl font-serif font-black uppercase tracking-tighter">Confidential clinical Profile</h1>
-                                        <p className="text-xs text-stone-400 uppercase tracking-[0.2em] mt-2 font-sans font-bold">Medical Examination Snapshot · sothis</p>
+                                        <h1 className="text-2xl md:text-4xl font-serif font-black uppercase tracking-tighter leading-none">Confidential clinical Profile</h1>
+                                        <p className="text-[9px] md:text-xs text-stone-400 uppercase tracking-[0.2em] mt-2 font-sans font-bold">Medical Examination Snapshot · sothis</p>
                                     </div>
                                 </div>
                                 
@@ -207,6 +256,7 @@ export default function ClinicalIntakeModal({ isOpen, onClose, client, sourceLab
                                     setActiveTab={setActiveTab} 
                                     isReadOnly={viewingVersion !== 'current'} 
                                     isTherapistView={true} 
+                                    onSave={saveSignature}
                                 />
                             </div>
                         </div>

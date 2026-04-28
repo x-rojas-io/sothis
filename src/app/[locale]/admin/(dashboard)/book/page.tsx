@@ -47,6 +47,46 @@ export default function AdminBookingPage() {
         data_consent: false
     });
 
+    // Search Autocomplete
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [showResults, setShowResults] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchQuery.length >= 4) {
+                performSearch();
+            } else {
+                setSearchResults([]);
+                setShowResults(false);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    const performSearch = async () => {
+        setIsSearching(true);
+        try {
+            const res = await fetch(`/api/admin/clients?mode=search&q=${encodeURIComponent(searchQuery)}`);
+            const data = await res.json();
+            setSearchResults(data);
+            setShowResults(true);
+        } catch (e) {
+            console.error('Search failed:', e);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const selectClient = (client: any) => {
+        setClientData(client);
+        setEmail(client.email);
+        setStep('details');
+        setShowResults(false);
+        fetchIntakeHistory(client.email);
+    };
+
     // 1. Auth & Initial Load
     useEffect(() => {
         if (status === 'authenticated') {
@@ -344,24 +384,69 @@ export default function AdminBookingPage() {
                         </div>
                     )}
 
-                    {/* STEP 1: LOOKUP */}
+                    {/* STEP 1: LOOKUP / SEARCH */}
                     {step === 'lookup' && (
-                        <form onSubmit={handleLookup} className="max-w-md mx-auto space-y-6">
+                        <div className="max-w-md mx-auto space-y-6 relative">
                             <div>
-                                <label className="block text-sm font-medium text-stone-700 mb-2">Client Email</label>
-                                <input
-                                    type="email"
-                                    required
-                                    value={email}
-                                    onChange={e => setEmail(e.target.value)}
-                                    className="w-full rounded-md border border-stone-300 px-4 py-3"
-                                    placeholder="client@example.com"
-                                />
+                                <label className="block text-sm font-medium text-stone-700 mb-2">Search Client (Name, Email, or Phone)</label>
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={e => setSearchQuery(e.target.value)}
+                                        className="w-full rounded-md border border-stone-300 px-4 py-3 focus:ring-2 focus:ring-secondary focus:border-transparent"
+                                        placeholder="Type at least 4 characters..."
+                                        autoComplete="off"
+                                    />
+                                    {isSearching && (
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                            <div className="w-4 h-4 border-2 border-secondary border-t-transparent rounded-full animate-spin"></div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {showResults && searchResults.length > 0 && (
+                                    <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-stone-200 shadow-2xl rounded-lg max-h-64 overflow-y-auto">
+                                        {searchResults.map(c => (
+                                            <button
+                                                key={c.id}
+                                                onClick={() => selectClient(c)}
+                                                className="w-full text-left px-4 py-3 hover:bg-stone-50 border-b border-stone-100 last:border-0 transition-colors group"
+                                            >
+                                                <div className="font-bold text-stone-900 group-hover:text-primary">{c.name}</div>
+                                                <div className="text-xs text-stone-500 flex justify-between">
+                                                    <span>{c.email}</span>
+                                                    {c.phone && <span className="font-mono">{c.phone}</span>}
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {showResults && searchResults.length === 0 && searchQuery.length >= 4 && !isSearching && (
+                                    <div className="absolute z-50 left-0 right-0 mt-1 bg-stone-50 border border-stone-200 p-4 text-center text-sm text-stone-500 rounded-lg shadow-xl">
+                                        No matches found.
+                                    </div>
+                                )}
                             </div>
-                            <Button type="submit" disabled={isLoading} className="w-full justify-center">
-                                {isLoading ? 'Checking...' : 'Find Client'}
-                            </Button>
-                        </form>
+
+                            <div className="pt-4 border-t border-stone-100 text-center">
+                                <p className="text-sm text-stone-400 mb-4">Or enter a new email to register:</p>
+                                <form onSubmit={handleLookup} className="space-y-4">
+                                    <input
+                                        type="email"
+                                        required
+                                        value={email}
+                                        onChange={e => setEmail(e.target.value)}
+                                        className="w-full rounded-md border border-stone-300 px-4 py-2 text-sm"
+                                        placeholder="newclient@example.com"
+                                    />
+                                    <Button type="submit" disabled={isLoading} variant="secondary" className="w-full justify-center">
+                                        {isLoading ? 'Checking...' : 'Check & Register'}
+                                    </Button>
+                                </form>
+                            </div>
+                        </div>
                     )}
 
                     {/* STEP 2: REGISTER */}
@@ -428,7 +513,10 @@ export default function AdminBookingPage() {
                             <div className="bg-blue-50 p-4 rounded-lg flex justify-between items-center">
                                 <div>
                                     <h3 className="font-bold text-blue-900">Booking for: {clientData.name}</h3>
-                                    <p className="text-blue-700 text-sm">{clientData.email}</p>
+                                    <div className="flex gap-4 text-blue-700 text-sm mt-1">
+                                        <span>{clientData.email}</span>
+                                        {clientData.phone && <span className="font-mono">| {clientData.phone}</span>}
+                                    </div>
                                 </div>
                                 <button onClick={() => setStep('lookup')} className="text-xs text-blue-600 hover:underline">Change Client</button>
                             </div>

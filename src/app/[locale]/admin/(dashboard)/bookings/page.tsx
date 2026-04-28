@@ -19,7 +19,7 @@ import {
     addDays,
     subDays
 } from 'date-fns';
-import { ChevronLeftIcon, ChevronRightIcon, CalendarDaysIcon, ListBulletIcon, ArrowLeftIcon } from '@heroicons/react/24/solid';
+import { ChevronLeftIcon, ChevronRightIcon, CalendarDaysIcon, ListBulletIcon, ArrowLeftIcon, PencilSquareIcon } from '@heroicons/react/24/solid';
 import ProviderFilter from '@/components/ProviderFilter';
 
 // Extended Type: A Slot that might have a Booking attached
@@ -28,6 +28,7 @@ type MasterSlot = TimeSlot & {
 };
 
 import BookingNoteModal from '@/components/BookingNoteModal';
+import SoapNoteModal, { SoapNote } from '@/components/SoapNoteModal';
 import { getLastNote } from '@/lib/notes';
 
 export default function MasterCalendarPage() {
@@ -44,6 +45,7 @@ export default function MasterCalendarPage() {
     // Notes Modal
     const [selectedBooking, setSelectedBooking] = useState<any>(null);
     const [noteModalOpen, setNoteModalOpen] = useState(false);
+    const [soapModalOpen, setSoapModalOpen] = useState(false);
 
     useEffect(() => {
         // Check URL params for filter to auto-set view
@@ -120,6 +122,17 @@ export default function MasterCalendarPage() {
         if (!res.ok) throw new Error('Failed to update notes');
 
         // Refresh data to update UI
+        await fetchMasterData();
+    }
+
+    async function saveSoapNote(newNote: SoapNote) {
+        const res = await fetch('/api/admin/soap-notes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newNote)
+        });
+
+        if (!res.ok) throw new Error('Failed to update SOAP notes');
         await fetchMasterData();
     }
 
@@ -210,6 +223,20 @@ export default function MasterCalendarPage() {
 
     return (
         <div className="space-y-6">
+            {/* SOAP Note Modal */}
+            {selectedBooking && !noteModalOpen && (
+                <SoapNoteModal
+                    isOpen={soapModalOpen}
+                    onClose={() => setSoapModalOpen(false)}
+                    bookingId={selectedBooking.id}
+                    clientName={selectedBooking.client_name}
+                    clientEmail={selectedBooking.client_email}
+                    date={selectedBooking.time_slot?.date || ''}
+                    clientNotes={selectedBooking.notes}
+                    onSave={saveSoapNote}
+                />
+            )}
+
             {/* Notes Modal */}
             {selectedBooking && (
                 <BookingNoteModal
@@ -231,28 +258,28 @@ export default function MasterCalendarPage() {
             </div>
 
             {/* Top Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
                 <div>
                     <h1 className="text-3xl font-serif font-bold text-stone-900">Bookings Calendar</h1>
-                    <p className="mt-1 text-stone-600">
+                    <p className="mt-1 text-stone-600 text-sm">
                         {view === 'month' ? `Viewing ${format(currentDate, 'MMMM yyyy')}` : format(currentDate, 'EEEE, MMMM do, yyyy')}
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                     {/* Provider Filter */}
                     <ProviderFilter
                         selectedProvider={selectedProvider}
                         onSelectProvider={setSelectedProvider}
-                        className="w-auto"
+                        className="w-full sm:w-auto"
                         showLabel={false}
                     />
 
-                    <div className="flex items-center gap-2 bg-stone-100 p-1 rounded-lg">
-                        <button onClick={() => setView('month')} className={`px-3 py-2 text-sm font-medium rounded-md flex items-center gap-2 transition-all ${view === 'month' ? 'bg-white shadow text-stone-900' : 'text-stone-500 hover:text-stone-900'}`}>
+                    <div className="flex items-center gap-2 bg-stone-100 p-1 rounded-lg w-full sm:w-auto">
+                        <button onClick={() => setView('month')} className={`flex-1 sm:flex-none px-3 py-2 text-sm font-medium rounded-md flex items-center justify-center gap-2 transition-all ${view === 'month' ? 'bg-white shadow text-stone-900' : 'text-stone-500 hover:text-stone-900'}`}>
                             <CalendarDaysIcon className="w-4 h-4" /> Month
                         </button>
-                        <button onClick={() => setView('day')} className={`px-3 py-2 text-sm font-medium rounded-md flex items-center gap-2 transition-all ${view === 'day' ? 'bg-white shadow text-stone-900' : 'text-stone-500 hover:text-stone-900'}`}>
+                        <button onClick={() => setView('day')} className={`flex-1 sm:flex-none px-3 py-2 text-sm font-medium rounded-md flex items-center justify-center gap-2 transition-all ${view === 'day' ? 'bg-white shadow text-stone-900' : 'text-stone-500 hover:text-stone-900'}`}>
                             <ListBulletIcon className="w-4 h-4" /> Day
                         </button>
                     </div>
@@ -400,6 +427,18 @@ export default function MasterCalendarPage() {
                                                                     </div>
                                                                 </div>
 
+                                                                {/* SOAP Action */}
+                                                                <button 
+                                                                    onClick={() => {
+                                                                        setSelectedBooking(booking);
+                                                                        setSoapModalOpen(true);
+                                                                    }}
+                                                                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:text-stone-900 bg-white border border-stone-200 px-4 py-2 rounded-lg transition-all shadow-sm"
+                                                                >
+                                                                    <PencilSquareIcon className="w-3.5 h-3.5" />
+                                                                    Professional SOAP Form
+                                                                </button>
+
                                                                 <div className="text-sm text-stone-500 flex gap-4 pt-2">
                                                                     {booking.client_email && <span>📧 {booking.client_email}</span>}
                                                                     {booking.client_phone && <span>📱 {booking.client_phone}</span>}
@@ -407,18 +446,18 @@ export default function MasterCalendarPage() {
                                                             </div>
 
                                                             {/* Actions */}
-                                                            <div className="flex lg:flex-col gap-2 min-w-[120px]">
+                                                            <div className="flex flex-row sm:flex-col lg:flex-col gap-2 min-w-[120px] w-full lg:w-auto">
                                                                 {booking.status === 'confirmed' ? (
                                                                     <>
-                                                                        <button onClick={() => handleMarkCompleted(booking.id)} className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium shadow-sm transition-colors">
+                                                                        <button onClick={() => handleMarkCompleted(booking.id)} className="flex-1 lg:w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium shadow-sm transition-colors">
                                                                             Mark Done
                                                                         </button>
-                                                                        <button onClick={() => handleCancelBooking(booking.id)} className="w-full py-2 bg-white border border-stone-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-stone-600 rounded text-sm font-medium transition-colors">
+                                                                        <button onClick={() => handleCancelBooking(booking.id)} className="flex-1 lg:w-full py-2 bg-white border border-stone-300 hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-stone-600 rounded text-sm font-medium transition-colors">
                                                                             Cancel
                                                                         </button>
                                                                     </>
                                                                 ) : (
-                                                                    <div className={`text-center py-2 px-4 rounded font-medium border ${booking.status === 'completed' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-stone-50 text-stone-500 border-stone-200'}`}>
+                                                                    <div className={`w-full text-center py-2 px-4 rounded font-medium border ${booking.status === 'completed' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-stone-50 text-stone-500 border-stone-200'}`}>
                                                                         {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                                                                     </div>
                                                                 )}

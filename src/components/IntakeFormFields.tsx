@@ -22,6 +22,7 @@ interface IntakeFormFieldsProps {
     isReadOnly?: boolean;
     isNameDisabled?: boolean;
     isTherapistView?: boolean;
+    onSave?: () => void;
 }
 
 export default function IntakeFormFields({ 
@@ -31,7 +32,8 @@ export default function IntakeFormFields({
     setActiveTab,
     isReadOnly = false,
     isNameDisabled = false,
-    isTherapistView = false
+    isTherapistView = false,
+    onSave
 }: IntakeFormFieldsProps) {
 
     // Helper: Yes/No Pills
@@ -48,6 +50,20 @@ export default function IntakeFormFields({
             {value ? 'Yes' : 'No'}
         </button>
     );
+
+    // Helper: Format Forensic Timestamp
+    const formatForensicTime = (dateStr: string) => {
+        if (!dateStr) return '';
+        return new Date(dateStr).toLocaleString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+    };
 
     const handleRegionToggle = (id: string) => {
         if (isReadOnly) return;
@@ -83,58 +99,58 @@ export default function IntakeFormFields({
                     </div>
                     
                     <div className="space-y-4">
-                        <div className="flex gap-4">
-                            <div className="flex-1 flex items-end gap-2">
-                                <label className="text-[12px] whitespace-nowrap pt-2">Name</label>
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1 flex flex-col md:flex-row md:items-end gap-2 min-w-0">
+                                <label className="text-[12px] whitespace-nowrap pt-2 md:pb-1">Name</label>
                                 <input 
                                     disabled={isReadOnly || isNameDisabled} 
                                     type="text" 
                                     value={form.full_name} 
                                     onChange={e => setForm({...form, full_name: e.target.value})} 
-                                    className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors ${isNameDisabled ? 'cursor-not-allowed text-stone-500' : ''}`} 
+                                    className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors ${isNameDisabled ? 'cursor-not-allowed text-stone-500' : ''} min-w-0 w-full`} 
                                 />
                             </div>
-                            <div className="w-1/3 flex items-end gap-2">
-                                <label className="text-[12px] whitespace-nowrap pt-2">Phone</label>
-                                <input disabled={isReadOnly} type="text" value={form.phone_day} onChange={e => setForm({...form, phone_day: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors`} />
+                            <div className="md:w-1/3 flex flex-col md:flex-row md:items-end gap-2 min-w-0">
+                                <label className="text-[12px] whitespace-nowrap pt-2 md:pb-1">Phone</label>
+                                <input disabled={isReadOnly} type="text" value={form.phone_day} onChange={e => setForm({...form, phone_day: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors min-w-0 w-full`} />
                             </div>
                         </div>
 
-                        <div className="flex items-end gap-2">
-                            <label className="text-[12px] whitespace-nowrap pt-2">Address</label>
-                            <input disabled={isReadOnly} type="text" value={form.address} onChange={e => setForm({...form, address: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors`} />
+                        <div className="flex flex-col md:flex-row md:items-end gap-2">
+                            <label className="text-[12px] whitespace-nowrap pt-2 md:pb-1">Address</label>
+                            <input disabled={isReadOnly} type="text" value={form.address} onChange={e => setForm({...form, address: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors w-full`} />
                         </div>
 
-                        <div className="flex gap-4">
-                            <div className="flex-1 flex items-end gap-2">
-                                <label className="text-[12px] whitespace-nowrap pt-2">City, State, Zip</label>
-                                <input disabled={isReadOnly} type="text" value={form.city_state_zip} onChange={e => setForm({...form, city_state_zip: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors`} />
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1 flex flex-col md:flex-row md:items-end gap-2 min-w-0">
+                                <label className="text-[12px] whitespace-nowrap pt-2 md:pb-1">City, State, Zip</label>
+                                <input disabled={isReadOnly} type="text" value={form.city_state_zip} onChange={e => setForm({...form, city_state_zip: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors min-w-0 w-full`} />
                             </div>
-                            <div className="flex-1 flex items-end gap-2">
-                                <label className="text-[12px] whitespace-nowrap pt-2">Occupation</label>
-                                <input disabled={isReadOnly} type="text" value={form.occupation} onChange={e => setForm({...form, occupation: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors`} />
-                            </div>
-                        </div>
-
-                        <div className="flex gap-4">
-                            <div className="flex-1 flex items-end gap-2">
-                                <label className="text-[12px] whitespace-nowrap pt-2">Date of Birth</label>
-                                <input disabled={isReadOnly} type="date" value={form.date_of_birth} onChange={e => setForm({...form, date_of_birth: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors`} />
-                            </div>
-                            <div className="flex-1 flex items-end gap-2">
-                                <label className="text-[12px] whitespace-nowrap pt-2">Initial Visit Date</label>
-                                <input disabled={isReadOnly} type="date" value={form.initial_visit_date} onChange={e => setForm({...form, initial_visit_date: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors`} />
+                            <div className="flex-1 flex flex-col md:flex-row md:items-end gap-2 min-w-0">
+                                <label className="text-[12px] whitespace-nowrap pt-2 md:pb-1">Occupation</label>
+                                <input disabled={isReadOnly} type="text" value={form.occupation} onChange={e => setForm({...form, occupation: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors min-w-0 w-full`} />
                             </div>
                         </div>
 
-                        <div className="flex gap-4">
-                            <div className="flex-1 flex items-end gap-2">
-                                <label className="text-[12px] whitespace-nowrap pt-2">Emergency Contact</label>
-                                <input disabled={isReadOnly} type="text" value={form.emergency_contact} onChange={e => setForm({...form, emergency_contact: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors`} />
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1 flex flex-col md:flex-row md:items-end gap-2 min-w-0">
+                                <label className="text-[12px] whitespace-nowrap pt-2 md:pb-1">Date of Birth</label>
+                                <input disabled={isReadOnly} type="date" value={form.date_of_birth} onChange={e => setForm({...form, date_of_birth: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors min-w-0 w-full`} />
                             </div>
-                            <div className="flex-1 flex items-end gap-2">
-                                <label className="text-[12px] whitespace-nowrap pt-2">Emergency Phone</label>
-                                <input disabled={isReadOnly} type="text" value={form.emergency_phone} onChange={e => setForm({...form, emergency_phone: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors`} />
+                            <div className="flex-1 flex flex-col md:flex-row md:items-end gap-2 min-w-0">
+                                <label className="text-[12px] whitespace-nowrap pt-2 md:pb-1">Initial Visit Date</label>
+                                <input disabled={isReadOnly} type="date" value={form.initial_visit_date} onChange={e => setForm({...form, initial_visit_date: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors min-w-0 w-full`} />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <div className="flex-1 flex flex-col md:flex-row md:items-end gap-2 min-w-0">
+                                <label className="text-[12px] whitespace-nowrap pt-2 md:pb-1">Emergency Contact</label>
+                                <input disabled={isReadOnly} type="text" value={form.emergency_contact} onChange={e => setForm({...form, emergency_contact: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors min-w-0 w-full`} />
+                            </div>
+                            <div className="flex-1 flex flex-col md:flex-row md:items-end gap-2 min-w-0">
+                                <label className="text-[12px] whitespace-nowrap pt-2 md:pb-1">Emergency Phone</label>
+                                <input disabled={isReadOnly} type="text" value={form.emergency_phone} onChange={e => setForm({...form, emergency_phone: e.target.value})} className={`flex-1 border-0 border-b border-[#888] ${FIELD_BG} px-2 py-1 outline-none focus:bg-white focus:border-[#f5a623] transition-colors min-w-0 w-full`} />
                             </div>
                         </div>
                     </div>
@@ -340,11 +356,11 @@ export default function IntakeFormFields({
                             </div>
                         </div>
 
-                        <div className="flex gap-12 justify-center py-4 bg-white p-6 rounded-sm shadow-inner border border-stone-50">
+                        <div className="flex flex-col sm:flex-row gap-6 sm:gap-12 justify-center py-4 bg-white p-6 rounded-sm shadow-inner border border-stone-50 overflow-x-auto">
                             {/* FRONT FIGURE */}
-                            <div className="text-center">
+                            <div className="text-center shrink-0">
                                 <span className="text-[10px] uppercase tracking-widest text-stone-400 font-bold block mb-4">Front</span>
-                                <svg className="w-[120px] h-auto drop-shadow-sm" viewBox="0 0 80 175" xmlns="http://www.w3.org/2000/svg">
+                                <svg className="w-[120px] h-auto drop-shadow-sm mx-auto" viewBox="0 0 80 175" xmlns="http://www.w3.org/2000/svg">
                                     <line className="stroke-stone-300 stroke-[0.5]" x1="40" y1="39" x2="40" y2="81" />
                                     {BODY_REGIONS.slice(0, 22).map(region => (
                                         <g 
@@ -380,9 +396,9 @@ export default function IntakeFormFields({
                             </div>
 
                             {/* BACK FIGURE */}
-                            <div className="text-center">
+                            <div className="text-center shrink-0">
                                 <span className="text-[10px] uppercase tracking-widest text-stone-400 font-bold block mb-4">Back</span>
-                                <svg className="w-[120px] h-auto drop-shadow-sm" viewBox="0 0 80 175" xmlns="http://www.w3.org/2000/svg">
+                                <svg className="w-[120px] h-auto drop-shadow-sm mx-auto" viewBox="0 0 80 175" xmlns="http://www.w3.org/2000/svg">
                                     <line className="stroke-stone-300 stroke-[0.5]" x1="40" y1="39" x2="40" y2="81" />
                                     {BODY_REGIONS.slice(22).map(region => (
                                         <g 
@@ -624,7 +640,7 @@ export default function IntakeFormFields({
                                         {form.consent_name}
                                     </div>
                                     <div className="text-[10px] font-mono uppercase tracking-tighter text-stone-400 font-bold">
-                                        DIGITALLY SIGNED ON {new Date(form.consent_at).toISOString().replace('T', ' ').split('.')[0]}
+                                        DIGITALLY SIGNED ON {formatForensicTime(form.consent_at)}
                                     </div>
                                 </div>
                             ) : (
@@ -656,7 +672,7 @@ export default function IntakeFormFields({
                                         {form.therapist_signature_name}
                                     </div>
                                     <div className="text-[10px] font-mono uppercase tracking-tighter text-[#f5a623] font-bold">
-                                        VERIFIED BY PROVIDER ON {new Date(form.therapist_signature_at).toISOString().replace('T', ' ').split('.')[0]} 
+                                        VERIFIED BY PROVIDER ON {formatForensicTime(form.therapist_signature_at)} 
                                         <span className="ml-2 opacity-50">[IP: {form.therapist_signature_ip}]</span>
                                     </div>
                                 </div>
@@ -684,6 +700,17 @@ export default function IntakeFormFields({
                                 </div>
                             )}
                         </div>
+
+                        {isTherapistView && !isReadOnly && !form.therapist_signature_at && (
+                            <div className="pt-10">
+                                <Button 
+                                    onClick={onSave}
+                                    className="w-full bg-stone-900 text-white py-6 font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-primary transition-all"
+                                >
+                                    ✍️ Sign & Complete Intake
+                                </Button>
+                            </div>
+                        )}
 
                         {!isReadOnly && (
                             <div className="pt-10 flex justify-between">

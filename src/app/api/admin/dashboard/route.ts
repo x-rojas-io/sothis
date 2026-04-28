@@ -61,14 +61,16 @@ export async function GET(request: Request) {
 
         if (bookingsError) throw bookingsError;
 
-        // Fetch all clients and their latest intakes to match by email
-        // (This is more robust than a direct Supabase join if client records are created after booking)
-        const [clientsRes, intakeRes] = await Promise.all([
+        // Fetch all clients, latest intakes, and SOAP note status
+        const [clientsRes, intakeRes, soapNotesRes] = await Promise.all([
             supabaseAdmin.from('clients').select('*'),
             supabaseAdmin
                 .from('intake_forms')
                 .select('client_id, signature_date')
-                .order('signature_date', { ascending: false })
+                .order('signature_date', { ascending: false }),
+            supabaseAdmin
+                .from('soap_notes')
+                .select('booking_id, status')
         ]);
 
         const clients = clientsRes.data || [];
@@ -83,6 +85,11 @@ export async function GET(request: Request) {
             if (!intakeByClient[i.client_id]) intakeByClient[i.client_id] = i;
         });
 
+        const soapNoteByBooking: Record<string, any> = {};
+        (soapNotesRes.data || []).forEach(s => {
+            soapNoteByBooking[s.booking_id] = s.status;
+        });
+
         // Filter and sort in memory
         const validBookings = allBookings
             ?.filter((b: any) => b.time_slot && b.time_slot.date >= today)
@@ -95,6 +102,7 @@ export async function GET(request: Request) {
                     ...b,
                     client: client,
                     latest_intake: latestIntake,
+                    soap_note_status: soapNoteByBooking[b.id] || null,
                     provider: b.time_slot?.provider
                 };
             })

@@ -137,13 +137,13 @@ export default function AvailabilityPage() {
     return (
 
         <div className="space-y-8 max-w-4xl mx-auto">
-            <div className="flex justify-between items-start">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
                     <h1 className="text-3xl font-serif font-bold text-stone-900">Availability & Slots</h1>
                     <p className="mt-2 text-stone-600">Manage weekly schedules and generate booking slots.</p>
                 </div>
                 {/* Provider Selector */}
-                <div className="w-64">
+                <div className="w-full md:w-64">
                     <label className="block text-sm font-medium text-stone-700 mb-1">Select Provider</label>
                     <select
                         value={selectedProviderId || ''}
@@ -167,7 +167,7 @@ export default function AvailabilityPage() {
                 </div>
 
                 {editMode && (
-                    <form onSubmit={handleSubmit} className="mb-8 p-4 bg-stone-50 rounded border border-stone-200 grid grid-cols-2 gap-4">
+                    <form onSubmit={handleSubmit} className="mb-8 p-4 bg-stone-50 rounded border border-stone-200 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm">Day</label>
                             <select value={formData.day_of_week} onChange={e => setFormData({ ...formData, day_of_week: +e.target.value })} className="w-full border rounded px-2 py-1">
@@ -213,16 +213,16 @@ export default function AvailabilityPage() {
                 <p className="text-blue-800 text-sm mb-4">
                     Create booking slots for {providers.find(p => p.id === selectedProviderId)?.name} based on the patterns above.
                 </p>
-                <div className="flex items-end gap-4">
-                    <div>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
+                    <div className="flex-1">
                         <label className="block text-xs font-bold text-blue-900 mb-1">From</label>
-                        <input type="date" value={genStartDate} onChange={e => setGenStartDate(e.target.value)} className="border rounded px-3 py-2" />
+                        <input type="date" value={genStartDate} onChange={e => setGenStartDate(e.target.value)} className="w-full border rounded px-3 py-2" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                         <label className="block text-xs font-bold text-blue-900 mb-1">Until</label>
-                        <input type="date" value={genEndDate} onChange={e => setGenEndDate(e.target.value)} className="border rounded px-3 py-2" />
+                        <input type="date" value={genEndDate} onChange={e => setGenEndDate(e.target.value)} className="w-full border rounded px-3 py-2" />
                     </div>
-                    <Button onClick={handleGenerateSlots}>Generate Slots</Button>
+                    <Button onClick={handleGenerateSlots} className="sm:w-auto">Generate Slots</Button>
                 </div>
                 {genMsg && <div className="mt-3 font-semibold text-blue-800">{genMsg}</div>}
             </div>

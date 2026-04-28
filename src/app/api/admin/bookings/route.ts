@@ -15,19 +15,21 @@ export async function GET(request: Request) {
 
         const today = new Date().toISOString().split('T')[0];
 
-        // Fetch bookings from today onwards to keep the payload efficient and reliable
+        // Build query
         let query = supabaseAdmin
             .from('bookings')
             .select(`
                 *,
-                time_slot:time_slots!inner(*)
-            `)
-            .gte('time_slots.date', today)
-            .order('date', { referencedTable: 'time_slots', ascending: true });
+                time_slot:time_slots!inner(*),
+                soap_notes(*)
+            `);
 
-        // Filter by client email if provided
+        // Filter by client email if provided (returns all history)
         if (clientEmail) {
             query = query.eq('client_email', clientEmail);
+        } else {
+            // Default: future bookings only
+            query = query.gte('time_slots.date', today);
         }
 
         const { data, error } = await query;

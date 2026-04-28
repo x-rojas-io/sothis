@@ -87,58 +87,89 @@ export default function AdminServicesPage() {
                     {loading ? (
                         <div className="p-8 text-center text-stone-500">Loading services...</div>
                     ) : (
-                        <table className="min-w-full divide-y divide-stone-200">
-                            <thead className="bg-stone-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Service</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Price (EN)</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-stone-200">
+                        <>
+                            {/* Mobile View: Cards */}
+                            <div className="block md:hidden divide-y divide-stone-100">
                                 {services.map((service) => (
-                                    <tr key={service.id} className={!service.is_active ? 'bg-stone-50 opacity-75' : ''}>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <div className="h-10 w-10 flex-shrink-0">
-                                                    <img className="h-10 w-10 rounded-full object-cover" src={service.image_url} alt="" />
-                                                </div>
-                                                <div className="ml-4">
-                                                    <div className="text-sm font-medium text-stone-900">{service.title['en']}</div>
-                                                    <div className="text-sm text-stone-500 truncate max-w-xs">{service.description['en']}</div>
-                                                </div>
+                                    <div key={service.id} className={`p-4 space-y-4 ${!service.is_active ? 'bg-stone-50 opacity-75' : ''}`}>
+                                        <div className="flex items-center gap-4">
+                                            <img className="h-12 w-12 rounded-lg object-cover shadow-sm" src={service.image_url} alt="" />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm font-bold text-stone-900 truncate">{service.title['en']}</div>
+                                                <div className="text-xs text-stone-500">{service.price['en']}</div>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-500">
-                                            {service.price['en']}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
                                             <span
-                                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${service.is_active ? 'bg-green-100 text-green-800' : 'bg-stone-100 text-stone-800'
-                                                    }`}
+                                                className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${service.is_active ? 'bg-green-100 text-green-800' : 'bg-stone-100 text-stone-800'}`}
                                             >
                                                 {service.is_active ? 'Active' : 'Disabled'}
                                             </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                                        </div>
+                                        <div className="text-xs text-stone-500 line-clamp-2">{service.description['en']}</div>
+                                        <div className="flex gap-2 pt-2">
                                             <button
                                                 onClick={() => handleToggleActive(service)}
-                                                className={`text-${service.is_active ? 'red' : 'green'}-600 hover:opacity-75`}
+                                                className={`flex-1 py-2 rounded text-xs font-bold border ${service.is_active ? 'text-red-600 border-red-100 bg-red-50' : 'text-green-600 border-green-100 bg-green-50'}`}
                                             >
                                                 {service.is_active ? 'Disable' : 'Enable'}
                                             </button>
-                                            <button onClick={() => handleEdit(service)} className="text-secondary hover:text-secondary-dark">Edit</button>
-                                        </td>
-                                    </tr>
+                                            <button onClick={() => handleEdit(service)} className="flex-1 py-2 rounded text-xs font-bold border border-stone-200 bg-white text-stone-900">Edit</button>
+                                        </div>
+                                    </div>
                                 ))}
-                                {services.length === 0 && (
+                            </div>
+
+                            {/* Desktop View: Table */}
+                            <table className="hidden md:table min-w-full divide-y divide-stone-200">
+                                <thead className="bg-stone-50">
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-8 text-center text-stone-500">No services found.</td>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Service</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Price (EN)</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-3 text-right text-xs font-medium text-stone-500 uppercase tracking-wider">Actions</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-stone-200">
+                                    {services.map((service) => (
+                                        <tr key={service.id} className={!service.is_active ? 'bg-stone-50 opacity-75' : ''}>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center">
+                                                    <div className="h-10 w-10 flex-shrink-0">
+                                                        <img className="h-10 w-10 rounded-full object-cover" src={service.image_url} alt="" />
+                                                    </div>
+                                                    <div className="ml-4">
+                                                        <div className="text-sm font-medium text-stone-900">{service.title['en']}</div>
+                                                        <div className="text-sm text-stone-500 truncate max-w-xs">{service.description['en']}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-stone-500">
+                                                {service.price['en']}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span
+                                                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${service.is_active ? 'bg-green-100 text-green-800' : 'bg-stone-100 text-stone-800'
+                                                        }`}
+                                                >
+                                                    {service.is_active ? 'Active' : 'Disabled'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                                                <button
+                                                    onClick={() => handleToggleActive(service)}
+                                                    className={`text-${service.is_active ? 'red' : 'green'}-600 hover:opacity-75`}
+                                                >
+                                                    {service.is_active ? 'Disable' : 'Enable'}
+                                                </button>
+                                                <button onClick={() => handleEdit(service)} className="text-secondary hover:text-secondary-dark">Edit</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </>
+                    )}
+                    {services.length === 0 && !loading && (
+                        <div className="p-8 text-center text-stone-500">No services found.</div>
                     )}
                 </div>
             )}

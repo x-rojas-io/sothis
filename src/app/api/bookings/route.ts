@@ -49,7 +49,18 @@ export async function POST(request: Request) {
             );
         }
 
-        // Create booking
+        // 1. Calculate Urgency (Scenario 2 vs 3)
+        const bookingDate = new Date(slot.date + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const sevenDaysFromNow = new Date(today);
+        sevenDaysFromNow.setDate(today.getDate() + 7);
+
+        // If within 7 days, it's an urgent request (Scenario 2)
+        const isUrgent = bookingDate < sevenDaysFromNow;
+
+        // 2. Create booking with PENDING status (Point 3)
         const { data: booking, error: bookingError } = await supabaseAdmin
             .from('bookings')
             .insert([{
@@ -61,10 +72,10 @@ export async function POST(request: Request) {
                 client_city,
                 client_state,
                 client_zip,
-                service_type: service_type || 'Therapeutic Massage', // Fallback
+                service_type: service_type || 'Therapeutic Massage',
                 notes,
-                intake_form_id: intake_form_id || null, // Persist the linkage
-                status: 'confirmed'
+                intake_form_id: intake_form_id || null,
+                status: 'pending' // ALWAYS pending for clients
             }])
             .select()
             .single();
@@ -84,43 +95,58 @@ export async function POST(request: Request) {
         // @ts-ignore
         const providerName = slot.providers?.name || 'Sothis Provider';
 
-        // Send confirmation email to client
+        // Generate WhatsApp Links
         const fromEmail = 'bookings@sothistherapeutic.com';
+        const sothisPhone = '15512414652';
+        const clientWaMessage = `Hi Sothis, I submitted an appointment request online for ${new Date(slot.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at ${slot.start_time.slice(0, 5)}.`;
+        const clientWaLink = `https://wa.me/${sothisPhone}?text=${encodeURIComponent(clientWaMessage)}`;
+
+        let adminWaLink = '';
+        if (client_phone) {
+            const cleanPhone = client_phone.replace(/\D/g, '');
+            const finalPhone = cleanPhone.length === 10 ? `1${cleanPhone}` : cleanPhone;
+            adminWaLink = `https://wa.me/${finalPhone}`;
+        }
 
         const { error: clientError } = await resend.emails.send({
             from: `Sothis Bookings <${fromEmail}>`,
             to: client_email,
-            subject: 'Appointment Confirmed - Sothis Therapeutic Massage',
+            subject: isUrgent ? 'URGENT Request Received - Sothis Therapeutic Massage' : 'Appointment Request Received - Sothis Therapeutic Massage',
             html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                     <h2 style="color: #292524; border-bottom: 2px solid #78716c; padding-bottom: 10px;">
-                        Appointment Confirmed
+                        ${isUrgent ? '⚠️ Urgent Request Received' : 'Appointment Request Received'}
                     </h2>
                     
-                    <p style="color: #44403c; line-height: 1.6;">
+                    <p style="color: #44403c; line-height: 1.6; font-size: 16px;">
                         Hi ${client_name},
                     </p>
                     
-                    <p style="color: #44403c; line-height: 1.6;">
-                        Your massage appointment with <strong>${providerName}</strong> has been confirmed!
+                    <p style="color: #44403c; line-height: 1.6; font-size: 16px;">
+                        We have received your appointment request. A professional will review your requested time and reply with the available date and time, which may differ from your initial request.
                     </p>
+
+                    <div style="background-color: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                        <h3 style="color: #92400e; margin-top: 0;">Action Required: Health Profile Update</h3>
+                        <p style="color: #92400e; line-height: 1.6;">
+                            Your appointment will <strong>NOT</strong> be assigned or confirmed until your Clinical Health Profile is submitted. If you did not complete it during the request process, please do so from your dashboard.
+                        </p>
+                    </div>
                     
                     <div style="background-color: #f5f5f4; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <h3 style="color: #292524; margin-top: 0;">Appointment Details</h3>
+                        <h3 style="color: #292524; margin-top: 0;">Requested Details</h3>
                         <p style="margin: 10px 0;"><strong>Date:</strong> ${new Date(slot.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
                         <p style="margin: 10px 0;"><strong>Time:</strong> ${slot.start_time.slice(0, 5)}</p>
                         <p style="margin: 10px 0;"><strong>Provider:</strong> ${providerName}</p>
-                        <p style="margin: 10px 0;"><strong>Service:</strong> Therapeutic Massage</p>
-                        <p style="margin: 10px 0;"><strong>Location:</strong> Edgewater, NJ</p>
+                        <p style="margin: 10px 0;"><strong>Status:</strong> <span style="color: #f5a623;">Pending Confirmation</span></p>
                     </div>
-                    
-                    <p style="color: #44403c; line-height: 1.6;">
-                        If you need to cancel or reschedule, please contact us at sothistherapeutic@gmail.com or via Instagram @sothistherapeutic.
-                    </p>
-                    
-                    <p style="color: #44403c; line-height: 1.6;">
-                        We look forward to seeing you!
-                    </p>
+
+                    <div style="margin-top: 30px;">
+                        <p style="color: #44403c; font-weight: bold; margin-bottom: 10px;">Need to add more details or ask a question?</p>
+                        <a href="${clientWaLink}" style="background-color: #25D366; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                            Message Us on WhatsApp
+                        </a>
+                    </div>
                     
                     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e7e5e4; color: #78716c; font-size: 12px;">
                         <p>Sothis Therapeutic Massage</p>
@@ -135,38 +161,47 @@ export async function POST(request: Request) {
             console.error('Resend Client Email Error:', clientError);
         }
 
-        // Send notification to Nancy
         const { error: adminError } = await resend.emails.send({
             from: `Sothis Booking System <${fromEmail}>`,
             to: process.env.CONTACT_EMAIL || 'sothistherapeutic@gmail.com',
-            subject: `New Booking: ${client_name} with ${providerName}`,
+            subject: `${isUrgent ? '🔴 URGENT REQUEST:' : 'New Request:'} ${client_name}`,
             html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                     <h2 style="color: #292524; border-bottom: 2px solid #78716c; padding-bottom: 10px;">
-                        New Appointment Booked
+                        ${isUrgent ? '🔴 Urgent Booking Request' : 'New Booking Request'}
                     </h2>
+                    
+                    <p style="font-size: 16px;"><strong>This request is PENDING your approval.</strong></p>
                     
                     <div style="background-color: #f5f5f4; padding: 20px; border-radius: 8px; margin: 20px 0;">
                         <h3 style="color: #292524; margin-top: 0;">Client Information</h3>
                         <p style="margin: 10px 0;"><strong>Name:</strong> ${client_name}</p>
                         <p style="margin: 10px 0;"><strong>Email:</strong> ${client_email}</p>
                         ${client_phone ? `<p style="margin: 10px 0;"><strong>Phone:</strong> ${client_phone}</p>` : ''}
-                        ${notes ? `<p style="margin: 10px 0;"><strong>Notes:</strong> ${notes}</p>` : ''}
                     </div>
                     
                     <div style="background-color: #f5f5f4; padding: 20px; border-radius: 8px; margin: 20px 0;">
                         <h3 style="color: #292524; margin-top: 0;">Appointment Details</h3>
                         <p style="margin: 10px 0;"><strong>Date:</strong> ${new Date(slot.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
                         <p style="margin: 10px 0;"><strong>Time:</strong> ${slot.start_time.slice(0, 5)}</p>
-                        <p style="margin: 10px 0;"><strong>Provider:</strong> ${providerName}</p>
-                        <p style="margin: 10px 0;"><strong>Service:</strong> ${service_type || 'Therapeutic Massage'}</p>
+                        <p style="margin: 10px 0;"><strong>Urgency:</strong> ${isUrgent ? '<span style="color: red; font-weight: bold;">URGENT (Within 7 Days)</span>' : 'Standard (7+ Days)'}</p>
+                        <p style="margin: 10px 0;"><strong>Notes:</strong> ${notes}</p>
                     </div>
+
+                    ${adminWaLink ? `
+                        <div style="margin-top: 25px;">
+                            <a href="${adminWaLink}" style="background-color: #25D366; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                                Message Client on WhatsApp
+                            </a>
+                        </div>
+                    ` : ''}
                     
-                    <p style="color: #44403c; line-height: 1.6;">
-                        View all bookings in your <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/admin/bookings">admin dashboard</a>.
+                    <p style="color: #44403c; line-height: 1.6; margin-top: 25px;">
+                        Approve or reschedule this request in your <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/admin/bookings">admin dashboard</a>.
                     </p>
                 </div>
             `,
+            replyTo: client_email
         });
 
         if (adminError) {

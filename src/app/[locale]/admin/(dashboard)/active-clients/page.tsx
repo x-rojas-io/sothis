@@ -6,8 +6,8 @@ import type { Client } from '@/lib/supabase';
 import Button from '@/components/Button';
 import { useSession } from 'next-auth/react';
 
-import BookingNoteModal from '@/components/BookingNoteModal';
 import ClinicalIntakeModal from '@/components/ClinicalIntakeModal';
+import SoapNoteModal, { SoapNote } from '@/components/SoapNoteModal';
 
 export default function ActiveClientsPage() {
     const { data: session } = useSession();
@@ -21,8 +21,8 @@ export default function ActiveClientsPage() {
     const [clientBookings, setClientBookings] = useState<any[]>([]);
     const [historyLoading, setHistoryLoading] = useState(false);
 
-    // Notes Modal State
-    const [noteModalOpen, setNoteModalOpen] = useState(false);
+    // SOAP Note Modal State
+    const [soapModalOpen, setSoapModalOpen] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState<any>(null);
 
     // Consolidated Clinical Modal State
@@ -77,20 +77,19 @@ export default function ActiveClientsPage() {
         }
     }
 
-    async function saveBookingNote(newNotes: string) {
+    async function saveSoapNote(newNote: SoapNote) {
         if (!selectedBooking) return;
 
-        const res = await fetch('/api/admin/bookings', {
-            method: 'PATCH',
+        const res = await fetch('/api/admin/soap-notes', {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id: selectedBooking.id,
-                notes: newNotes
-            })
+            body: JSON.stringify(newNote)
         });
 
-        if (!res.ok) throw new Error('Failed to update notes');
-        setClientBookings(prev => prev.map(b => b.id === selectedBooking.id ? { ...b, notes: newNotes } : b));
+        if (!res.ok) throw new Error('Failed to update SOAP notes');
+        
+        // Refresh history to show updated note
+        if (historyClient) fetchHistory(historyClient);
     }
 
     async function sendIntakeInvite(email: string, name?: string) {
@@ -163,16 +162,16 @@ export default function ActiveClientsPage() {
 
             {msg && <div className="bg-orange-50 border border-orange-200 text-orange-800 p-4 rounded-sm font-bold shadow-sm animate-bounce-subtle">{msg}</div>}
 
-            {/* Note Modal */}
+            {/* SOAP Note Modal */}
             {selectedBooking && (
-                <BookingNoteModal
-                    isOpen={noteModalOpen}
-                    onClose={() => setNoteModalOpen(false)}
+                <SoapNoteModal
+                    isOpen={soapModalOpen}
+                    onClose={() => setSoapModalOpen(false)}
                     bookingId={selectedBooking.id}
                     clientName={historyClient?.name || 'Client'}
+                    clientEmail={historyClient?.email || ''}
                     date={selectedBooking.time_slot.date}
-                    initialNotes={selectedBooking.notes}
-                    onSave={saveBookingNote}
+                    onSave={saveSoapNote}
                 />
             )}
 
@@ -186,12 +185,12 @@ export default function ActiveClientsPage() {
                         <div className="p-8 border-b-2 border-stone-200 flex justify-between items-center bg-stone-50">
                             <div>
                                 <h2 className="text-3xl font-serif font-black text-stone-900 uppercase tracking-tight">{historyClient.name}</h2>
-                                <p className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-stone-500 mt-1">Clinical Session Registry</p>
+                                <p className="text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-stone-500 mt-1">Professional SOAP History</p>
                             </div>
                             <button onClick={() => setHistoryClient(null)} className="w-12 h-12 flex items-center justify-center bg-white border border-stone-200 rounded-full text-stone-900 hover:bg-stone-900 hover:text-white transition-all shadow-sm">✕</button>
                         </div>
                         <div className="p-8 flex-1 overflow-y-auto">
-                            <h3 className="font-serif text-xl font-bold mb-6 border-b border-stone-200 pb-2">Session History Audit</h3>
+                            <h3 className="font-serif text-xl font-bold mb-6 border-b border-stone-200 pb-2">SOAP Encounter Audit</h3>
                             {historyLoading ? (
                                 <div className="text-center py-20 opacity-30 animate-pulse text-stone-900 font-serif italic">Accessing historical records...</div>
                             ) : clientBookings.length === 0 ? (
@@ -205,11 +204,29 @@ export default function ActiveClientsPage() {
                                                 <span className="font-black text-lg text-stone-900">{new Date(booking.time_slot.date).toLocaleDateString()}</span>
                                                 <span className="text-[10px] uppercase font-bold tracking-widest bg-stone-100 px-3 py-1 rounded text-stone-500">{booking.status}</span>
                                             </div>
-                                            <p className="text-sm text-stone-400 uppercase tracking-widest font-bold mb-4">{booking.service_type} • {booking.time_slot.start_time.slice(0, 5)}</p>
-                                            <div className="bg-[#fff8ee] p-5 border border-[#e0c89a] text-sm text-stone-700 font-serif leading-relaxed italic">
-                                                {booking.notes || "No therapist clinical notes for this session."}
+                                            <div className={`p-5 border text-sm leading-relaxed shadow-sm rounded-lg ${booking.soap_notes && booking.soap_notes.length > 0 ? 'bg-white border-stone-200 text-stone-700' : 'bg-stone-50 border-dashed border-stone-300 text-stone-400 italic'}`}>
+                                                {booking.soap_notes && booking.soap_notes.length > 0 ? (
+                                                    <div className="space-y-4">
+                                                        <div>
+                                                            <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Subjective Findings</div>
+                                                            <div className="font-serif">{booking.soap_notes[0].subjective_symptoms}</div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1">Clinical Assessment</div>
+                                                            <div className="font-serif">{booking.soap_notes[0].assessment_summary}</div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Plan</div>
+                                                            <div className="font-serif">{booking.soap_notes[0].plan_treatment}</div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    "No structured SOAP documentation for this encounter."
+                                                )}
                                             </div>
-                                            <button onClick={() => { setSelectedBooking(booking); setNoteModalOpen(true); }} className="mt-4 text-xs font-black uppercase tracking-widest text-primary hover:underline">✏️ Amend Session Notes</button>
+                                            <button onClick={() => { setSelectedBooking(booking); setSoapModalOpen(true); }} className="mt-4 text-xs font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-2">
+                                                {booking.soap_notes && booking.soap_notes.length > 0 ? '🔍 View / Edit Full SOAP Note' : '➕ Create Encounter SOAP Note'}
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
@@ -228,7 +245,64 @@ export default function ActiveClientsPage() {
             />
 
             <div className="bg-white rounded-lg border border-stone-200 overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
+                {/* Mobile View: Cards */}
+                <div className="block md:hidden divide-y divide-stone-100">
+                    {filteredClients.length === 0 ? (
+                        <div className="px-6 py-20 text-center text-stone-400 font-serif italic text-lg opacity-50">No clinical records found matching your filter criteria.</div>
+                    ) : filteredClients.map((client) => {
+                        const intakeValid = isIntakeValid(client);
+                        return (
+                            <div key={client.id} className="p-4 space-y-4">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <div className="font-serif font-black text-stone-900 text-lg">{client.name}</div>
+                                        <div className="text-[10px] font-sans font-bold uppercase tracking-widest text-stone-400 mt-0.5">ID: {client.id.slice(0, 8)}</div>
+                                    </div>
+                                    <button onClick={() => fetchHistory(client)} className="font-black text-[10px] uppercase tracking-[0.12em] text-stone-600 bg-stone-100 px-3 py-2 rounded border border-stone-200 hover:bg-stone-200 shadow-sm">🩺 SOAP History</button>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4 text-xs">
+                                    <div>
+                                        <div className="text-[10px] font-black text-stone-400 uppercase tracking-wider mb-1">Contact</div>
+                                        <div className="text-stone-900 font-medium truncate">{client.email}</div>
+                                        <div className="text-stone-500 font-serif italic">{client.phone}</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] font-black text-stone-400 uppercase tracking-wider mb-1">Next Planned</div>
+                                        {client.next_appointment ? (
+                                            <div>
+                                                <div className="font-black text-primary">{new Date(client.next_appointment.date).toLocaleDateString()}</div>
+                                                <div className="text-[10px] uppercase font-bold text-primary/60 tracking-wider font-sans">{client.next_appointment.service}</div>
+                                            </div>
+                                        ) : <span className="text-[10px] uppercase font-black text-stone-400 tracking-tighter bg-stone-100 px-2 py-1 rounded">Not Booked</span>}
+                                    </div>
+                                </div>
+
+                                <div className="pt-2">
+                                    {!intakeValid ? (
+                                        <button 
+                                            onClick={() => sendIntakeInvite(client.email, client.name)} 
+                                            disabled={!!sendingInvite} 
+                                            className={`w-full font-black text-[10px] uppercase tracking-[0.12em] px-4 py-3 rounded border-2 transition-all ${sendingInvite === client.email ? 'bg-stone-50 text-stone-300 border-stone-100' : 'bg-stone-900 text-white border-stone-900 shadow-lg'}`}
+                                        >
+                                            ✉️ Request Intake Form
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            onClick={() => openIntake(client)} 
+                                            className="w-full font-black text-[10px] uppercase tracking-[0.12em] text-blue-700 bg-blue-50 px-4 py-3 rounded border border-blue-200"
+                                        >
+                                            🩺 View Intake Form
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Desktop View: Table */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="min-w-full divide-y divide-stone-200">
                         <thead className="bg-stone-50">
                             <tr>
@@ -287,7 +361,7 @@ export default function ActiveClientsPage() {
                                                 🩺 View Intake Form
                                             </button>
                                         )}
-                                        <button onClick={() => fetchHistory(client)} className="font-black text-[10px] uppercase tracking-[0.12em] text-stone-600 bg-stone-100 px-4 py-2.5 rounded border border-stone-200 hover:bg-stone-200 shadow-sm">📜 Ledger</button>
+                                        <button onClick={() => fetchHistory(client)} className="font-black text-[10px] uppercase tracking-[0.12em] text-stone-600 bg-stone-100 px-4 py-2.5 rounded border border-stone-200 hover:bg-stone-200 shadow-sm">🩺 SOAP History</button>
                                     </td>
                                 </tr>
                             )})}
