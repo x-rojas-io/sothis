@@ -61,15 +61,19 @@ export default function ClientsPage() {
                 body: JSON.stringify(editingClient)
             });
 
-            if (!res.ok) throw new Error('Failed to update');
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to update');
+            }
 
             setMsg('Demographics updated successfully');
             setEditingClient(null);
             fetchClients();
             setTimeout(() => setMsg(''), 3000);
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            setMsg('Error updating record');
+            setMsg(`Error: ${error.message || 'Failed to update record'}`);
+            setTimeout(() => setMsg(''), 5000);
         }
     }
 
@@ -184,6 +188,10 @@ export default function ClientsPage() {
                                     <label className="block text-[10px] font-black uppercase tracking-widest text-stone-400 mb-1">Phone Number</label>
                                     <input value={editingClient.phone || ''} onChange={e => setEditingClient({ ...editingClient, phone: e.target.value })} className="w-full border-2 border-stone-100 rounded-lg px-3 py-2 focus:border-stone-900 outline-none" />
                                 </div>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-stone-400 mb-1">Email Address</label>
+                                <input type="email" value={editingClient.email} onChange={e => setEditingClient({ ...editingClient, email: e.target.value })} className="w-full border-2 border-stone-100 rounded-lg px-3 py-2 focus:border-stone-900 outline-none" required />
                             </div>
                             <div>
                                 <label className="block text-[10px] font-black uppercase tracking-widest text-stone-400 mb-1">Mailing Address</label>
