@@ -287,12 +287,16 @@ export async function PUT(req: Request) {
                     const fromEmail = 'bookings@sothistherapeutic.com';
                     const baseUrl = process.env.NEXTAUTH_URL || 'https://sothistherapeutic.com';
 
-                    for (const booking of futureBookings) {
+                    for (const booking of futureBookings as any[]) {
                         const targetEmail = (updates.email || booking.client_email).trim();
                         const clientName = updates.name || booking.client_name;
-                        const providerName = booking.time_slot?.provider?.name || 'Sothis Provider';
-                        const dateVal = booking.time_slot?.date;
-                        const startTimeVal = booking.time_slot?.start_time || '00:00:00';
+                        
+                        const timeSlotObj = Array.isArray(booking.time_slot) ? booking.time_slot[0] : booking.time_slot;
+                        const providerObj = timeSlotObj && Array.isArray(timeSlotObj.provider) ? timeSlotObj.provider[0] : timeSlotObj?.provider;
+
+                        const providerName = providerObj?.name || 'Sothis Provider';
+                        const dateVal = timeSlotObj?.date;
+                        const startTimeVal = timeSlotObj?.start_time || '00:00:00';
 
                         try {
                             await resend.emails.send({
