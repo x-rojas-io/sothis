@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function GET(request: Request) {
     try {
@@ -231,12 +234,21 @@ export async function PUT(req: Request) {
         // 5. Update future bookings if email or other demographic fields were updated
         const today = new Date().toISOString().split('T')[0];
 
-        // Fetch bookings associated with this client's old email
+        // Fetch bookings associated with this client's old email with provider details
         const { data: clientBookings, error: bookingsFetchError } = await supabaseAdmin
             .from('bookings')
             .select(`
                 id,
-                time_slot:time_slots!inner(date)
+                client_name,
+                client_email,
+                client_phone,
+                service_type,
+                intake_form_id,
+                time_slot:time_slots!inner(
+                    date,
+                    start_time,
+                    provider:providers(name)
+                )
             `)
             .eq('client_email', oldEmail);
 
@@ -244,9 +256,11 @@ export async function PUT(req: Request) {
             console.error('API PUT clients: fetch client bookings error:', bookingsFetchError);
         } else if (clientBookings && clientBookings.length > 0) {
             // Filter to bookings that occur today or in the future
-            const futureBookingIds = clientBookings
-                .filter((b: any) => b.time_slot && b.time_slot.date >= today)
-                .map((b: any) => b.id);
+            const futureBookings = clientBookings.filter(
+                (b: any) => b.time_slot && b.time_slot.date >= today
+            );
+
+            const futureBookingIds = futureBookings.map((b: any) => b.id);
 
             if (futureBookingIds.length > 0) {
                 const bookingUpdates: any = {};
@@ -267,6 +281,70 @@ export async function PUT(req: Request) {
                     if (bookingsUpdateError) {
                         console.error('API PUT clients: bookings update error:', bookingsUpdateError);
                         throw bookingsUpdateError;
+                    }
+
+                    // Send email notification for each updated future booking to the new/corrected email
+                    const fromEmail = 'bookings@sothistherapeutic.com';
+                    const baseUrl = process.env.NEXTAUTH_URL || 'https://sothistherapeutic.com';
+
+                    for (const booking of futureBookings) {
+                        const targetEmail = (updates.email || booking.client_email).trim();
+                        const clientName = updates.name || booking.client_name;
+                        const providerName = booking.time_slot?.provider?.name || 'Sothis Provider';
+                        const dateVal = booking.time_slot?.date;
+                        const startTimeVal = booking.time_slot?.start_time || '00:00:00';
+
+                        try {
+                            await resend.emails.send({
+                                from: `Sothis Bookings <${fromEmail}>`,
+                                to: targetEmail,
+                                subject: 'Appointment Confirmed - Sothis Therapeutic Massage',
+                                html: `
+                                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                                        <h2 style="color: #292524; border-bottom: 2px solid #78716c; padding-bottom: 10px;">
+                                            Appointment Confirmed
+                                        </h2>
+                                        <p style="color: #44403c; line-height: 1.6;">Hi ${clientName},</p>
+                                        <p style="color: #44403c; line-height: 1.6;">
+                                            Your massage appointment with <strong>${providerName}</strong> has been updated in our system.
+                                        </p>
+                                        <div style="background-color: #f5f5f4; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                                            <h3 style="color: #292524; margin-top: 0;">Appointment Details</h3>
+                                            <p style="margin: 10px 0;"><strong>Date:</strong> ${new Date(dateVal + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                                            <p style="margin: 10px 0;"><strong>Time:</strong> ${startTimeVal.slice(0, 5)}</p>
+                                            <p style="margin: 10px 0;"><strong>Provider:</strong> ${providerName}</p>
+                                            <p style="margin: 10px 0;"><strong>Service:</strong> ${booking.service_type || 'Therapeutic Massage'}</p>
+                                            <p style="margin: 10px 0;"><strong>Location:</strong> Edgewater, NJ</p>
+                                        </div>
+
+                                        ${!booking.intake_form_id ? `
+                                        <div style="background-color: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                                            <h3 style="color: #92400e; margin-top: 0;">Action Required: Health Profile Update</h3>
+                                            <p style="color: #92400e; line-height: 1.6;">
+                                                Our therapist has requested an updated health profile for this session. Please complete your clinical intake form before your arrival:
+                                            </p>
+                                            <div style="margin-top: 15px;">
+                                                <a href="${baseUrl}/intake-form?booking_id=${booking.id}" 
+                                                   style="background-color: #f5a623; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                                                    Complete Health Profile
+                                                </a>
+                                            </div>
+                                            <p style="color: #92400e; font-size: 12px; margin-top: 10px;">
+                                                * If you cannot click the button, copy this link: ${baseUrl}/intake-form?booking_id=${booking.id}
+                                            </p>
+                                        </div>
+                                        ` : ''}
+
+                                        <p style="color: #44403c; line-height: 1.6;">
+                                            If you need to change your appointment, please contact us at sothistherapeutic@gmail.com.
+                                        </p>
+                                    </div>
+                                `
+                            });
+                            console.log(`API PUT clients: Sent update email for booking ${booking.id} to ${targetEmail}`);
+                        } catch (emailErr) {
+                            console.error('API PUT clients: Failed to send update notification for booking:', booking.id, emailErr);
+                        }
                     }
                 }
             }
