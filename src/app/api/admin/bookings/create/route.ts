@@ -89,14 +89,8 @@ export async function POST(request: Request) {
                 }
             });
 
-            const [maxH, maxM] = maxEndTime.split(':').map(Number);
-            const nextDate = new Date();
-            nextDate.setHours(maxH);
-            nextDate.setMinutes(maxM + 15);
-
-            const nextH = nextDate.getHours().toString().padStart(2, '0');
-            const nextM = nextDate.getMinutes().toString().padStart(2, '0');
-            const nextAvailable = `${nextH}:${nextM}`;
+            // Suggest the exact end time of the conflict to allow back-to-back bookings
+            const nextAvailable = maxEndTime.slice(0, 5);
 
             return NextResponse.json({
                 error: 'Time slot conflict',
