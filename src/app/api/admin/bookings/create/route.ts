@@ -82,7 +82,8 @@ export async function POST(request: Request) {
 
         if (conflictingSlots && conflictingSlots.length > 0) {
             // Conflict found logic...
-            let maxEndTime = formattedEndTime;
+            // Initialize maxEndTime to the end_time of the first conflicting slot, then find the maximum
+            let maxEndTime = conflictingSlots[0].end_time;
             conflictingSlots.forEach(slot => {
                 if (slot.end_time > maxEndTime) {
                     maxEndTime = slot.end_time;
