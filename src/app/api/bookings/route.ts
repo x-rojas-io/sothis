@@ -18,7 +18,9 @@ export async function POST(request: Request) {
             client_zip, 
             notes, 
             service_type,
-            intake_form_id // Optional link to clinical profile
+            intake_form_id, // Optional link to clinical profile
+            price,
+            duration
         } = body;
 
         // Validate input
@@ -49,6 +51,31 @@ export async function POST(request: Request) {
             );
         }
 
+        // Update the time slot's end time dynamically based on the chosen duration
+        if (duration) {
+            const durationMin = parseInt(duration.toString(), 10);
+            if (!isNaN(durationMin)) {
+                const timeParts = slot.start_time.split(':');
+                const startH = parseInt(timeParts[0], 10);
+                const startM = parseInt(timeParts[1], 10);
+
+                const endDate = new Date();
+                endDate.setHours(startH);
+                endDate.setMinutes(startM + durationMin);
+
+                const formattedEndTime = `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}:00`;
+
+                const { error: updateSlotErr } = await supabaseAdmin
+                    .from('time_slots')
+                    .update({ end_time: formattedEndTime })
+                    .eq('id', time_slot_id);
+
+                if (updateSlotErr) {
+                    console.error('Error updating slot end_time:', updateSlotErr);
+                }
+            }
+        }
+
         // 1. Calculate Urgency (Scenario 2 vs 3)
         const bookingDate = new Date(slot.date + 'T00:00:00');
         const today = new Date();
@@ -75,7 +102,9 @@ export async function POST(request: Request) {
                 service_type: service_type || 'Therapeutic Massage',
                 notes,
                 intake_form_id: intake_form_id || null,
-                status: 'pending' // ALWAYS pending for clients
+                status: 'pending', // ALWAYS pending for clients
+                price: price ? parseFloat(price.toString()) : null,
+                duration: duration ? parseInt(duration.toString(), 10) : null
             }])
             .select()
             .single();

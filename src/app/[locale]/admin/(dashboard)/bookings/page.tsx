@@ -404,10 +404,19 @@ export default function MasterCalendarPage() {
                                                             <div className="space-y-3 flex-1">
                                                                 <div>
                                                                     <h3 className="text-xl font-bold text-stone-900 flex items-center gap-2">
-                                                                        {booking.client_name} {/* Showing Full Name */}
-                                                                        <span className="text-xs font-normal bg-stone-200 text-stone-800 px-2 py-1 rounded-full">Booked</span>
+                                                                        {booking.client_name}
+                                                                        <span className="text-xs font-normal bg-stone-200 text-stone-800 px-2 py-1 rounded-full font-sans">Booked</span>
                                                                     </h3>
-                                                                    <div className="text-secondary font-medium mt-1">💆 {booking.service_type}</div>
+                                                                    <div className="text-secondary font-medium mt-1 flex items-center gap-2 flex-wrap">
+                                                                        <span>💆 {booking.service_type}</span>
+                                                                        {(booking.duration || booking.price) && (
+                                                                            <span className="text-xs text-stone-500 bg-stone-100 border border-stone-200 px-2 py-0.5 rounded font-normal font-sans">
+                                                                                {booking.duration ? `${booking.duration} min` : ''}
+                                                                                {booking.duration && booking.price ? ' · ' : ''}
+                                                                                {booking.price ? `$${booking.price}` : ''}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                                 {/* Notes Highlight */}
                                                                 <div

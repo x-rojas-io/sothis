@@ -55,6 +55,8 @@ export type Booking = {
     notes?: string;
     status: 'confirmed' | 'cancelled' | 'completed' | 'no_show';
     cancellation_token: string;
+    price?: number;
+    duration?: number;
     created_at: string;
     updated_at: string;
 };

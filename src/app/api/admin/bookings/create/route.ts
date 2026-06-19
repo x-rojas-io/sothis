@@ -20,7 +20,9 @@ export async function POST(request: Request) {
             service_type, // New field
             date,       // "YYYY-MM-DD"
             time,        // "HH:MM" (e.g. "14:30")
-            intake_form_id // Optional link to clinical profile
+            intake_form_id, // Optional link to clinical profile
+            price,
+            duration
         } = body;
 
         // 1. Validate Input
@@ -31,7 +33,17 @@ export async function POST(request: Request) {
             );
         }
 
-        // 2. Formatting Time
+        // 2. Validate date and time is not in the past (using Eastern Time)
+        const nowInET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+        const bookingDateTime = new Date(`${date}T${time}:00`);
+        if (bookingDateTime < nowInET) {
+            return NextResponse.json(
+                { error: 'Cannot book appointments in the past' },
+                { status: 400 }
+            );
+        }
+
+        // 3. Formatting Time
         // Ensure time is in HH:MM:00 format for DB
         const timeParts = time.split(':');
         if (timeParts.length < 2) {
@@ -39,13 +51,14 @@ export async function POST(request: Request) {
         }
         const formattedTime = `${timeParts[0].padStart(2, '0')}:${timeParts[1].padStart(2, '0')}:00`;
 
-        // 1. Set Duration to 2 Hours (120 minutes)
-        const startHour = parseInt(timeParts[0]);
-        const startMin = parseInt(timeParts[1]);
+        // Calculate dynamic duration based on selection (default 120 minutes)
+        const durationMinutes = duration ? parseInt(duration.toString(), 10) : 120;
+        const startHour = parseInt(timeParts[0], 10);
+        const startMin = parseInt(timeParts[1], 10);
 
         const endDateObj = new Date();
-        endDateObj.setHours(startHour + 2); // Add 2 hours
-        endDateObj.setMinutes(startMin);
+        endDateObj.setHours(startHour);
+        endDateObj.setMinutes(startMin + durationMinutes);
 
         const endHour = endDateObj.getHours();
         const endMin = endDateObj.getMinutes();
@@ -144,7 +157,9 @@ export async function POST(request: Request) {
                 service_type: service_type || 'Therapeutic Massage',
                 notes,
                 intake_form_id: intake_form_id || null, // Link the profile
-                status: 'confirmed'
+                status: 'confirmed',
+                price: price ? parseFloat(price.toString()) : null,
+                duration: duration ? parseInt(duration.toString(), 10) : null
             }])
             .select()
             .single();

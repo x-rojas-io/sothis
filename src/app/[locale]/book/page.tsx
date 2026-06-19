@@ -4,6 +4,8 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { TimeSlot, Provider, Service } from '@/lib/supabase';
 import { useSession, signIn } from 'next-auth/react';
+import { parseServiceVariants } from '@/lib/service-helper';
+import type { ServiceVariant } from '@/lib/service-helper';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Button from '@/components/Button';
 import { useTranslations } from 'next-intl';
@@ -44,11 +46,12 @@ function BookingContent() {
     const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
     // Auth Flow State
-    const [step, setStep] = useState<'auth' | 'register' | 'verify' | 'provider' | 'service' | 'slots' | 'confirm' | 'urgent-request' | 'success'>('auth');
+    const [step, setStep] = useState<'auth' | 'register' | 'verify' | 'provider' | 'service' | 'duration-selection' | 'slots' | 'confirm' | 'urgent-request' | 'success'>('auth');
     const [providers, setProviders] = useState<Provider[]>([]);
     const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
     const [services, setServices] = useState<Service[]>([]);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
+    const [selectedVariant, setSelectedVariant] = useState<ServiceVariant | null>(null);
     
     // Intake Selection State
     const [intakeHistory, setIntakeHistory] = useState<any[]>([]);
@@ -365,7 +368,13 @@ function BookingContent() {
 
     const handleServiceSelect = (service: Service) => {
         setSelectedService(service);
-        setStep('slots');
+        const variants = parseServiceVariants(service);
+        if (variants.length > 1) {
+            setStep('duration-selection');
+        } else {
+            setSelectedVariant(variants[0] || null);
+            setStep('slots');
+        }
     };
 
     const handleSlotSelect = (slot: TimeSlot) => {
@@ -404,6 +413,8 @@ function BookingContent() {
                 body: JSON.stringify({
                     time_slot_id: selectedSlot.id,
                     service_type: selectedService ? selectedService.title['en'] : 'Therapeutic Massage', // Add fallback
+                    price: selectedVariant ? selectedVariant.price : null,
+                    duration: selectedVariant ? selectedVariant.duration : null,
 
                     ...formData,
                     notes: formattedNotes, // Send timestamped note
@@ -773,9 +784,58 @@ function BookingContent() {
                         </div>
                     )}
 
+                    {/* STEP 1.95: DURATION/VARIANT SELECTION */}
+                    {step === 'duration-selection' && selectedService && (
+                        <div className="space-y-6">
+                            <button
+                                onClick={() => setStep('service')}
+                                className="flex items-center text-sm text-stone-500 hover:text-stone-900"
+                            >
+                                <ChevronLeftIcon className="w-4 h-4 mr-1" />
+                                Back to Services
+                            </button>
+                            <h2 className="text-2xl font-serif font-bold text-stone-900 text-center mb-2">Select Duration</h2>
+                            <p className="text-center text-stone-600 mb-6">{selectedService.title['en']}</p>
+                            <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
+                                {parseServiceVariants(selectedService).map((variant, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => {
+                                            setSelectedVariant(variant);
+                                            setStep('slots');
+                                        }}
+                                        className="p-6 rounded-xl border border-stone-200 hover:border-secondary hover:bg-stone-50 transition-all text-left flex justify-between items-center bg-white shadow-sm group"
+                                    >
+                                        <div>
+                                            <h4 className="font-bold text-stone-900 group-hover:text-secondary text-lg">{variant.durationStr}</h4>
+                                            <p className="text-sm text-stone-500">Professional therapist care</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="font-bold text-secondary text-xl">{variant.priceStr}</span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* STEP 2: SELECT SLOT (CALENDAR) */}
                     {step === 'slots' && (
                         <div className="space-y-6">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (selectedService && parseServiceVariants(selectedService).length > 1) {
+                                        setStep('duration-selection');
+                                    } else {
+                                        setStep('service');
+                                    }
+                                }}
+                                className="flex items-center text-sm text-stone-500 hover:text-stone-900 mb-2"
+                            >
+                                <ChevronLeftIcon className="w-4 h-4 mr-1" />
+                                Back to {selectedService && parseServiceVariants(selectedService).length > 1 ? 'Durations' : 'Services'}
+                            </button>
                             {/* Calendar Header */}
                             <div className="flex items-center justify-between mb-6">
                                 <button onClick={prevMonth} className="p-2 hover:bg-stone-100 rounded-full text-stone-600 transition-colors">
@@ -1135,13 +1195,24 @@ function BookingContent() {
                     {/* STEP 3: CONFIRMATION */}
                     {step === 'confirm' && selectedSlot && (
                         <form onSubmit={handleConfirmBooking} className="space-y-6">
-                            <div className="bg-secondary/10 border border-secondary/20 p-4 rounded-lg">
-                                <p className="text-sm font-medium text-stone-900">{t('confirm.timeLabel')}</p>
-                                <p className="text-xl font-bold text-secondary mt-1">
-                                    {new Date(selectedSlot.date + 'T00:00:00').toLocaleDateString('en-US', {
-                                        weekday: 'short', month: 'long', day: 'numeric'
-                                    })} at {selectedSlot.start_time.slice(0, 5)}
-                                </p>
+                            <div className="bg-secondary/10 border border-secondary/20 p-4 rounded-lg flex justify-between items-center">
+                                <div>
+                                    <p className="text-sm font-medium text-stone-900">{t('confirm.timeLabel')}</p>
+                                    <p className="text-xl font-bold text-secondary mt-1">
+                                        {new Date(selectedSlot.date + 'T00:00:00').toLocaleDateString('en-US', {
+                                            weekday: 'short', month: 'long', day: 'numeric'
+                                        })} at {selectedSlot.start_time.slice(0, 5)}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm font-medium text-stone-900">Service & Cost</p>
+                                    <p className="text-lg font-bold text-stone-800 mt-1">
+                                        {selectedService?.title['en']}
+                                    </p>
+                                    <p className="text-sm text-secondary font-medium mt-0.5">
+                                        {selectedVariant ? `${selectedVariant.durationStr} · ${selectedVariant.priceStr}` : selectedService?.price['en']}
+                                    </p>
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-stone-600 bg-white p-4 rounded-lg border border-stone-100">

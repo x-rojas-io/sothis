@@ -7,6 +7,8 @@ import Button from '@/components/Button';
 import { supabase } from '@/lib/supabase';
 import type { Provider, Service } from '@/lib/supabase'; // Import Service type
 import { ChevronLeftIcon } from '@heroicons/react/24/solid';
+import { parseServiceVariants } from '@/lib/service-helper';
+import type { ServiceVariant } from '@/lib/service-helper';
 
 // ... (imports)
 
@@ -28,6 +30,7 @@ export default function AdminBookingPage() {
     // Booking Form
     const [selectedProvider, setSelectedProvider] = useState<string>('');
     const [selectedService, setSelectedService] = useState<Service | null>(null); // New: Selected Service
+    const [selectedVariant, setSelectedVariant] = useState<ServiceVariant | null>(null);
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
     const [notes, setNotes] = useState('');
@@ -119,8 +122,16 @@ export default function AdminBookingPage() {
         if (servData && servData.length > 0) {
             setServices(servData);
             setSelectedService(servData[0]); // Default to first service
+            const variants = parseServiceVariants(servData[0]);
+            setSelectedVariant(variants[0] || null);
         }
         setIsLoading(false);
+    };
+
+    const handleServiceSelect = (service: Service) => {
+        setSelectedService(service);
+        const variants = parseServiceVariants(service);
+        setSelectedVariant(variants[0] || null);
     };
 
     // 2. Lookup Client
@@ -214,6 +225,14 @@ export default function AdminBookingPage() {
             return;
         }
 
+        // Validate date and time is not in the past (using Eastern Time)
+        const nowInET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+        const bookingDateTime = new Date(`${date}T${time}:00`);
+        if (bookingDateTime < nowInET) {
+            setMessage('Error: Cannot book appointments in the past.');
+            return;
+        }
+
         setIsLoading(true);
         setMessage('');
         setConflictSuggestion(null);
@@ -250,7 +269,9 @@ export default function AdminBookingPage() {
                     service_type: selectedService.title['en'], // Send English title as service_type
                     date,
                     time,
-                    intake_form_id: selectedIntakeId === 'new' ? null : selectedIntakeId
+                    intake_form_id: selectedIntakeId === 'new' ? null : selectedIntakeId,
+                    price: selectedVariant ? selectedVariant.price : null,
+                    duration: selectedVariant ? selectedVariant.duration : null
                 })
             });
 
@@ -284,6 +305,15 @@ export default function AdminBookingPage() {
 
     const confirmSuggestedBooking = async (overrideTime: string) => {
         if (!selectedService) return;
+
+        // Validate date and time is not in the past (using Eastern Time)
+        const nowInET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+        const bookingDateTime = new Date(`${date}T${overrideTime}:00`);
+        if (bookingDateTime < nowInET) {
+            setMessage('Error: Cannot book appointments in the past.');
+            return;
+        }
+
         setIsLoading(true);
         setMessage('');
         setConflictSuggestion(null);
@@ -321,7 +351,9 @@ export default function AdminBookingPage() {
                     service_type: selectedService.title['en'],
                     date,
                     time: overrideTime,
-                    intake_form_id: selectedIntakeId === 'new' ? null : selectedIntakeId
+                    intake_form_id: selectedIntakeId === 'new' ? null : selectedIntakeId,
+                    price: selectedVariant ? selectedVariant.price : null,
+                    duration: selectedVariant ? selectedVariant.duration : null
                 })
             });
 
@@ -348,7 +380,11 @@ export default function AdminBookingPage() {
         setMessage('');
         setConflictSuggestion(null);
         if (providers.length > 0) setSelectedProvider(providers[0].id);
-        if (services.length > 0) setSelectedService(services[0]);
+        if (services.length > 0) {
+            setSelectedService(services[0]);
+            const vars = parseServiceVariants(services[0]);
+            setSelectedVariant(vars[0] || null);
+        }
         setIntakeHistory([]);
         setSelectedIntakeId('new');
         setLoadingIntake(false);
@@ -550,7 +586,8 @@ export default function AdminBookingPage() {
                                         {services.map(service => (
                                             <button
                                                 key={service.id}
-                                                onClick={() => setSelectedService(service)}
+                                                type="button"
+                                                onClick={() => handleServiceSelect(service)}
                                                 className={`w-full p-4 rounded-lg border text-left flex justify-between items-center transition-all ${selectedService?.id === service.id
                                                     ? 'border-secondary bg-secondary/5 ring-1 ring-secondary'
                                                     : 'border-stone-200 hover:border-stone-300'
@@ -567,6 +604,28 @@ export default function AdminBookingPage() {
                                         ))}
                                     </div>
                                 </div>
+
+                                {/* Dynamic Duration Sub-selection */}
+                                {selectedService && parseServiceVariants(selectedService).length > 1 && (
+                                    <div className="bg-stone-50 p-4 rounded-lg border border-stone-200">
+                                        <label className="block text-sm font-medium text-stone-700 mb-2">Select Service Duration</label>
+                                        <div className="flex gap-3">
+                                            {parseServiceVariants(selectedService).map((variant, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    type="button"
+                                                    onClick={() => setSelectedVariant(variant)}
+                                                    className={`px-4 py-2 rounded-md border text-sm font-medium transition-all ${selectedVariant?.duration === variant.duration
+                                                        ? 'border-secondary bg-secondary text-white'
+                                                        : 'border-stone-300 bg-white text-stone-700 hover:bg-stone-50'
+                                                        }`}
+                                                >
+                                                    {variant.durationStr} ({variant.priceStr})
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div>
                                     <label className="block text-lg font-serif font-bold text-stone-900 mb-3">3. Date & Time</label>
@@ -692,7 +751,7 @@ export default function AdminBookingPage() {
                                     disabled={isLoading || !selectedProvider || !selectedService || !date || !time}
                                     className="w-full justify-center text-lg py-4"
                                 >
-                                    {isLoading ? 'Booking...' : `Confirm Appointment ${selectedService ? `(${selectedService.price['en']})` : ''}`}
+                                    {isLoading ? 'Booking...' : `Confirm Appointment ${selectedVariant ? `(${selectedVariant.priceStr})` : (selectedService ? `(${selectedService.price['en']})` : '')}`}
                                 </Button>
                             </div>
                         </div>

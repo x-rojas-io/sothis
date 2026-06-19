@@ -20,6 +20,7 @@ export default function AdminNav({ session }: AdminNavProps) {
     { name: 'Active Clients', href: '/admin/active-clients' },
     { name: 'Book Appointment', href: '/admin/book', highlight: true },
     { name: 'Bookings', href: '/admin/bookings' },
+    ...(isAdmin ? [{ name: 'Income Reports', href: '/admin/reports' }] : []),
   ];
 
   const maintenanceLinks = [
