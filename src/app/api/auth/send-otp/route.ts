@@ -13,12 +13,14 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Email is required' }, { status: 400 });
         }
 
+        const sanitizedEmail = email.toLowerCase().trim();
+
         // 0. Validate Email Exists (Security)
         // Check USERS
         const { data: user } = await supabaseAdmin
             .from('users')
             .select('id')
-            .eq('email', email)
+            .eq('email', sanitizedEmail)
             .single();
 
         let exists = !!user;
@@ -28,7 +30,7 @@ export async function POST(request: Request) {
             const { data: client } = await supabaseAdmin
                 .from('clients')
                 .select('id')
-                .eq('email', email)
+                .eq('email', sanitizedEmail)
                 .single();
             exists = !!client;
         }
@@ -54,12 +56,12 @@ export async function POST(request: Request) {
         await supabaseAdmin
             .from('verification_tokens')
             .delete()
-            .eq('identifier', email);
+            .eq('identifier', sanitizedEmail);
 
         const { error: dbError } = await supabaseAdmin
             .from('verification_tokens')
             .insert({
-                identifier: email,
+                identifier: sanitizedEmail,
                 token: otp,
                 expires: expires.toISOString(),
             });
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
         // 3. Send Email
         const { error: emailError } = await resend.emails.send({
             from: 'Sothis Bookings <bookings@sothistherapeutic.com>',
-            to: email,
+            to: sanitizedEmail,
             subject: 'Your Sothis Sign-in Code',
             html: `
                 <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">

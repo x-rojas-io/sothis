@@ -17,7 +17,7 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const historyMode = searchParams.get('history');
         const userId = (session.user as any)?.id;
-        const userEmail = session.user.email;
+        const userEmail = session.user.email.toLowerCase().trim();
         const userName = session.user.name;
 
         // Diagnostic logs (Visible in Server Terminal)
@@ -159,7 +159,7 @@ export async function POST(request: Request) {
             const { data: client } = await supabaseAdmin
                 .from('clients')
                 .select('id')
-                .eq('email', session.user.email)
+                .eq('email', session.user.email.toLowerCase().trim())
                 .single();
 
             if (!client) {
@@ -187,7 +187,7 @@ export async function POST(request: Request) {
         const intakeInsertPayload = {
             id: id, 
             client_id: targetClientId,
-            client_email: body.client_email || session.user.email, // Preserve patient email
+            client_email: (body.client_email || session.user.email).toLowerCase().trim(), // Preserve patient email
             full_name,
             phone_day,
             address,
@@ -207,7 +207,7 @@ export async function POST(request: Request) {
             signature_name: consent_name, // Legacy support
             signature_date: new Date().toISOString(),
             updated_by: (session.user as any)?.id, 
-            updated_by_email: session.user.email,
+            updated_by_email: session.user.email.toLowerCase().trim(),
             ip_address: ip
         };
 
@@ -230,7 +230,7 @@ export async function POST(request: Request) {
                 .from('bookings')
                 .update({ intake_form_id: intake.id })
                 .eq('id', booking_id)
-                .eq('client_email', session.user.email); // Security check
+                .eq('client_email', session.user.email.toLowerCase().trim()); // Security check
             
             if (bookingUpdateError) {
                 console.error('API: Failed to late-bind intake to booking:', booking_id, bookingUpdateError);
@@ -243,7 +243,7 @@ export async function POST(request: Request) {
             .insert({
                 intake_form_id: intake.id,
                 modified_by: (session.user as any)?.id,
-                modified_by_email: session.user.email,
+                modified_by_email: session.user.email.toLowerCase().trim(),
                 snapshot: body,
                 ip_address: ip,
                 created_at: new Date().toISOString()

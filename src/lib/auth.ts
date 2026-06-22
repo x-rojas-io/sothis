@@ -28,13 +28,13 @@ export const authOptions: NextAuthOptions = {
                     throw new Error('Missing email or code');
                 }
 
-                // ... (code verification logic) ...
+                const sanitizedEmail = credentials.email.toLowerCase().trim();
 
                 // 1. Verify Code in verification_tokens
                 const { data: dbToken } = await supabaseAdmin
                     .from('verification_tokens')
                     .select('*')
-                    .eq('identifier', credentials.email)
+                    .eq('identifier', sanitizedEmail)
                     .eq('token', credentials.code)
                     .single();
 
@@ -51,14 +51,14 @@ export const authOptions: NextAuthOptions = {
                 const { data: user } = await supabaseAdmin
                     .from('users')
                     .select('*')
-                    .eq('email', credentials.email)
+                    .eq('email', sanitizedEmail)
                     .single();
 
                 if (user) {
                     await supabaseAdmin.from('verification_tokens').delete().eq('token', credentials.code);
                     return {
                         id: user.id,
-                        email: user.email,
+                        email: user.email.toLowerCase().trim(),
                         name: user.name,
                         image: user.image,
                         role: user.role
@@ -69,14 +69,14 @@ export const authOptions: NextAuthOptions = {
                 const { data: client } = await supabaseAdmin
                     .from('clients')
                     .select('*')
-                    .eq('email', credentials.email)
+                    .eq('email', sanitizedEmail)
                     .single();
 
                 if (client) {
                     await supabaseAdmin.from('verification_tokens').delete().eq('token', credentials.code);
                     return {
                         id: client.id,
-                        email: client.email,
+                        email: client.email.toLowerCase().trim(),
                         name: client.name,
                         image: client.image,
                         role: 'client'

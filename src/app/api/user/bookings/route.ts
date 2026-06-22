@@ -10,7 +10,7 @@ export async function GET(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const userEmail = session.user.email;
+        const userEmail = session.user.email.toLowerCase().trim();
 
         // Fetch bookings for this email
         // We use supabaseAdmin to bypass RLS, but we strictly filter by the session email

@@ -11,7 +11,7 @@ export async function GET(request: Request) {
         }
 
         const { searchParams } = new URL(request.url);
-        const clientEmail = searchParams.get('client_email');
+        const clientEmail = searchParams.get('client_email')?.toLowerCase().trim();
 
         const today = new Date().toISOString().split('T')[0];
 

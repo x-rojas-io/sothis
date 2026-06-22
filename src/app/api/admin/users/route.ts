@@ -62,7 +62,8 @@ export async function GET() {
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { email, password, role, name, bio, specialties, color_code } = body;
+        const { email: rawEmail, password, role, name, bio, specialties, color_code } = body;
+        const email = rawEmail?.toLowerCase().trim();
 
         // 1. Create Auth User
         const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({

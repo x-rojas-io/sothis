@@ -12,7 +12,7 @@ export async function GET(request: Request) {
 
         const { searchParams } = new URL(request.url);
         const bookingId = searchParams.get('booking_id');
-        const clientEmail = searchParams.get('client_email');
+        const clientEmail = searchParams.get('client_email')?.toLowerCase().trim();
         const limit = searchParams.get('limit');
 
         let response;
@@ -49,6 +49,9 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
+        if (body.client_email) {
+            body.client_email = body.client_email.toLowerCase().trim();
+        }
         
         let id = body.id;
         if (!id && body.booking_id) {

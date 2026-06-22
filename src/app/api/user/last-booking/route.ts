@@ -15,7 +15,7 @@ export async function GET() {
         const { data: booking, error } = await supabaseAdmin
             .from('bookings')
             .select('*')
-            .eq('client_email', session.user.email)
+            .eq('client_email', session.user.email.toLowerCase().trim())
             .order('created_at', { ascending: false })
             .limit(1)
             .single();

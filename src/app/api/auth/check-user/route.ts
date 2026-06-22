@@ -10,12 +10,14 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
+    const sanitizedEmail = email.toLowerCase().trim();
+
     try {
         // 1. Check USERS table (Admin/Provider)
         const { data: user, error: userError } = await supabaseAdmin
             .from('users')
             .select('*')
-            .eq('email', email)
+            .eq('email', sanitizedEmail)
             .single();
 
         if (user) {
@@ -40,7 +42,7 @@ export async function GET(request: Request) {
         const { data: client, error: clientError } = await supabaseAdmin
             .from('clients')
             .select('*')
-            .eq('email', email)
+            .eq('email', sanitizedEmail)
             .single();
 
         if (client) {

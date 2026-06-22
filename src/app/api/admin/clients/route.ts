@@ -158,15 +158,18 @@ export async function PUT(req: Request) {
             throw fetchError;
         }
 
-        const oldEmail = currentClient.email;
+        if (updates.email) {
+            updates.email = updates.email.toLowerCase().trim();
+        }
+        const oldEmail = currentClient.email?.toLowerCase().trim();
         const newEmail = updates.email;
 
         // 2. Check for email uniqueness if email is being updated
-        if (newEmail && newEmail.toLowerCase().trim() !== oldEmail.toLowerCase().trim()) {
+        if (newEmail && newEmail !== oldEmail) {
             const { data: existingClient, error: conflictError } = await supabaseAdmin
                 .from('clients')
                 .select('id')
-                .eq('email', newEmail.trim())
+                .eq('email', newEmail)
                 .neq('id', id)
                 .maybeSingle();
 
@@ -207,7 +210,7 @@ export async function PUT(req: Request) {
         }
 
         // 4. Update the user record if it exists and email has changed
-        if (newEmail && newEmail.toLowerCase().trim() !== oldEmail.toLowerCase().trim()) {
+        if (newEmail && newEmail !== oldEmail) {
             const { data: existingUser, error: userFetchError } = await supabaseAdmin
                 .from('users')
                 .select('id')
@@ -220,7 +223,7 @@ export async function PUT(req: Request) {
                 const { error: userUpdateError } = await supabaseAdmin
                     .from('users')
                     .update({
-                        email: newEmail.trim(),
+                        email: newEmail,
                         name: updates.name
                     })
                     .eq('id', existingUser.id);
@@ -264,7 +267,7 @@ export async function PUT(req: Request) {
 
             if (futureBookingIds.length > 0) {
                 const bookingUpdates: any = {};
-                if (updates.email) bookingUpdates.client_email = updates.email.trim();
+                if (updates.email) bookingUpdates.client_email = updates.email;
                 if (updates.name) bookingUpdates.client_name = updates.name;
                 if (updates.phone !== undefined) bookingUpdates.client_phone = updates.phone;
                 if (updates.address !== undefined) bookingUpdates.client_address = updates.address;
@@ -288,7 +291,7 @@ export async function PUT(req: Request) {
                     const baseUrl = process.env.NEXTAUTH_URL || 'https://sothistherapeutic.com';
 
                     for (const booking of futureBookings as any[]) {
-                        const targetEmail = (updates.email || booking.client_email).trim();
+                        const targetEmail = (updates.email || booking.client_email).trim().toLowerCase();
                         const clientName = updates.name || booking.client_name;
                         
                         const timeSlotObj = Array.isArray(booking.time_slot) ? booking.time_slot[0] : booking.time_slot;
@@ -358,7 +361,7 @@ export async function PUT(req: Request) {
         if (updates.email) {
             const { error: intakeUpdateError } = await supabaseAdmin
                 .from('intake_forms')
-                .update({ client_email: updates.email.trim() })
+                .update({ client_email: updates.email })
                 .eq('client_id', id);
 
             if (intakeUpdateError) {

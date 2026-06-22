@@ -15,11 +15,13 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Data processing consent is required' }, { status: 400 });
         }
 
+        const sanitizedEmail = email.toLowerCase().trim();
+
         // Check if client already exists
         const { data: existingClient } = await supabaseAdmin
             .from('clients')
             .select('id')
-            .eq('email', email)
+            .eq('email', sanitizedEmail)
             .single();
 
         if (existingClient) {
@@ -31,7 +33,7 @@ export async function POST(request: Request) {
             .from('clients')
             .insert({
                 name,
-                email,
+                email: sanitizedEmail,
                 phone,
                 address,
                 city,

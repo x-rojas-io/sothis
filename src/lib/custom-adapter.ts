@@ -9,7 +9,7 @@ export function SimpleSupabaseAdapter(): Adapter {
 
             // Explicitly map fields to avoid inserting unknown columns
             const newUser = {
-                email: rest.email,
+                email: rest.email?.toLowerCase().trim(),
                 name: rest.name,
                 image: rest.image,
                 email_verified: emailVerified,
@@ -41,7 +41,7 @@ export function SimpleSupabaseAdapter(): Adapter {
             const { data, error } = await supabaseAdmin
                 .from('users')
                 .select('*')
-                .eq('email', email)
+                .eq('email', email.toLowerCase().trim())
                 .single();
             if (error) return null;
             return { ...data, emailVerified: data.email_verified };
@@ -62,7 +62,7 @@ export function SimpleSupabaseAdapter(): Adapter {
             // Explicitly only allow known columns to prevent PGRST204 if extra props exist
             const updates: any = {
                 name: rest.name,
-                email: rest.email,
+                email: rest.email ? rest.email.toLowerCase().trim() : undefined,
                 image: rest.image,
                 role: (rest as any).role,
                 email_verified: emailVerified,

@@ -9,7 +9,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const {
             client_name,
-            client_email,
+            client_email: rawEmail,
             client_phone,
             client_address,
             client_city,
@@ -26,12 +26,14 @@ export async function POST(request: Request) {
         } = body;
 
         // 1. Validate Input
-        if (!client_name || !client_email || !provider_id || !date || !time) {
+        if (!client_name || !rawEmail || !provider_id || !date || !time) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
             );
         }
+
+        const client_email = rawEmail.toLowerCase().trim();
 
         // 2. Validate date and time is not in the past (using Eastern Time)
         const nowInET = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));

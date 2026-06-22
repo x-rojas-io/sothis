@@ -10,7 +10,7 @@ export async function POST(request: Request) {
         const { 
             time_slot_id, 
             client_name, 
-            client_email, 
+            client_email: rawEmail, 
             client_phone, 
             client_address, 
             client_city, 
@@ -24,12 +24,14 @@ export async function POST(request: Request) {
         } = body;
 
         // Validate input
-        if (!time_slot_id || !client_name || !client_email) {
+        if (!time_slot_id || !client_name || !rawEmail) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
                 { status: 400 }
             );
         }
+
+        const client_email = rawEmail.toLowerCase().trim();
 
         // Check if slot is still available
         const { data: slot, error: slotError } = await supabaseAdmin
