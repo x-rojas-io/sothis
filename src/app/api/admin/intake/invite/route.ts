@@ -26,29 +26,65 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Client email is required for invitation.' }, { status: 400 });
         }
 
-        // 2. Upsert Client Record (Ensure they exist in the registry)
+        // 2. Register/Update Client Record (Ensure they exist in the registry)
+        // Since PostgreSQL uses a LOWER(email) unique index, PostgREST upsert with onConflict: 'email' fails.
+        // We use a query-then-insert/update flow to bypass the constraint matching limitation.
         const trimmedEmail = client_email.trim().toLowerCase();
-        const { data: client, error: clientError } = await supabaseAdmin
+        
+        let client: any = null;
+        let clientError: any = null;
+
+        // Fetch existing client
+        const { data: existingClient, error: fetchError } = await supabaseAdmin
             .from('clients')
-            .upsert({
-                email: trimmedEmail,
-                name: client_name || 'Valued Client',
-            }, { onConflict: 'email' })
             .select()
-            .single();
+            .eq('email', trimmedEmail)
+            .maybeSingle();
+
+        if (fetchError) {
+            console.error('API: Invite Client Fetch Error:', fetchError);
+            clientError = fetchError;
+        } else if (!existingClient) {
+            // Insert client if not exists
+            const { data: newClient, error: insertError } = await supabaseAdmin
+                .from('clients')
+                .insert({
+                    email: trimmedEmail,
+                    name: client_name || 'Valued Client',
+                })
+                .select()
+                .single();
+            client = newClient;
+            clientError = insertError;
+        } else {
+            client = existingClient;
+            // Update name if a new/different name is provided
+            if (client_name && client.name !== client_name) {
+                const { data: updatedClient, error: updateError } = await supabaseAdmin
+                    .from('clients')
+                    .update({ name: client_name })
+                    .eq('id', client.id)
+                    .select()
+                    .single();
+                client = updatedClient;
+                clientError = updateError;
+            }
+        }
 
         if (clientError) {
-            console.error('API: Invite Client Upsert Error:', clientError);
+            console.error('API: Invite Client Registration Error:', clientError);
             throw new Error('Failed to register prospective client.');
         }
 
         // 3. Send Invitation Email
         const intakeLink = `${process.env.NEXTAUTH_URL || 'https://sothis.pro'}/en/intake-form?mode=new`;
         const fromEmail = 'bookings@sothistherapeutic.com';
+        const adminEmail = process.env.CONTACT_EMAIL || 'sothistherapeutic@gmail.com';
 
         const { error: mailError } = await resend.emails.send({
             from: `Sothis Therapeutic <${fromEmail}>`,
             to: trimmedEmail,
+            cc: adminEmail,
             subject: 'Initial Clinical Intake - Sothis Therapeutic Massage',
             html: `
                 <div style="font-family: 'Times New Roman', serif; max-width: 600px; margin: 0 auto; color: #1c1917; line-height: 1.6;">
