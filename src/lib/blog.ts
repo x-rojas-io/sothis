@@ -16,7 +16,7 @@ export async function getAllBlogPosts(locale: string = 'en'): Promise<BlogPost[]
     const markdownPosts = getMarkdownPosts(locale).map(p => ({
         ...p,
         imageUrl: undefined, // Add frontmatter image support later if needed
-        href: `/blog/${p.id}`
+        href: `/${locale}/blog/${p.id}`
     }));
 
     return markdownPosts.sort((a, b) => {
