@@ -115,8 +115,9 @@
     "BlogPage": {
         "title": "Blog - Sothis Masaje Terapéutico",
         "description": "Consejos de bienestar, noticias y actualizaciones de SOTHIS.",
-        "heading": "Blog de SOTHIS",
-        "subheading": "Ideas sobre salud holística, terapia de masaje y autocuidado.",
+        "heading": "Desde Nuestro Instagram",
+        "description": "Sigue a @sothistherapeutic en Instagram para consejos de bienestar, terapia de masaje y novedades de nuestro estudio en Edgewater, NJ.",
+        "subheading": "Mantente al día con consejos de bienestar y terapia de masaje.",
         "instagramHeading": "Desde Nuestro Instagram",
         "instagramSubheading": "Manténgase al día con consejos de bienestar y terapia de masaje.",
         "followUs": "Seguir @sothistherapeutic"
@@ -226,7 +227,7 @@
         "about": "Nosotros",
         "services": "Servicios",
         "testimonials": "Testimonios",
-        "blog": "Blog",
+        "blog": "Instagram",
         "contact": "Contacto",
         "book": "Reservar",
         "items": {
@@ -234,7 +235,7 @@
             "about": "Nosotros",
             "services": "Servicios",
             "testimonials": "Testimonios",
-            "blog": "Blog",
+            "blog": "Instagram",
             "contact": "Contacto"
         }
     }

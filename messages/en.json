@@ -115,8 +115,9 @@
     "BlogPage": {
         "title": "Blog - SOTHIS Therapeutic Massage",
         "description": "Wellness tips, news, and updates from SOTHIS.",
-        "heading": "SOTHIS Blog",
-        "subheading": "Insights on holistic health, massage therapy, and self-care.",
+        "heading": "From Our Instagram",
+        "description": "Follow @sothistherapeutic on Instagram for daily wellness tips, massage therapy insights, and updates from our Edgewater, NJ studio.",
+        "subheading": "Stay updated with wellness tips and massage therapy insights.",
         "instagramHeading": "From Our Instagram",
         "instagramSubheading": "Stay updated with wellness tips and massage therapy insights.",
         "followUs": "Follow @sothistherapeutic"
@@ -226,7 +227,7 @@
         "about": "About",
         "services": "Services",
         "testimonials": "Testimonials",
-        "blog": "Blog",
+        "blog": "Instagram",
         "contact": "Contact",
         "book": "Book Now",
         "items": {
@@ -234,7 +235,7 @@
             "about": "About",
             "services": "Services",
             "testimonials": "Testimonials",
-            "blog": "Blog",
+            "blog": "Instagram",
             "contact": "Contact"
         }
     }
