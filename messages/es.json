@@ -106,7 +106,11 @@
         "title": "Testimonios - Sothis Masaje Terapéutico",
         "description": "Lea lo que nuestros clientes tienen que decir sobre su experiencia.",
         "heading": "Testimonios de Clientes",
-        "subheading": "Nos sentimos honrados de ser parte de los viajes de sanación de nuestros clientes."
+        "subheading": "Nos sentimos honrados de ser parte de los viajes de sanación de nuestros clientes.",
+        "writeReview": "Escribir una reseña",
+        "viewAll": "Ver en Google Maps",
+        "googleRating": "Calificación de Google",
+        "basedOn": "basado en {count} opiniones en Google"
     },
     "BlogPage": {
         "title": "Blog - Sothis Masaje Terapéutico",

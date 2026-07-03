@@ -1,20 +1,50 @@
 [
   {
     "id": 1,
-    "name": "Sarah Jenkins",
-    "quote": "The best massage I've ever had! The atmosphere is so calming and I left feeling completely rejuvenated.",
-    "role": "Regular Client"
+    "name": "Eliza de Oro",
+    "quote": "I recently had a trigger point deep tissue massage with Nancy, and it was absolutely amazing. She took the time to understand where I was holding tension and focused on the areas that needed the most attention. Her technique was both therapeutic and effective, providing relief while still making the experience relaxing.\n\nI left feeling significantly better, with less tension, improved mobility, and a renewed sense of well-being. Nancy is knowledgeable, professional, and clearly passionate about helping her clients feel their best. I highly recommend her to anyone looking for a truly skilled massage therapist. I will definitely be back!",
+    "rating": 5,
+    "time": "2 weeks ago",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
   },
   {
     "id": 2,
-    "name": "Michael Chen",
-    "quote": "I've struggled with back pain for years, but after a few sessions at SOTHIS, I feel like a new person.",
-    "role": "Athlete"
+    "name": "Amelia Singh",
+    "quote": "Highly professional and skilled. I appreciate the personalized approach to my specific issues.",
+    "rating": 5,
+    "time": "9 weeks ago",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
   },
   {
     "id": 3,
-    "name": "Emily Rodriguez",
-    "quote": "Highly professional and skilled. I appreciate the personalized approach to my specific issues.",
-    "role": "Yoga Instructor"
+    "name": "Imirse Hidalgo",
+    "quote": "A+ massage! Nancy is very professional, skilled and listens to what you need. The room is very cozy and calm. It was a very relaxing experience.",
+    "rating": 5,
+    "time": "9 weeks ago",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
+  },
+  {
+    "id": 4,
+    "name": "Kena Duarte",
+    "quote": "I really enjoyed my experience. She has such a warm, welcoming presence that makes you feel at ease instantly. The massage was super therapeutic, which is exactly what I needed.",
+    "rating": 5,
+    "time": "9 weeks ago",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
+  },
+  {
+    "id": 5,
+    "name": "Jeannette Polanco",
+    "quote": "Excellent price compared to the service received. Professionalism, atmosphere, parking—what more could you ask for? 100% satisfied.",
+    "rating": 5,
+    "time": "9 weeks ago",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
+  },
+  {
+    "id": 6,
+    "name": "Nancy Munoz",
+    "quote": "The best massage I've ever had! The atmosphere is so calming and I left feeling completely rejuvenated.",
+    "rating": 5,
+    "time": "13 weeks ago",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
   }
 ]

@@ -1,20 +1,50 @@
 [
-    {
-        "id": 1,
-        "name": "Sarah Jenkins",
-        "quote": "¡El mejor masaje que he tenido! El ambiente es muy relajante y salí sintiéndome completamente rejuvenecida.",
-        "role": "Cliente Regular"
-    },
-    {
-        "id": 2,
-        "name": "Michael Chen",
-        "quote": "He luchado con dolor de espalda durante años, pero después de unas pocas sesiones en SOTHIS, me siento como una persona nueva.",
-        "role": "Atleta"
-    },
-    {
-        "id": 3,
-        "name": "Emily Rodriguez",
-        "quote": "Altamente profesional y calificada. Aprecio el enfoque personalizado para mis problemas específicos.",
-        "role": "Instructora de Yoga"
-    }
+  {
+    "id": 1,
+    "name": "Eliza de Oro",
+    "quote": "Hace poco tuve un masaje de tejido profundo con puntos gatillo con Nancy, y fue absolutamente increíble. Se tomó el tiempo para entender dónde tenía tensión y se enfocó en las áreas que más atención necesitaban. Su técnica fue tanto terapéutica como efectiva, brindando alivio a la vez que hacía que la experiencia fuera relajante.\n\nSalí sintiéndome significativamente mejor, con menos tensión, mayor movilidad y una renovada sensación de bienestar. Nancy es muy conocedora, profesional y claramente apasionada por ayudar a sus clientes a sentirse lo mejor posible. La recomiendo encarecidamente a cualquiera que busque una terapeuta de masaje verdaderamente calificada. ¡Definitivamente volveré!",
+    "rating": 5,
+    "time": "Hace 2 semanas",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
+  },
+  {
+    "id": 2,
+    "name": "Amelia Singh",
+    "quote": "Altamente profesional y calificada. Aprecio el enfoque personalizado para mis problemas específicos.",
+    "rating": 5,
+    "time": "Hace 9 semanas",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
+  },
+  {
+    "id": 3,
+    "name": "Imirse Hidalgo",
+    "quote": "¡Masaje excelente! Nancy es muy profesional, capacitada y escucha lo que necesitas. La sala es muy acogedora y tranquila. Fue una experiencia muy relajante.",
+    "rating": 5,
+    "time": "Hace 9 semanas",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
+  },
+  {
+    "id": 4,
+    "name": "Kena Duarte",
+    "quote": "Realmente disfruté mi experiencia. Tiene una presencia tan cálida y acogedora que te hace sentir a gusto al instante. El masaje fue súper terapéutico, que es exactamente lo que necesitaba.",
+    "rating": 5,
+    "time": "Hace 9 semanas",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
+  },
+  {
+    "id": 5,
+    "name": "Jeannette Polanco",
+    "quote": "Excelente precio en comparación con el servicio recibido. Profesionalismo, ambiente, estacionamiento... ¿qué más se puede pedir? 100% satisfecha.",
+    "rating": 5,
+    "time": "Hace 9 semanas",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
+  },
+  {
+    "id": 6,
+    "name": "Nancy Munoz",
+    "quote": "¡El mejor masaje que he tenido! El ambiente es muy relajante y salí sintiéndome completamente rejuvenecida.",
+    "rating": 5,
+    "time": "Hace 13 semanas",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
+  }
 ]

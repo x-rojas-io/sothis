@@ -106,7 +106,11 @@
         "title": "Testimonials - SOTHIS Therapeutic Massage",
         "description": "Read what our clients have to say about their experience.",
         "heading": "Client Testimonials",
-        "subheading": "We are honored to be part of our clients' healing journeys."
+        "subheading": "We are honored to be part of our clients' healing journeys.",
+        "writeReview": "Write a Review",
+        "viewAll": "View on Google Maps",
+        "googleRating": "Google Rating",
+        "basedOn": "based on {count} Google reviews"
     },
     "BlogPage": {
         "title": "Blog - SOTHIS Therapeutic Massage",
