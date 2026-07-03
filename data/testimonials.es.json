@@ -46,5 +46,29 @@
     "rating": 5,
     "time": "Hace 13 semanas",
     "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
+  },
+  {
+    "id": 7,
+    "name": "Nestor Rojas",
+    "quote": "Tuve una experiencia increíble en Sothis. Nancy es una profesional de la salud de primer nivel, ¡ya puedo sentir mi cuerpo mejorando!",
+    "rating": 5,
+    "time": "Hace 2 semanas",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
+  },
+  {
+    "id": 8,
+    "name": "Hernando Trujillo Mejia",
+    "quote": "Tuve una experiencia absolutamente increíble en Sothis. Desde el momento en que entré, me sentí bienvenido y completamente a gusto. El ambiente era tranquilo, limpio y perfectamente preparado para la relajación.\n\nLa terapeuta fue increíblemente profesional, atenta y calificada. Se tomó el tiempo para comprender mis puntos de estrés y se enfocó en las áreas que necesitaban más atención. La presión fue la adecuada y pude sentir cómo la tensión se desvanecía durante la sesión. Recomiendo al 100% a esta terapeuta a cualquiera que busque un masaje terapéutico de alta calidad.",
+    "rating": 5,
+    "time": "Hace 3 semanas",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
+  },
+  {
+    "id": 9,
+    "name": "Gina Mesa",
+    "quote": "Me encantó la experiencia. El masaje fue exactamente lo que necesitaba, muy relajante y hecho con mucho cuidado. Realmente se nota la dedicación y el profesionalismo. Salí sintiéndome mucho mejor. Definitivamente regresaré.",
+    "rating": 5,
+    "time": "Hace 6 semanas",
+    "url": "https://g.page/r/CeMf2YxkFe54EAE/review"
   }
 ]
