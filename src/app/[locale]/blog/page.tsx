@@ -27,7 +27,7 @@ export default async function BlogPage({
 }) {
     const { locale } = await params;
     const posts = await getAllBlogPosts(locale);
-    const instagramPosts = await getInstagramPosts();
+    const instagramPosts = await getInstagramPosts(locale);
     const t = await getTranslations({ locale, namespace: 'BlogPage' });
 
     return (

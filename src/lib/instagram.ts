@@ -11,7 +11,7 @@ export interface InstagramPost {
     timestamp: string;
 }
 
-export async function getInstagramPosts(): Promise<InstagramPost[]> {
+export async function getInstagramPosts(locale: string = 'en'): Promise<InstagramPost[]> {
     const rawToken = process.env.INSTAGRAM_ACCESS_TOKEN;
 
     if (rawToken) {
@@ -45,11 +45,14 @@ export async function getInstagramPosts(): Promise<InstagramPost[]> {
         console.warn('INSTAGRAM_ACCESS_TOKEN is missing. Using static fallback data.');
     }
 
-    // Fallback: Read static JSON from data/instagram.json
+    // Fallback: Read static JSON from data/instagram.json or instagram.es.json
     try {
-        const filePath = path.join(process.cwd(), 'data', 'instagram.json');
-        if (fs.existsSync(filePath)) {
-            const fileContents = fs.readFileSync(filePath, 'utf8');
+        const filename = locale === 'es' ? 'instagram.es.json' : 'instagram.json';
+        const filePath = path.join(process.cwd(), 'data', filename);
+        const finalPath = fs.existsSync(filePath) ? filePath : path.join(process.cwd(), 'data', 'instagram.json');
+
+        if (fs.existsSync(finalPath)) {
+            const fileContents = fs.readFileSync(finalPath, 'utf8');
             return JSON.parse(fileContents) as InstagramPost[];
         }
     } catch (err) {
