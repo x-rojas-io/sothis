@@ -14,6 +14,23 @@ export default function MyBookingsPage() {
 
     const [activeTab, setActiveTab] = useState<'upcoming' | 'past' | 'cancelled'>('upcoming');
 
+    const getContactLink = (booking: any) => {
+        const date = new Date(booking.time_slot.date + 'T00:00:00');
+        const dateFormatted = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        const timeFormatted = booking.time_slot.start_time.slice(0, 5);
+        const subject = `Reschedule/Cancel Request: ${dateFormatted} at ${timeFormatted}`;
+        const bodyMsg = `Hi Nancy, I need to reschedule or cancel my appointment on ${dateFormatted} at ${timeFormatted} because: `;
+        return `/contact?name=${encodeURIComponent(booking.client_name)}&email=${encodeURIComponent(booking.client_email)}&subject=${encodeURIComponent(subject)}&message=${encodeURIComponent(bodyMsg)}`;
+    };
+
+    const getWaLink = (booking: any) => {
+        const date = new Date(booking.time_slot.date + 'T00:00:00');
+        const dateFormatted = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        const timeFormatted = booking.time_slot.start_time.slice(0, 5);
+        const msg = `Hi Sothis, I need to change or cancel my appointment on ${dateFormatted} at ${timeFormatted}.`;
+        return `https://wa.me/15512414652?text=${encodeURIComponent(msg)}`;
+    };
+
     useEffect(() => {
         if (status === 'unauthenticated') {
             signIn(undefined, { callbackUrl: '/my-bookings' });
@@ -300,11 +317,30 @@ export default function MyBookingsPage() {
                                             </div>
 
                                             {isUpcoming && booking.status === 'confirmed' && (
-                                                <div className="text-right">
-                                                    <p className="text-sm text-stone-500 mb-2">Need to change?</p>
-                                                    <a href="mailto:sothistherapeutic@gmail.com" className="text-sm text-red-600 hover:text-red-800 font-medium">
-                                                        Contact to Cancel
-                                                    </a>
+                                                <div className="text-right flex flex-col items-end gap-1.5">
+                                                    <p className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">Need to change?</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <a 
+                                                            href={getContactLink(booking)} 
+                                                            title="Send Message to Sothis"
+                                                            className="inline-flex items-center justify-center p-2 rounded-lg bg-stone-100 border border-stone-200 hover:border-stone-300 text-stone-700 transition-all hover:scale-105"
+                                                        >
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                                            </svg>
+                                                        </a>
+                                                        <a 
+                                                            href={getWaLink(booking)} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer" 
+                                                            title="Message on WhatsApp"
+                                                            className="inline-flex items-center justify-center p-2 rounded-lg bg-emerald-50 border border-emerald-200 hover:border-emerald-300 text-emerald-600 transition-all hover:scale-105"
+                                                        >
+                                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.665.989 3.3 1.489 5.358 1.49 5.487 0 9.954-4.41 9.958-9.825.002-2.624-1.013-5.09-2.861-6.942-1.847-1.853-4.3-2.873-6.93-2.874-5.49 0-9.957 4.411-9.961 9.828-.001 2.242.601 4.412 1.74 6.357L2.895 21.16l4.241-1.094c-.495.291-.491.285-.489.288zm9.578-6.982c-.294-.145-1.736-.845-2.003-.94-.268-.097-.463-.145-.658.145-.195.292-.756.94-.926 1.13-.17.19-.34.213-.634.069-.294-.145-1.243-.451-2.367-1.439-.874-.768-1.465-1.718-1.636-2.008-.17-.29-.018-.447.129-.592.132-.13.294-.34.441-.51.147-.171.195-.292.293-.487.098-.195.049-.365-.024-.511-.073-.146-.658-1.558-.901-2.143-.236-.57-.498-.492-.683-.502-.177-.009-.38-.01-.585-.01-.205 0-.537.076-.817.38-.28.305-1.073 1.03-1.073 2.512 0 1.48 1.097 2.912 1.243 3.107.147.195 2.158 3.25 5.228 4.542.729.307 1.299.49 1.743.629.734.23 1.403.197 1.932.12.59-.086 1.736-.697 1.981-1.37.245-.672.245-1.25.17-1.37-.074-.12-.27-.193-.565-.338z" />
+                                                            </svg>
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>

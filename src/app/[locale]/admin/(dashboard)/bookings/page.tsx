@@ -195,6 +195,7 @@ export default function MasterCalendarPage() {
         }
     }
 
+
     const getCleanPhone = (phone: string) => {
         const clean = phone.replace(/\D/g, '');
         return clean.length === 10 ? `1${clean}` : clean;

@@ -432,9 +432,6 @@ function BookingContent() {
                 throw new Error(err.error || 'Failed to create booking');
             }
 
-            const bookingData = await bookingRes.json();
-            const newBookingId = bookingData.booking?.id;
-
             setMessage('');
 
             // Trigger WhatsApp message window opening for client to coordinate with Sothis
@@ -448,9 +445,9 @@ function BookingContent() {
                 console.error('Failed to open WhatsApp window:', e);
             }
             
-            // If "Create New" was selected, jump to intake form with booking context
+            // If "Create New" was selected, jump to intake form
             if (selectedIntakeId === 'new') {
-                router.push(`/intake-form?booking_id=${newBookingId}`);
+                router.push(`/intake-form`);
             } else {
                 setStep('success');
             }

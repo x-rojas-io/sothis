@@ -1,18 +1,34 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from '@/components/Button';
 import Card, { CardContent } from '@/components/Card';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 
 export default function ContactPage() {
     const t = useTranslations('ContactPage');
+    const searchParams = useSearchParams();
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         subject: '',
         message: '',
     });
+
+    useEffect(() => {
+        const nameParam = searchParams.get('name') || '';
+        const emailParam = searchParams.get('email') || '';
+        const subjectParam = searchParams.get('subject') || '';
+        const messageParam = searchParams.get('message') || '';
+
+        setFormData({
+            name: nameParam,
+            email: emailParam,
+            subject: subjectParam,
+            message: messageParam,
+        });
+    }, [searchParams]);
     const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

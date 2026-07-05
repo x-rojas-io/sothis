@@ -7,11 +7,30 @@ import type { Booking, TimeSlot } from '@/lib/supabase';
 import ProviderFilter from '@/components/ProviderFilter';
 import Button from '@/components/Button';
 
+import { format } from 'date-fns';
 import { getLastNote } from '@/lib/notes';
 import ClinicalIntakeModal from '@/components/ClinicalIntakeModal';
 import SoapNoteModal, { SoapNote } from '@/components/SoapNoteModal';
 
 export default function AdminDashboard() {
+    const getCleanPhone = (phone: string) => {
+        const clean = phone.replace(/\D/g, '');
+        return clean.length === 10 ? `1${clean}` : clean;
+    };
+
+    const getConfirmLink = (booking: any) => {
+        if (!booking.client_phone) return '';
+        const phone = getCleanPhone(booking.client_phone);
+        const [y, m, d] = booking.time_slot.date.split('-').map(Number);
+        const dateFormatted = format(new Date(y, m - 1, d), 'EEEE, MMMM d');
+        
+        const timeParts = booking.time_slot.start_time.split(':');
+        const h = parseInt(timeParts[0], 10);
+        const timeFormatted = `${h % 12 || 12}:${timeParts[1]} ${h >= 12 ? 'PM' : 'AM'}`;
+
+        const msg = `Hi ${booking.client_name}, Nancy here from Sothis Therapeutic Massage. This is a confirmation for your massage appointment on ${dateFormatted} at ${timeFormatted}. Please let us know if you have any questions. See you soon!`;
+        return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    };
     const [upcomingBookings, setUpcomingBookings] = useState<any[]>([]);
     const [stats, setStats] = useState({
         todayBookings: 0,
@@ -238,6 +257,19 @@ export default function AdminDashboard() {
                                                         <span className="text-[10px] uppercase font-bold bg-stone-100 text-stone-500 px-2 py-0.5 rounded ring-1 ring-stone-200">
                                                             {booking.provider.name}
                                                         </span>
+                                                    )}
+                                                    {booking.client_phone && (
+                                                        <a
+                                                            href={getConfirmLink(booking)}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            title="Send WhatsApp Confirmation"
+                                                            className="text-emerald-600 hover:text-emerald-800 transition-colors ml-1 p-1 hover:bg-emerald-50 rounded"
+                                                        >
+                                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.665.989 3.3 1.489 5.358 1.49 5.487 0 9.954-4.41 9.958-9.825.002-2.624-1.013-5.09-2.861-6.942-1.847-1.853-4.3-2.873-6.93-2.874-5.49 0-9.957 4.411-9.961 9.828-.001 2.242.601 4.412 1.74 6.357L2.895 21.16l4.241-1.094c-.495.291-.491.285-.489.288zm9.578-6.982c-.294-.145-1.736-.845-2.003-.94-.268-.097-.463-.145-.658.145-.195.292-.756.94-.926 1.13-.17.19-.34.213-.634.069-.294-.145-1.243-.451-2.367-1.439-.874-.768-1.465-1.718-1.636-2.008-.17-.29-.018-.447.129-.592.132-.13.294-.34.441-.51.147-.171.195-.292.293-.487.098-.195.049-.365-.024-.511-.073-.146-.658-1.558-.901-2.143-.236-.57-.498-.492-.683-.502-.177-.009-.38-.01-.585-.01-.205 0-.537.076-.817.38-.28.305-1.073 1.03-1.073 2.512 0 1.48 1.097 2.912 1.243 3.107.147.195 2.158 3.25 5.228 4.542.729.307 1.299.49 1.743.629.734.23 1.403.197 1.932.12.59-.086 1.736-.697 1.981-1.37.245-.672.245-1.25.17-1.37-.074-.12-.27-.193-.565-.338z" />
+                                                            </svg>
+                                                        </a>
                                                     )}
                                                 </div>
                                                 <div className="text-sm text-stone-500 mt-1 font-medium">{booking.client_email}</div>
