@@ -219,6 +219,25 @@ export default function AdminBookingPage() {
         }
     };
 
+    const openWhatsAppConfirmation = (bookingDate: string, bookingTime: string) => {
+        try {
+            const rawPhone = clientData?.phone || regForm.phone || '';
+            const cleanPhone = rawPhone.replace(/\D/g, '');
+            const phone = cleanPhone.length === 10 ? `1${cleanPhone}` : cleanPhone;
+            if (phone) {
+                const dateParts = bookingDate.split('-');
+                const dateObj = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+                const dateFormatted = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+                const name = clientData?.name || regForm.name || '';
+                const msg = `Hi ${name}, Nancy here from Sothis Therapeutic Massage. This is a confirmation for your massage appointment on ${dateFormatted} at ${bookingTime}. Please let us know if you have any questions. See you soon!`;
+                const waLink = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+                window.open(waLink, '_blank');
+            }
+        } catch (e) {
+            console.error('Failed to open WhatsApp window:', e);
+        }
+    };
+
     const handleBooking = async () => {
         if (!selectedProvider || !date || !time || !selectedService) {
             setMessage('Please fill in all booking details.');
@@ -284,6 +303,8 @@ export default function AdminBookingPage() {
             }
 
             if (!res.ok) throw new Error(data.error || 'Booking failed');
+
+            openWhatsAppConfirmation(date, time);
 
             setStep('confirm');
             setMessage('Booking confirmed successfully!');
@@ -359,6 +380,8 @@ export default function AdminBookingPage() {
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Booking failed');
+
+            openWhatsAppConfirmation(date, overrideTime);
 
             setStep('confirm');
             setMessage('Booking confirmed successfully!');

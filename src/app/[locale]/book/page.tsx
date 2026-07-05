@@ -436,6 +436,17 @@ function BookingContent() {
             const newBookingId = bookingData.booking?.id;
 
             setMessage('');
+
+            // Trigger WhatsApp message window opening for client to coordinate with Sothis
+            try {
+                const dateFormatted = format(parseISO(selectedSlot.date), 'EEEE, MMMM d');
+                const timeFormatted = selectedSlot.start_time.slice(0, 5);
+                const waMessage = `Hi Sothis, I submitted an appointment request online for ${dateFormatted} at ${timeFormatted}.`;
+                const waLink = `https://wa.me/15512414652?text=${encodeURIComponent(waMessage)}`;
+                window.open(waLink, '_blank');
+            } catch (e) {
+                console.error('Failed to open WhatsApp window:', e);
+            }
             
             // If "Create New" was selected, jump to intake form with booking context
             if (selectedIntakeId === 'new') {
