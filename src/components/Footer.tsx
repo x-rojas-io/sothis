@@ -82,7 +82,7 @@ export default async function Footer() {
 
 
             {/* ══════════════════════════════════════════════
-                MAIN FOOTER — Horizontal Layout
+                MAIN FOOTER - Horizontal Layout
             ══════════════════════════════════════════════ */}
             <div className="mx-auto max-w-7xl px-6 lg:px-8 py-10">
                 {/* Row 1: Brand & Nav */}
@@ -179,7 +179,7 @@ export default async function Footer() {
             </div>
 
             {/* ══════════════════════════════════════════════
-                ZONE 3 — Copyright Bar
+                ZONE 3 - Copyright Bar
             ══════════════════════════════════════════════ */}
             <div className="border-t border-stone-800">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-2">

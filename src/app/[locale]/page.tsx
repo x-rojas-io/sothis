@@ -61,7 +61,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         { num: '03', title: 'Ven y siéntelo', desc: 'Llega, relájate y sal sintiéndote transformado/a.' },
     ] : [
         { num: '01', title: 'Choose your session', desc: 'Pick the service that fits your needs.' },
-        { num: '02', title: 'Book online in 60 sec', desc: 'Select your date and time — no phone calls needed.' },
+        { num: '02', title: 'Book online in 60 sec', desc: 'Select your date and time - no phone calls needed.' },
         { num: '03', title: 'Come in & feel the change', desc: 'Arrive, relax, and leave feeling transformed.' },
     ];
 
@@ -69,7 +69,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         <div className="flex flex-col">
 
             {/* ═══════════════════════════════════════════
-                1. HERO — Cinematic full-bleed
+                1. HERO - Cinematic full-bleed
             ═══════════════════════════════════════════ */}
             <section className="relative min-h-[90vh] flex items-center overflow-hidden">
                 {/* Background image */}
@@ -106,7 +106,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                         <p className="mt-6 text-lg sm:text-xl text-stone-300 leading-relaxed max-w-xl">
                             {locale === 'es'
                                 ? 'Masaje terapéutico personalizado en Edgewater, NJ. Alivia el dolor, reduce el estrés y recarga tu energía.'
-                                : 'Expert therapeutic massage in Edgewater, NJ. Relieve pain, reduce stress, and restore your energy — personalized to you.'}
+                                : 'Expert therapeutic massage in Edgewater, NJ. Relieve pain, reduce stress, and restore your energy - personalized to you.'}
                         </p>
 
                         {/* Trust signals */}
@@ -163,7 +163,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             </div>
 
             {/* ═══════════════════════════════════════════
-                3. PAIN POINTS — "Do you feel this way?"
+                3. PAIN POINTS - "Do you feel this way?"
             ═══════════════════════════════════════════ */}
             <section className="py-20 sm:py-28 bg-stone-50">
                 <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -176,8 +176,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                         </h2>
                         <p className="mt-3 text-stone-500 max-w-xl mx-auto">
                             {locale === 'es'
-                                ? 'El masaje terapéutico no es un lujo — es una solución real para tu bienestar.'
-                                : 'Therapeutic massage isn\'t a luxury — it\'s a real solution for how you feel.'}
+                                ? 'El masaje terapéutico no es un lujo, es una solución real para tu bienestar.'
+                                : 'Therapeutic massage isn\'t a luxury, it\'s a real solution for how you feel.'}
                         </p>
                     </div>
 
@@ -249,7 +249,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             </section>
 
             {/* ═══════════════════════════════════════════
-                5. HOW IT WORKS — 3 Steps
+                5. HOW IT WORKS - 3 Steps
             ═══════════════════════════════════════════ */}
             <section className="py-20 sm:py-28 bg-stone-900 relative overflow-hidden">
                 {/* Decorative blobs */}

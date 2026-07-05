@@ -369,10 +369,10 @@ export default function IncomeReportsPage() {
                                                     {booking.service_type}
                                                 </td>
                                                 <td className="px-6 py-4 text-center text-sm text-stone-700 print:px-2">
-                                                    {booking.duration ? `${booking.duration} min` : <span className="text-stone-300 italic">—</span>}
+                                                    {booking.duration ? `${booking.duration} min` : <span className="text-stone-300 italic">-</span>}
                                                 </td>
                                                 <td className="px-6 py-4 text-right font-semibold text-stone-900 print:px-2">
-                                                    {booking.price ? `$${booking.price.toFixed(2)}` : <span className="text-stone-300 italic">—</span>}
+                                                    {booking.price ? `$${booking.price.toFixed(2)}` : <span className="text-stone-300 italic">-</span>}
                                                 </td>
                                             </tr>
                                         ))

@@ -63,7 +63,13 @@ function BookingContent() {
         // Fetch Providers and Services
         const fetchData = async () => {
             const { data: provData } = await supabase.from('providers').select('*').eq('is_active', true);
-            if (provData) setProviders(provData);
+            if (provData) {
+                setProviders(provData);
+                const nancy = provData.find(p => p.name.toLowerCase().includes('nancy')) || provData[0];
+                if (nancy) {
+                    setSelectedProvider(nancy);
+                }
+            }
 
             const { data: servData } = await supabase
                 .from('services')
@@ -101,7 +107,8 @@ function BookingContent() {
                 return;
             }
 
-            setStep('provider');
+            setStep('service');
+            setProcessing(false); // Reset processing state to avoid locking the UI buttons
             // fetchAvailableSlots(); // Handled later
 
             // Pre-fill data
@@ -282,12 +289,10 @@ function BookingContent() {
 
             // Success! The session will update, passing the effect hook to show slots
             setMessage(t('errors.verifySuccess'));
-            // The useEffect listening to [status] will likely take over, but we can force step slightly faster
-            // Wait for session update...
-
         } catch (error: any) {
             setMessage(`❌ ${error.message}`);
-            setProcessing(false); // Stop processing only on error, otherwise wait for redirect/session update
+        } finally {
+            setProcessing(false);
         }
     };
 
@@ -744,13 +749,6 @@ function BookingContent() {
                     {/* STEP 1.9: SERVICE SELECTION */}
                     {step === 'service' && (
                         <div className="space-y-6">
-                            <button
-                                onClick={() => setStep('provider')}
-                                className="flex items-center text-sm text-stone-500 hover:text-stone-900"
-                            >
-                                <ChevronLeftIcon className="w-4 h-4 mr-1" />
-                                Back to Providers
-                            </button>
                             <h2 className="text-2xl font-serif font-bold text-stone-900 text-center mb-6">Select a Service</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {services.map(service => (

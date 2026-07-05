@@ -195,6 +195,37 @@ export default function MasterCalendarPage() {
         }
     }
 
+    const getCleanPhone = (phone: string) => {
+        const clean = phone.replace(/\D/g, '');
+        return clean.length === 10 ? `1${clean}` : clean;
+    };
+
+    const getConfirmLink = (booking: Booking, dateStr: string, timeStr: string) => {
+        if (!booking.client_phone) return '';
+        const phone = getCleanPhone(booking.client_phone);
+        const dateFormatted = format(parseISO(dateStr), 'EEEE, MMMM d');
+        const msg = `Hi ${booking.client_name}, Nancy here from Sothis Therapeutic Massage. This is a confirmation for your massage appointment on ${dateFormatted} at ${timeStr.slice(0, 5)}. Please let us know if you have any questions. See you soon!`;
+        return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    };
+
+    const getReminderLink = (booking: Booking, dateStr: string, timeStr: string) => {
+        if (!booking.client_phone) return '';
+        const phone = getCleanPhone(booking.client_phone);
+        const dateFormatted = format(parseISO(dateStr), 'EEEE, MMMM d');
+        const msg = `Hi ${booking.client_name}, this is a friendly reminder for your upcoming massage appointment at Sothis on ${dateFormatted} at ${timeStr.slice(0, 5)}. Please reply to confirm or let us know if you need to reschedule. Thank you!`;
+        return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    };
+
+    const getIntakeLink = (booking: Booking) => {
+        if (!booking.client_phone) return '';
+        const phone = getCleanPhone(booking.client_phone);
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sothistherapeutic.com';
+        const locale = typeof window !== 'undefined' ? (window.location.pathname.split('/')[1] || 'en') : 'en';
+        const url = `${origin}/${locale}/intake-form?email=${encodeURIComponent(booking.client_email)}`;
+        const msg = `Hi ${booking.client_name}, we look forward to your visit. Please fill out our online Clinical Health Profile before your session using this link:\n${url}\n\nThank you! Sothis Therapeutic Massage`;
+        return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    };
+
     // --- Navigation ---
     const nextPeriod = () => view === 'month' ? setCurrentDate(addMonths(currentDate, 1)) : setCurrentDate(addDays(currentDate, 1));
     const prevPeriod = () => view === 'month' ? setCurrentDate(subMonths(currentDate, 1)) : setCurrentDate(subDays(currentDate, 1));
@@ -448,10 +479,40 @@ export default function MasterCalendarPage() {
                                                                     Professional SOAP Form
                                                                 </button>
 
-                                                                <div className="text-sm text-stone-500 flex gap-4 pt-2">
+                                                                <div className="text-sm text-stone-500 flex gap-4 pt-2 pb-1">
                                                                     {booking.client_email && <span>📧 {booking.client_email}</span>}
                                                                     {booking.client_phone && <span>📱 {booking.client_phone}</span>}
                                                                 </div>
+
+                                                                {booking.client_phone && (
+                                                                    <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-stone-100">
+                                                                        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mr-1">WhatsApp Quick Texts:</span>
+                                                                        <a
+                                                                            href={getConfirmLink(booking, slot.date, slot.start_time)}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="inline-flex items-center gap-1.5 text-[11px] bg-teal-50 border border-teal-200 hover:border-teal-300 text-teal-700 px-3 py-1.5 rounded-lg hover:bg-teal-100 transition-colors font-bold shadow-sm"
+                                                                        >
+                                                                            💬 Confirm
+                                                                        </a>
+                                                                        <a
+                                                                            href={getReminderLink(booking, slot.date, slot.start_time)}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="inline-flex items-center gap-1.5 text-[11px] bg-amber-50 border border-amber-200 hover:border-amber-300 text-amber-700 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors font-bold shadow-sm"
+                                                                        >
+                                                                            ⏰ Reminder
+                                                                        </a>
+                                                                        <a
+                                                                            href={getIntakeLink(booking)}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="inline-flex items-center gap-1.5 text-[11px] bg-blue-50 border border-blue-200 hover:border-blue-300 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors font-bold shadow-sm"
+                                                                        >
+                                                                            📋 Intake Form
+                                                                        </a>
+                                                                    </div>
+                                                                )}
                                                             </div>
 
                                                             {/* Actions */}

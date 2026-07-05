@@ -47,7 +47,7 @@ export default function Header() {
     }
 
     // isTransparent = dark hero style (home page top)
-    // NOT "see-through" — it's a dark bg that matches the hero
+    // NOT "see-through" - it's a dark bg that matches the hero
     const linkClass = (active: boolean) =>
         `text-sm font-semibold leading-6 transition-colors duration-200 ${
             isTransparent
@@ -83,7 +83,7 @@ export default function Header() {
                                     priority
                                 />
                             </div>
-                            {/* Brand name — desktop only */}
+                            {/* Brand name - desktop only */}
                             <div className="hidden lg:flex flex-col leading-none">
                                 <span className={`font-serif font-bold text-base tracking-wide transition-colors duration-500 ${
                                     isTransparent ? 'text-white' : 'text-stone-900'
