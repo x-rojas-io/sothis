@@ -149,36 +149,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           </div>
         </div>
       </section>
-
-      {/* Testimonials Preview */}
-      <section className="py-24 sm:py-32 bg-white">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-3xl font-serif font-bold tracking-tight text-stone-900 sm:text-4xl">{t('Testimonials.title')}</h2>
-          </div>
-          <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 lg:mx-0 lg:max-w-none lg:grid-cols-2">
-            <Card>
-              <CardContent className="pt-6">
-                <blockquote className="text-stone-900">
-                  <p>{t('Testimonials.review1')}</p>
-                </blockquote>
-                <div className="mt-6 font-semibold text-stone-900">– Sarah Jenkins</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <blockquote className="text-stone-900">
-                  <p>{t('Testimonials.review2')}</p>
-                </blockquote>
-                <div className="mt-6 font-semibold text-stone-900">– Michael Chen</div>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="mt-10 text-center">
-            <Button href="/testimonials" variant="outline">{t('Testimonials.readMore')}</Button>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
