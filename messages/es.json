@@ -238,5 +238,9 @@
             "blog": "Instagram",
             "contact": "Contacto"
         }
+    },
+    "WhatsAppWidget": {
+        "tooltip": "Tu bienestar te espera. Escríbenos por WhatsApp para reservar tu tratamiento terapéutico.",
+        "prefilledMessage": "Hola Nancy, busco alivio a través de la terapia de masajes. Me gustaría saber más sobre los servicios de Sothis y consultar la disponibilidad de citas."
     }
 }

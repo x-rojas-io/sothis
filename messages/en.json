@@ -238,5 +238,9 @@
             "blog": "Instagram",
             "contact": "Contact"
         }
+    },
+    "WhatsAppWidget": {
+        "tooltip": "Your wellness awaits. Message us on WhatsApp to reserve your therapeutic treatment.",
+        "prefilledMessage": "Hi Nancy, I'm looking for massage therapy relief. I would like to know more about Sothis services and check appointment availability."
     }
 }
