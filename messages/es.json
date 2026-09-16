@@ -242,5 +242,11 @@
     "WhatsAppWidget": {
         "tooltip": "Tu bienestar te espera. Escríbenos por WhatsApp para reservar tu tratamiento terapéutico.",
         "prefilledMessage": "Hola Nancy, busco alivio a través de la terapia de masajes. Me gustaría saber más sobre los servicios de Sothis y consultar la disponibilidad de citas."
+    },
+    "ChatWidget": {
+        "initialMessage": "¡Hola! Soy la asistente virtual de Nancy. ¿En qué puedo ayudarte hoy con nuestros servicios de masaje?",
+        "errorMessage": "Lo siento, tengo problemas para conectarme en este momento. Puedes chatear con Nancy directamente en WhatsApp para obtener asistencia inmediata:",
+        "whatsappButton": "Chatear por WhatsApp",
+        "prefilledMessagePrefix": "Hola Nancy, le estaba preguntando al asistente virtual: \"{message}\" pero tuve un problema de conexión."
     }
 }

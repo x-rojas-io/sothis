@@ -73,6 +73,17 @@ async function updateServices() {
             price: { en: '$130 / $195' },
             duration: { en: '60 / 90 min' },
             is_active: true
+        },
+        {
+            title: { en: 'Localized Massage', es: 'Masaje Localizado' },
+            description: { 
+                en: "Different areas of the body carry different kinds of tension and sometimes what's needed isn't a full-body reset, but a deep, focused release.",
+                es: "Diferentes áreas del cuerpo acumulan distintos tipos de tensión y, a veces, lo que se necesita no es un restablecimiento de cuerpo completo, sino una liberación profunda y enfocada."
+            },
+            price: { en: '$50', es: '$50' },
+            duration: { en: '30 min', es: '30 min' },
+            image_url: 'https://mmqystevqgvgpfymfqzk.supabase.co/storage/v1/object/public/service-images/localized-massage.png',
+            is_active: true
         }
     ];
 

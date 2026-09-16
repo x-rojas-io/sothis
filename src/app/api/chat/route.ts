@@ -70,10 +70,12 @@ ${ragContext}
 
         // 5. Generate Answer (with Fallback for Reliability)
         let reply: string;
+        let isFallback = false;
         try {
             reply = await generateChatResponse(fullContext, message);
         } catch (genError: any) {
             console.error('Generative AI Fallback Triggered:', genError.message);
+            isFallback = true;
             // Fallback: Provide a structured response based on the retrieved context
             reply = "I'm currently experiencing high demand, but I've found some information that might help you:\n\n" + 
                     (ragContext || "Please contact us directly at sothistherapeutic@gmail.com for assistance.");
@@ -93,7 +95,8 @@ ${ragContext}
 
         return NextResponse.json({ 
             reply, 
-            ui: uiPayload 
+            ui: uiPayload,
+            isFallback
         });
 
     } catch (error) {
