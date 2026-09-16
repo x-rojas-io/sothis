@@ -8,6 +8,7 @@ import { getMessages } from 'next-intl/server';
 import Providers from '@/components/Providers';
 import ChatWidget from '@/components/ChatWidget';
 import WhatsAppWidget from '@/components/WhatsAppWidget';
+import NewsletterPopup from '@/components/NewsletterPopup';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,6 +60,7 @@ export default async function RootLayout({
             <Footer />
             <ChatWidget />
             <WhatsAppWidget />
+            <NewsletterPopup />
           </Providers>
         </NextIntlClientProvider>
       </body>

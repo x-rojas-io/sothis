@@ -248,5 +248,16 @@
         "errorMessage": "Sorry, I'm having trouble connecting right now. You can chat with Nancy directly on WhatsApp for immediate assistance:",
         "whatsappButton": "Chat on WhatsApp",
         "prefilledMessagePrefix": "Hi Nancy, I was asking the virtual assistant: \"{message}\" but encountered a connection issue."
+    },
+    "NewsletterPopup": {
+        "tagline": "Sothis Wellness Circle",
+        "title": "Receive Self-Care Insights & Exclusive Specials",
+        "description": "Join our community for weekly pain relief tips, tension reset exercises, and priority booking.",
+        "placeholder": "Enter your email address",
+        "button": "Join the Circle",
+        "submitting": "Joining...",
+        "successTitle": "You're on the list!",
+        "successMessage": "Thank you for joining our wellness circle. We look forward to supporting your self-care journey.",
+        "privacyNotice": "Zero spam. Unsubscribe anytime with one click."
     }
 }

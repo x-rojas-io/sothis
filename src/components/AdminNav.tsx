@@ -28,6 +28,7 @@ export default function AdminNav({ session }: AdminNavProps) {
     { name: 'Services', href: '/admin/services' },
     { name: 'Staff Users', href: '/admin/staff' },
     { name: 'Client Master', href: '/admin/clients' },
+    { name: 'Newsletter', href: '/admin/newsletter' },
   ];
 
   return (

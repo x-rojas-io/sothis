@@ -248,5 +248,16 @@
         "errorMessage": "Lo siento, tengo problemas para conectarme en este momento. Puedes chatear con Nancy directamente en WhatsApp para obtener asistencia inmediata:",
         "whatsappButton": "Chatear por WhatsApp",
         "prefilledMessagePrefix": "Hola Nancy, le estaba preguntando al asistente virtual: \"{message}\" pero tuve un problema de conexión."
+    },
+    "NewsletterPopup": {
+        "tagline": "Círculo de Bienestar Sothis",
+        "title": "Recibe Consejos de Autocuidado y Promociones Exclusivas",
+        "description": "Únete a nuestra comunidad para recibir consejos semanales para aliviar el dolor, ejercicios de liberación de tensión y reservas prioritarias.",
+        "placeholder": "Ingresa tu correo electrónico",
+        "button": "Unirme al Círculo",
+        "submitting": "Uniendo...",
+        "successTitle": "¡Ya estás en la lista!",
+        "successMessage": "Gracias por unirte a nuestro círculo de bienestar. Esperamos acompañarte en tu camino de autocuidado.",
+        "privacyNotice": "Cero spam. Cancela tu suscripción en cualquier momento con un clic."
     }
 }
